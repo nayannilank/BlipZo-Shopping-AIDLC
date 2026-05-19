@@ -1,0 +1,33 @@
+{
+  "name": "@blipzo/infra-cdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "BlipZo AWS CDK infrastructure stacks",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "synth": "cdk synth",
+    "synth:dev": "cdk synth BlipzoStack-dev",
+    "synth:qa": "cdk synth BlipzoStack-qa",
+    "synth:prod": "cdk synth BlipzoStack-prod",
+    "deploy:dev": "cdk deploy BlipzoStack-dev",
+    "deploy:qa": "cdk deploy BlipzoStack-qa",
+    "deploy:prod": "cdk deploy BlipzoStack-prod",
+    "diff:dev": "cdk diff BlipzoStack-dev",
+    "diff:qa": "cdk diff BlipzoStack-qa",
+    "diff:prod": "cdk diff BlipzoStack-prod",
+    "clean": "rm -rf dist cdk.out"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.170.0",
+    "constructs": "10.4.2"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.170.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.5.4"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
