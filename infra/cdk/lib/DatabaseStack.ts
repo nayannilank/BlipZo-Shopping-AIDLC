@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+
 import { BlipzoTable } from './constructs/BlipzoTable';
 
 /**
@@ -56,7 +57,8 @@ export class DatabaseStack extends cdk.NestedStack {
 
     const { stageName } = props;
     const resourceName = (suffix: string): string => `blipzo-${stageName}-${suffix}`;
-    const removalPolicy = stageName === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
+    const removalPolicy =
+      stageName === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
 
     // -------------------------------------------------------------------------
     // OTP Table — PK only, TTL on expiresAt

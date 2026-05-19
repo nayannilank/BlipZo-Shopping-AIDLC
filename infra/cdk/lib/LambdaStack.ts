@@ -1,4 +1,5 @@
 import * as path from 'path';
+
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
@@ -7,6 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+
 import { SecureLambda } from './constructs/SecureLambda';
 
 /**
@@ -85,22 +87,28 @@ export class LambdaStack extends cdk.NestedStack {
     // Auth Lambda IAM: OTP table read/write, Cognito admin actions, Secrets Manager read
     tables.otpTable.grantReadWriteData(authLambda.function);
 
-    authLambda.function.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'cognito-idp:AdminCreateUser',
-        'cognito-idp:AdminInitiateAuth',
-        'cognito-idp:AdminUpdateUserAttributes',
-        'cognito-idp:AdminGetUser',
-      ],
-      resources: [userPool.userPoolArn],
-    }));
+    authLambda.function.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'cognito-idp:AdminCreateUser',
+          'cognito-idp:AdminInitiateAuth',
+          'cognito-idp:AdminUpdateUserAttributes',
+          'cognito-idp:AdminGetUser',
+        ],
+        resources: [userPool.userPoolArn],
+      }),
+    );
 
-    authLambda.function.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: [`arn:aws:secretsmanager:${this.region}:${this.account}:secret:blipzo/${stageName}/*`],
-    }));
+    authLambda.function.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [
+          `arn:aws:secretsmanager:${this.region}:${this.account}:secret:blipzo/${stageName}/*`,
+        ],
+      }),
+    );
 
     this.functions['auth'] = authLambda.function;
 
@@ -207,11 +215,15 @@ export class LambdaStack extends cdk.NestedStack {
     tables.productsTable.grantReadWriteData(orderLambda.function);
     tables.cartsTable.grantWriteData(orderLambda.function);
 
-    orderLambda.function.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: ['lambda:InvokeFunction'],
-      resources: [`arn:aws:lambda:${this.region}:${this.account}:function:blipzo-${stageName}-payment-service`],
-    }));
+    orderLambda.function.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [
+          `arn:aws:lambda:${this.region}:${this.account}:function:blipzo-${stageName}-payment-service`,
+        ],
+      }),
+    );
 
     this.functions['order'] = orderLambda.function;
 

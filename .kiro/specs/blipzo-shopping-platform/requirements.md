@@ -31,6 +31,8 @@ BlipZo is a cloud-native e-commerce platform similar to Amazon, supporting Buyer
 - **S3**: Amazon S3 — used for storing product images and other static assets.
 - **API_Gateway**: AWS API Gateway — the entry point for all client-to-backend HTTP requests.
 - **Lambda**: AWS Lambda — the serverless compute layer executing all backend business logic.
+- **Logo_Image**: The BlipZo brand logo file located at `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png`, used as the application logo and mobile splash screen image.
+- **Color_Theme**: The blue and purple color palette used as the primary visual identity across all Platform client applications.
 
 ---
 
@@ -302,3 +304,31 @@ BlipZo is a cloud-native e-commerce platform similar to Amazon, supporting Buyer
 3. WHERE the iOS platform is enabled in future, THE Platform SHALL provide an iOS application built with React Native and Expo that supports iOS 14 and above.
 4. THE Web application and Android application SHALL consume the same versioned REST APIs exposed through API_Gateway, using shared TypeScript type definitions from a shared package in the Turborepo monorepo.
 5. WHEN the client application loses network connectivity, THE client application SHALL display a user-friendly offline indicator and queue non-critical actions for retry when connectivity is restored.
+
+---
+
+### Requirement 19: Logo and Splash Screen
+
+**User Story:** As a user, I want to see the BlipZo brand logo throughout the application and on the mobile splash screen, so that I have a consistent and recognizable brand experience.
+
+#### Acceptance Criteria
+
+1. THE Web application SHALL display the logo image located at `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` as the primary application logo in the header or navigation bar.
+2. THE Android application SHALL display the logo image located at `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` as the primary application logo in the header or navigation bar.
+3. WHEN the Android application launches, THE Android application SHALL display a splash screen featuring the logo image located at `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` centered on the screen until the application is ready for interaction.
+4. WHERE the iOS platform is enabled in future, THE iOS application SHALL display the same logo image as the application logo and splash screen image.
+5. THE Platform SHALL use the logo image at its original aspect ratio without distortion across all placements.
+
+---
+
+### Requirement 20: Color Theme
+
+**User Story:** As a user, I want the application to have a cohesive blue and purple color theme, so that the visual experience is consistent and appealing across Web and Mobile platforms.
+
+#### Acceptance Criteria
+
+1. THE Web application SHALL use a color theme consisting of blue and purple as the primary and secondary brand colors for UI elements including buttons, links, headers, and navigation components.
+2. THE Android application SHALL use the same blue and purple color theme as the Web application for UI elements including buttons, links, headers, and navigation components.
+3. THE Platform SHALL define the blue and purple color palette as shared design tokens accessible to both the Web application and the Android application to ensure visual consistency.
+4. WHERE the iOS platform is enabled in future, THE iOS application SHALL use the same blue and purple color theme defined in the shared design tokens.
+5. THE Platform SHALL ensure that all color combinations used in the blue and purple theme meet WCAG AA contrast ratio requirements for text and interactive elements.

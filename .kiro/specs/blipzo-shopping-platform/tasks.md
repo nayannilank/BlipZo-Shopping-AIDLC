@@ -70,79 +70,77 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Create a CloudWatch dashboard with widgets for order success rate, payment failure rate, and catalogue latency
     - _Requirements: 16.1, 16.3, 16.4_
 
-  - [ ]* 2.8 Verify CDK synth produces valid CloudFormation for all three environments
+  - [ ]\* 2.8 Verify CDK synth produces valid CloudFormation for all three environments
     - Run `cdk synth` for dev, qa, and prod stacks and assert zero synthesis errors
     - _Requirements: 17.1, 17.2_
 
-
-- [ ] 3. Shared package (`packages/shared`)
-  - [ ] 3.1 Scaffold shared package and TypeScript types
+- [x] 3. Shared package (`packages/shared`)
+  - [x] 3.1 Scaffold shared package and TypeScript types
     - Create `packages/shared/` with its own `package.json` (`name: @blipzo/shared`), `tsconfig.json` extending root base, and `src/index.ts` barrel export
     - Write TypeScript interfaces in `src/types/`: `auth.ts`, `product.ts`, `catalogue.ts`, `wishlist.ts`, `cart.ts`, `order.ts`, `address.ts`, `payment.ts`, `errors.ts` — matching all interfaces defined in the design document
     - _Requirements: 18.4_
 
-  - [ ] 3.2 Implement Zod validation schemas
+  - [x] 3.2 Implement Zod validation schemas
     - Write Zod schemas in `src/schemas/` for: `auth.schema.ts` (register, login, OTP request/verify), `product.schema.ts` (create, update, policy), `catalogue.schema.ts` (list request, search request), `wishlist.schema.ts`, `cart.schema.ts`, `order.schema.ts` (checkout, return/exchange), `address.schema.ts`
     - Ensure all field constraints match requirements exactly (e.g., password 8–128 chars with uppercase/lowercase/digit, price > 0 and ≤ 9999999.99, E.164 phone)
     - Export all schemas from `src/index.ts`
     - _Requirements: 1.1, 1.4, 5.1, 5.2, 9.1, 9.2_
 
-  - [ ]* 3.3 Write property tests for shared Zod schemas
+  - [ ]\* 3.3 Write property tests for shared Zod schemas
     - **Property 3: Invalid passwords are rejected with specific errors**
     - **Property 12: Invalid product fields are rejected with field-specific errors**
     - **Validates: Requirements 1.4, 5.2, 5.7**
 
-  - [ ]* 3.4 Write unit tests for shared schemas
+  - [ ]\* 3.4 Write unit tests for shared schemas
     - Test all valid boundary values (min/max lengths, min/max prices, valid E.164 formats)
     - Test all invalid boundary values (empty strings, price = 0, price > 9999999.99, phone without `+`)
     - _Requirements: 1.1, 1.4, 5.1, 9.1_
 
-- [ ] 4. Auth_Service Lambda
-  - [ ] 4.1 Scaffold auth-service and implement registration handler
+- [x] 4. Auth_Service Lambda
+  - [x] 4.1 Scaffold auth-service and implement registration handler
     - Create `services/auth-service/` with `package.json`, `tsconfig.json`, `src/handler.ts`, `src/service.ts`, `src/validators.ts`, `src/errors.ts`
     - Install Middy (`@middy/core`, `@middy/http-json-body-parser`, `@middy/http-error-handler`, `@middy/correlation-ids`) and AWS SDK v3 Cognito client
     - Implement `POST /auth/register`: validate with `registerSchema` from `@blipzo/shared`, call `AdminCreateUser` on Cognito, set `custom:role` attribute, return `201 { userId, message }`
     - Map Cognito `UsernameExistsException` → `409 CONFLICT`; `ServiceUnavailableException` → `503 SERVICE_UNAVAILABLE`
     - _Requirements: 1.1, 1.2, 1.3, 1.6, 1.7_
 
-  - [ ]* 4.2 Write property tests for registration
+  - [ ]\* 4.2 Write property tests for registration
     - **Property 1: Registration creates a retrievable account with the correct role**
     - **Property 2: Duplicate registration is rejected**
     - **Property 3: Invalid passwords are rejected with specific errors**
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.7**
 
-  - [ ] 4.3 Implement email/password login with account lockout
+  - [x] 4.3 Implement email/password login with account lockout
     - Implement `POST /auth/login`: validate with `loginSchema`, read `custom:lockUntil` from Cognito; if locked return `423 ACCOUNT_LOCKED`
     - Call `AdminInitiateAuth` with `USER_PASSWORD_AUTH`; on success reset `custom:failedAttempts` to 0 and return `AuthResponse` (accessToken, refreshToken, userId, role)
     - On `NotAuthorizedException` or `UserNotFoundException` increment `custom:failedAttempts`; after 5 failures within 15 min set `custom:lockUntil = now + 15 min`; always return generic `401 INVALID_CREDENTIALS`
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ]* 4.4 Write property tests for login and lockout
+  - [ ]\* 4.4 Write property tests for login and lockout
     - **Property 4: Successful login returns a JWT with correct claims and bounded expiry**
     - **Property 5: Invalid credentials return a generic error without revealing which field is wrong**
     - **Property 6: Locked accounts reject all login attempts**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 4.4**
 
-  - [ ] 4.5 Implement OTP request and verify handlers
+  - [x] 4.5 Implement OTP request and verify handlers
     - Implement `POST /auth/otp/request`: validate E.164 phone, check user exists in Cognito, generate 6-digit numeric OTP, write to `blipzo-{env}-otp` table with `expiresAt = now + 600s` TTL and `attemptCount = 0`, log OTP to CloudWatch (dev/qa only)
     - Implement `POST /auth/otp/verify`: read OTP record, check `used`, check `expiresAt`, check `attemptCount < 3`; on success mark `used = true` and return `AuthResponse`; on failure increment `attemptCount`; after 3 failures delete OTP record
     - Implement `POST /auth/token/refresh`: call Cognito `InitiateAuth` with `REFRESH_TOKEN_AUTH` and return new `accessToken`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ]* 4.6 Write property tests for OTP flow
+  - [ ]\* 4.6 Write property tests for OTP flow
     - **Property 7: OTP is a 6-digit numeric code with a 10-minute TTL**
     - **Property 8: OTP verification is a one-time operation (round trip)**
     - **Validates: Requirements 3.1, 3.2**
 
-  - [ ]* 4.7 Write unit tests for auth-service
+  - [ ]\* 4.7 Write unit tests for auth-service
     - Test Cognito error mapping (all error types in the design mapping table)
     - Test lockout counter increment and reset logic
     - Test OTP expiry and attempt-count invalidation
     - _Requirements: 2.2, 2.3, 3.3, 3.4_
 
-- [ ] 5. Checkpoint — Auth service
+- [x] 5. Checkpoint — Auth service
   - Ensure all auth-service unit and property tests pass. Verify `cdk synth` still succeeds. Ask the user if questions arise.
-
 
 - [ ] 6. Product_Service Lambda
   - [ ] 6.1 Scaffold product-service and implement product creation
@@ -152,7 +150,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return `201` with full `ProductRecord`
     - _Requirements: 5.1, 5.2, 5.8_
 
-  - [ ]* 6.2 Write property tests for product creation
+  - [ ]\* 6.2 Write property tests for product creation
     - **Property 11: Valid product creation persists all fields and returns a unique ID**
     - **Property 12: Invalid product fields are rejected with field-specific errors**
     - **Property 15: S3 upload failure prevents partial product creation (atomicity)**
@@ -164,7 +162,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `GET /products/seller/me`: query GSI2 with `SELLER#{sellerId}`, return paginated list
     - _Requirements: 5.3, 5.4, 5.5, 5.6, 5.7_
 
-  - [ ]* 6.4 Write property tests for product ownership and partial update
+  - [ ]\* 6.4 Write property tests for product ownership and partial update
     - **Property 13: Sellers cannot modify products owned by other sellers**
     - **Property 14: Product update modifies only the supplied fields**
     - **Validates: Requirements 5.4, 5.5, 5.6**
@@ -174,7 +172,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return `200` with updated `ProductRecord` including `sellerPolicy`
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
-  - [ ]* 6.6 Write unit tests for product-service
+  - [ ]\* 6.6 Write unit tests for product-service
     - Test validation errors for each invalid field (price = 0, name empty, image > 10 MB, > 10 images)
     - Test soft-delete does not physically remove the DynamoDB item
     - Test policy update stores new `policyVersion` UUID
@@ -188,7 +186,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return `404` for unknown category, `200` with empty list when no products exist
     - _Requirements: 6.1, 6.3, 6.4, 6.5, 6.7_
 
-  - [ ]* 7.2 Write property tests for catalogue pagination
+  - [ ]\* 7.2 Write property tests for catalogue pagination
     - **Property 16: Catalogue returns only active products sorted by creation date descending**
     - **Property 17: Catalogue pagination stays within bounds and cursors are consistent**
     - **Validates: Requirements 6.1, 6.5**
@@ -198,11 +196,11 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `GET /catalogue/search`: validate `q` (1–100 non-whitespace chars), query GSI1 with `FilterExpression contains(searchTokens, lowercase(q))`, apply pagination, return `CatalogueListResponse`
     - _Requirements: 6.2, 6.3, 6.6, 6.7_
 
-  - [ ]* 7.4 Write property tests for search correctness
+  - [ ]\* 7.4 Write property tests for search correctness
     - **Property 18: Search returns only active products matching the query case-insensitively**
     - **Validates: Requirements 6.6**
 
-  - [ ]* 7.5 Write unit tests for catalogue-service
+  - [ ]\* 7.5 Write unit tests for catalogue-service
     - Test `404` for deleted product detail request
     - Test empty-list `200` response when no products match category or search
     - Test cursor decoding/encoding round trip
@@ -216,7 +214,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `DELETE /wishlist/items/{productId}`: `DeleteItem` (idempotent — no error if not present), return updated wishlist
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9_
 
-  - [ ]* 8.2 Write property tests for wishlist invariants
+  - [ ]\* 8.2 Write property tests for wishlist invariants
     - **Property 19: Wishlist add/remove is a round trip**
     - **Property 20: Wishlist add is idempotent (no duplicates)**
     - **Property 21: Wishlist remove is idempotent**
@@ -224,12 +222,11 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 23: Deleted products in wishlist are marked unavailable, not removed**
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.5, 7.6, 7.8**
 
-  - [ ]* 8.3 Write unit tests for wishlist-service
+  - [ ]\* 8.3 Write unit tests for wishlist-service
     - Test `401` for unauthenticated requests
     - Test `404` when adding a non-existent product
     - Test enrichment marks deleted product as `isAvailable: false`
     - _Requirements: 7.4, 7.8, 7.9_
-
 
 - [ ] 9. Cart_Service Lambda
   - [ ] 9.1 Scaffold cart-service and implement cart handlers
@@ -240,13 +237,13 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `DELETE /cart`: `BatchWriteItem` to delete all items for buyer, return empty cart
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
 
-  - [ ]* 9.2 Write property tests for cart invariants
+  - [ ]\* 9.2 Write property tests for cart invariants
     - **Property 24: Cart quantity replacement (not accumulation)**
     - **Property 25: Cart totals are correctly calculated and rounded**
     - **Property 26: Cart stock validation prevents over-ordering**
     - **Validates: Requirements 8.2, 8.4, 8.5**
 
-  - [ ]* 9.3 Write unit tests for cart-service
+  - [ ]\* 9.3 Write unit tests for cart-service
     - Test `quantity = 0` removes item
     - Test `401` for unauthenticated requests
     - Test `404` for non-existent product
@@ -266,12 +263,12 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `POST /addresses/{addressId}/default`: use `TransactWriteItems` to set `isDefault = true` on the target address and `isDefault = false` on the previously default address in a single atomic write
     - _Requirements: 9.6_
 
-  - [ ]* 10.3 Write property tests for address invariants
+  - [ ]\* 10.3 Write property tests for address invariants
     - **Property 27: Default address invariant — exactly one default per buyer**
     - **Property 28: Address ownership is enforced**
     - **Validates: Requirements 9.6, 9.7**
 
-  - [ ]* 10.4 Write unit tests for address-service
+  - [ ]\* 10.4 Write unit tests for address-service
     - Test validation errors for missing required fields and invalid E.164 phone
     - Test `404` for update/delete of address owned by another buyer
     - _Requirements: 9.2, 9.7_
@@ -283,7 +280,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Write `PaymentRecord` to `blipzo-{env}-payments` table with `orderId`, `method`, `status`, `transactionId` — never write `mockCardLast4`, `mockUpiRef`, or any credential field
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-  - [ ]* 11.2 Write unit tests for payment-service
+  - [ ]\* 11.2 Write unit tests for payment-service
     - Test each supported payment method returns correct `paymentStatus`
     - Test unsupported method returns `400`
     - Test DynamoDB write never includes card/UPI fields
@@ -297,7 +294,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - On payment failure return `402 PAYMENT_FAILED` with no side effects; on Payment Lambda unreachable return `503`
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-  - [ ]* 12.2 Write property tests for checkout atomicity and field persistence
+  - [ ]\* 12.2 Write property tests for checkout atomicity and field persistence
     - **Property 29: Checkout is atomic — all steps succeed or none persist**
     - **Property 30: Checkout persists all required order fields**
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.6**
@@ -307,7 +304,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `GET /orders/{orderId}`: `GetItem`, assert `buyerId === requestingUserId` (else `404`), return full `OrderRecord`
     - _Requirements: 12.1, 12.2, 12.3_
 
-  - [ ]* 12.4 Write property tests for order history and ownership
+  - [ ]\* 12.4 Write property tests for order history and ownership
     - **Property 31: Order history is paginated and sorted by timestamp descending**
     - **Property 32: Order ownership is enforced — buyers cannot see other buyers' orders**
     - **Validates: Requirements 12.1, 12.3**
@@ -316,7 +313,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `POST /orders/{orderId}/cancel`: assert ownership, check `orderStatus` is `Confirmed` or `Processing` (else `400 INVALID_STATUS`), update `orderStatus = 'Cancelled'`, invoke Payment Lambda mock refund for non-CoD orders; if refund succeeds set `refundStatus = 'Completed'`; if refund fails set `refundStatus = 'Pending'` (do not roll back cancellation)
     - _Requirements: 12.4, 12.5, 12.6_
 
-  - [ ]* 12.6 Write property tests for cancellation rules
+  - [ ]\* 12.6 Write property tests for cancellation rules
     - **Property 33: Cancellation is only permitted for eligible order statuses**
     - **Property 34: Refund failure during cancellation sets refund status to Pending**
     - **Validates: Requirements 12.4, 12.5, 12.6**
@@ -326,12 +323,12 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `GET /orders/return-exchange/{requestId}`: assert ownership, return `ReturnExchangeRequest` with current status and `sellerNotes`
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 14.3, 14.4_
 
-  - [ ]* 12.8 Write property tests for return/exchange eligibility
+  - [ ]\* 12.8 Write property tests for return/exchange eligibility
     - **Property 35: Return/exchange eligibility is determined by Seller_Policy at request time**
     - **Property 36: Policy updates do not retroactively affect pending return requests**
     - **Validates: Requirements 13.1, 13.2, 14.3, 14.4**
 
-  - [ ]* 12.9 Write unit tests for order-service
+  - [ ]\* 12.9 Write unit tests for order-service
     - Test checkout with empty cart returns validation error
     - Test CoD sets `paymentStatus = 'Pending'` and `transactionId` is absent
     - Test cancellation of `Shipped` order returns `400`
@@ -340,7 +337,6 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
 
 - [ ] 13. Checkpoint — All backend services
   - Ensure all service unit and property tests pass. Run `pnpm turbo typecheck` across all services. Ask the user if questions arise.
-
 
 - [ ] 14. Observability middleware (all services)
   - [ ] 14.1 Implement structured logger Middy middleware
@@ -354,7 +350,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Emit `OrderPlacementSuccess` metric on successful checkout, `PaymentFailureCount` on payment failure, `CatalogueResponseLatency` (duration in ms) on every catalogue response
     - _Requirements: 16.4_
 
-  - [ ]* 14.3 Write property tests for structured log correctness
+  - [ ]\* 14.3 Write property tests for structured log correctness
     - **Property 37: Structured logs contain all required fields for every Lambda invocation**
     - **Property 38: Error logs do not contain stack traces or sensitive data**
     - **Validates: Requirements 16.1, 16.2**
@@ -412,18 +408,17 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Create `src/pages/Profile/AddressesPage.tsx`: list addresses, Add Address form (React Hook Form + `addressSchema`), Edit, Delete, Set Default actions
     - _Requirements: 9.1, 9.3, 9.4, 9.5, 9.6, 18.1_
 
-  - [ ]* 15.9 Write Vitest + React Testing Library unit tests for web components
+  - [ ]\* 15.9 Write Vitest + React Testing Library unit tests for web components
     - Test auth forms: validation errors shown for invalid inputs, successful submit calls correct API
     - Test cart page: quantity update triggers PUT, subtotals and total render correctly
     - Test offline indicator renders when `navigator.onLine = false`
     - _Requirements: 18.1, 18.5_
 
-  - [ ]* 15.10 Write Playwright E2E tests for web critical flows
+  - [ ]\* 15.10 Write Playwright E2E tests for web critical flows
     - Registration → Login → Browse catalogue → Add to cart → Checkout flow
     - Seller: Login → Add product → Set policy
     - Viewport tests at 320px, 768px, 1280px, 1920px
     - _Requirements: 18.1_
-
 
 - [ ] 16. Mobile application (`apps/mobile`)
   - [ ] 16.1 Scaffold mobile app with Expo + React Native + NativeWind
@@ -460,13 +455,13 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Create `src/screens/SellerDashboard/` with product list, add/edit product forms (including image picker using `expo-image-picker`), and policy configuration form
     - _Requirements: 5.1, 5.5, 14.1, 18.2_
 
-  - [ ]* 16.7 Write React Native Testing Library unit tests for mobile screens
+  - [ ]\* 16.7 Write React Native Testing Library unit tests for mobile screens
     - Test auth screens: validation errors for invalid inputs
     - Test cart screen: quantity update and total recalculation
     - Test offline banner renders when network is unavailable
     - _Requirements: 18.2, 18.5_
 
-  - [ ]* 16.8 Write Detox E2E tests for Android critical flows
+  - [ ]\* 16.8 Write Detox E2E tests for Android critical flows
     - Registration → Login → Browse → Add to cart → Checkout on Android emulator (API 26+)
     - _Requirements: 18.2_
 
@@ -491,7 +486,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Add `cdk synth` step to validate CloudFormation output before deploy
     - _Requirements: 17.3_
 
-  - [ ]* 18.4 Write unit tests for Turborepo pipeline configuration
+  - [ ]\* 18.4 Write unit tests for Turborepo pipeline configuration
     - Verify `turbo.json` pipeline tasks have correct `dependsOn` and `outputs` by running `pnpm turbo run build --dry-run` and asserting expected task graph
     - _Requirements: 17.3_
 
@@ -515,7 +510,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test expired JWT returns `401`
     - _Requirements: 4.1, 4.2, 4.3, 4.5_
 
-  - [ ]* 19.3 Write k6 performance tests for catalogue and auth endpoints
+  - [ ]\* 19.3 Write k6 performance tests for catalogue and auth endpoints
     - Catalogue endpoint: 100 virtual users, 60-second ramp, assert p99 < 2000ms
     - Auth login endpoint: 50 virtual users, assert p99 < 5000ms (cold start budget)
     - _Requirements: 15.2, 15.4_
@@ -523,6 +518,64 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
 - [ ] 20. Final checkpoint — Full platform
   - Ensure all unit, property, integration, and E2E tests pass. Run `pnpm turbo typecheck` and `pnpm turbo lint` with zero errors. Verify `cdk synth` succeeds for all three environments. Ask the user if questions arise.
 
+- [ ] 21. Design tokens and color theme setup
+  - [ ] 21.1 Define shared design tokens (color palette) in the shared package
+    - Create `packages/shared/src/design-tokens/colors.ts` exporting the blue and purple color palette as named constants (e.g., `brand.primary` for blue, `brand.secondary` for purple) with light/dark shades for hover, active, and disabled states
+    - Include WCAG AA-compliant foreground colors for each background shade (ensure contrast ratio ≥ 4.5:1 for normal text, ≥ 3:1 for large text)
+    - Export a `designTokens` object consumable by both Tailwind CSS config and NativeWind theme config
+    - Add barrel export from `packages/shared/src/index.ts`
+    - _Requirements: 20.3, 20.4_
+
+  - [ ] 21.2 Apply blue-purple color theme to web app (Tailwind config)
+    - Update `apps/web/tailwind.config.ts` to import color tokens from `@blipzo/shared` and extend the Tailwind theme with `colors.brand.primary` (blue) and `colors.brand.secondary` (purple)
+    - Update global CSS / Tailwind base layer to apply brand colors to buttons, links, headers, and navigation elements
+    - Verify all color combinations meet WCAG AA contrast ratio requirements
+    - _Requirements: 20.1, 20.4_
+
+  - [ ] 21.3 Apply blue-purple color theme to mobile app (NativeWind/theme config)
+    - Update `apps/mobile/tailwind.config.ts` (NativeWind) to import color tokens from `@blipzo/shared` and extend the theme with the same brand primary (blue) and secondary (purple) colors
+    - Update shared navigation theme and component styles to use brand colors for buttons, links, headers, and tab bar
+    - Verify all color combinations meet WCAG AA contrast ratio requirements
+    - _Requirements: 20.2, 20.4_
+
+  - [ ]\* 21.4 Write unit tests for design token accessibility compliance
+    - Test that all foreground/background color pairs in the design tokens meet WCAG AA contrast ratio (≥ 4.5:1 for normal text)
+    - Test that the exported token structure matches the expected schema for both Tailwind and NativeWind consumption
+    - _Requirements: 20.3, 20.4_
+
+- [ ] 22. Logo asset setup and integration
+  - [ ] 22.1 Copy and configure logo asset for web and mobile
+    - Copy `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` to `apps/web/public/logo.png` for the web app
+    - Copy `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` to `apps/mobile/assets/logo.png` for the mobile app
+    - Generate required splash screen asset sizes from the logo for Expo (e.g., `splash.png` at recommended 1284×2778 resolution with the logo centered on a brand-colored background)
+    - _Requirements: 19.1, 19.2, 19.4_
+
+  - [ ] 22.2 Add logo to web app header/navigation
+    - Update the web app's header/navigation component to display the logo image (`/logo.png`) with proper `alt` text ("BlipZo")
+    - Apply CSS to maintain original aspect ratio (`object-fit: contain` or equivalent) without distortion
+    - Ensure the logo is responsive and appropriately sized across all breakpoints (320px–1920px)
+    - _Requirements: 19.1, 19.4_
+
+  - [ ] 22.3 Add logo to mobile app header/navigation
+    - Update the mobile app's navigation header (React Navigation) to display the logo image from `assets/logo.png`
+    - Use `resizeMode: 'contain'` to maintain original aspect ratio without distortion
+    - Ensure the logo renders correctly on various Android screen densities
+    - _Requirements: 19.2, 19.4_
+
+  - [ ] 22.4 Configure mobile splash screen with logo
+    - Update `apps/mobile/app.json` (or `app.config.ts`) to configure the Expo splash screen with the logo centered on a brand-colored background (using the primary blue from design tokens)
+    - Set `splash.resizeMode` to `contain` to maintain aspect ratio
+    - Ensure the splash screen displays until the app is fully loaded (use `expo-splash-screen` `preventAutoHideAsync` / `hideAsync` pattern in the root component)
+    - _Requirements: 19.3, 19.4_
+
+  - [ ]\* 22.5 Write unit tests for logo rendering
+    - Test web header component renders an `<img>` element with correct `src` and `alt` attributes
+    - Test mobile header renders the logo `Image` component with `resizeMode: 'contain'`
+    - Test that the logo element has appropriate accessibility properties
+    - _Requirements: 19.1, 19.2, 19.4_
+
+- [ ] 23. Checkpoint — Branding and theme
+  - Ensure all design token tests pass. Verify logo renders correctly in web and mobile headers. Verify splash screen displays on mobile app launch. Run `pnpm turbo typecheck` with zero errors. Ask the user if questions arise.
 
 ## Notes
 
@@ -534,6 +587,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
 - The Payment_Service is invoked Lambda-to-Lambda (not via API Gateway); no public route is exposed
 - Search is implemented via DynamoDB `FilterExpression` on `searchTokens` for academic scope; production would use OpenSearch
 - iOS support (Requirement 18.3) is deferred — the mobile app is scaffolded to support it via Expo but iOS-specific tasks are not included
+- Tasks 21–23 cover branding (logo, splash screen, color theme) per Requirements 19 and 20; these depend on the web and mobile app scaffolding (tasks 15.1 and 16.1) being complete
+- The logo source file is at `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` — it must be copied into the respective app asset directories, not referenced from the external path at runtime
 
 ## Task Dependency Graph
 
@@ -577,7 +632,11 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     { "id": 34, "tasks": ["18.2", "18.3"] },
     { "id": 35, "tasks": ["18.4", "19.1"] },
     { "id": 36, "tasks": ["19.2"] },
-    { "id": 37, "tasks": ["19.3"] }
+    { "id": 37, "tasks": ["19.3"] },
+    { "id": 38, "tasks": ["21.1"] },
+    { "id": 39, "tasks": ["21.2", "21.3", "22.1"] },
+    { "id": 40, "tasks": ["21.4", "22.2", "22.3", "22.4"] },
+    { "id": 41, "tasks": ["22.5"] }
   ]
 }
 ```

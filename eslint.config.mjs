@@ -1,18 +1,19 @@
 // @ts-check
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
 import importX from 'eslint-plugin-import-x';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   // Global ignores
   {
     ignores: [
       'node_modules/**',
-      'dist/**',
+      '**/dist/**',
       '.turbo/**',
       'coverage/**',
       'build/**',
       '.next/**',
+      'infra/cdk/cdk.out/**',
     ],
   },
 

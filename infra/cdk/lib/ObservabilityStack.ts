@@ -1,9 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
 /**
@@ -95,9 +95,7 @@ export class ObservabilityStack extends cdk.NestedStack {
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
-    paymentFailureAlarm.addAlarmAction(
-      new cdk.aws_cloudwatch_actions.SnsAction(this.alarmTopic),
-    );
+    paymentFailureAlarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(this.alarmTopic));
 
     // --- Catalogue Response Latency p99 > 2000ms ---
     const catalogueLatencyMetric = new cloudwatch.Metric({
@@ -117,9 +115,7 @@ export class ObservabilityStack extends cdk.NestedStack {
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
-    catalogueLatencyAlarm.addAlarmAction(
-      new cdk.aws_cloudwatch_actions.SnsAction(this.alarmTopic),
-    );
+    catalogueLatencyAlarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(this.alarmTopic));
 
     // --- Lambda Error Rate > 1% (per function) ---
     for (const service of SERVICES) {
@@ -146,19 +142,21 @@ export class ObservabilityStack extends cdk.NestedStack {
         label: `${service} Error Rate (%)`,
       });
 
-      const errorRateAlarm = new cloudwatch.Alarm(this, `${this.capitalize(service)}ErrorRateAlarm`, {
-        alarmName: `blipzo-${stageName}-${service}-error-rate`,
-        alarmDescription: `Lambda error rate for ${service} exceeds 1%`,
-        metric: errorRateMetric,
-        threshold: 1,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
-
-      errorRateAlarm.addAlarmAction(
-        new cdk.aws_cloudwatch_actions.SnsAction(this.alarmTopic),
+      const errorRateAlarm = new cloudwatch.Alarm(
+        this,
+        `${this.capitalize(service)}ErrorRateAlarm`,
+        {
+          alarmName: `blipzo-${stageName}-${service}-error-rate`,
+          alarmDescription: `Lambda error rate for ${service} exceeds 1%`,
+          metric: errorRateMetric,
+          threshold: 1,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        },
       );
+
+      errorRateAlarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(this.alarmTopic));
     }
 
     // =========================================================================

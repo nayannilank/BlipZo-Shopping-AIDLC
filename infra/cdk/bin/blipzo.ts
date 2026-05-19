@@ -8,6 +8,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { BlipzoStack } from '../lib/BlipzoStack';
 
 const app = new cdk.App();
