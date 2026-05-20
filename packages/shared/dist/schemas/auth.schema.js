@@ -36,9 +36,7 @@ export const emailSchema = z
 /**
  * Phone number in E.164 format: + followed by 7-15 digits.
  */
-export const e164PhoneSchema = z
-    .string()
-    .regex(e164PhoneRegex, {
+export const e164PhoneSchema = z.string().regex(e164PhoneRegex, {
     message: 'Phone must be in E.164 format (+ followed by 7-15 digits)',
 });
 /**

@@ -1,8 +1,8 @@
 import middy from '@middy/core';
-import httpJsonBodyParser from '@middy/http-json-body-parser';
 import httpErrorHandler from '@middy/http-error-handler';
-import { validateRegisterInput, validateLoginInput, validateOtpRequestInput, validateOtpVerifyInput, validateTokenRefreshInput, } from './validators.js';
+import httpJsonBodyParser from '@middy/http-json-body-parser';
 import { registerUser, loginUser, requestOtp, verifyOtp, refreshToken } from './service.js';
+import { validateRegisterInput, validateLoginInput, validateOtpRequestInput, validateOtpVerifyInput, validateTokenRefreshInput, } from './validators.js';
 /**
  * POST /auth/register — thin handler that delegates to service layer.
  * Validates input, calls registerUser, returns 201 with userId and message.

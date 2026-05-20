@@ -53,7 +53,7 @@ export function validateRegisterInput(event: APIGatewayProxyEvent): RegisterRequ
     throw createError(400, 'Either email or phone is required for registration');
   }
 
-  return data;
+  return data as RegisterRequest;
 }
 
 /**

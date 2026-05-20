@@ -294,14 +294,14 @@ export async function requestOtp(input) {
         });
         await docClient.send(putCommand);
     }
-    catch (error) {
+    catch {
         // OTP storage failure — treat as delivery failure
         // Requirement 3.6: do not expose internal details
         createOtpDeliveryFailedError();
     }
     // Step 5: Log OTP to CloudWatch in dev/qa only (mock delivery)
     if (STAGE === 'dev' || STAGE === 'qa') {
-        console.log(`[OTP_DELIVERY] Phone: ${phone}, OTP: ${otp}, ExpiresAt: ${expiresAt}`);
+        console.log(`[OTP_DELIVERY] Phone: ${phone}, OTP: ${otp}, ExpiresAt: ${String(expiresAt)}`);
     }
     return { message: 'OTP sent' };
 }
@@ -418,7 +418,7 @@ async function generateTokensForUser(phone) {
         // Instead, we'll set a temporary internal password and authenticate with it.
         // In production, this would use a custom auth challenge flow.
         // Generate a temporary password for token issuance
-        const tempPassword = `TempOtp!${Date.now()}${Math.random().toString(36).slice(2)}`;
+        const tempPassword = `TempOtp!${String(Date.now())}${Math.random().toString(36).slice(2)}`;
         // Set temporary password
         const setPasswordCommand = new AdminSetUserPasswordCommand({
             UserPoolId: USER_POOL_ID,

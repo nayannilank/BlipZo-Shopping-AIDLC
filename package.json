@@ -4,10 +4,15 @@
   "version": "0.0.0",
   "description": "BlipZo cloud-native e-commerce platform monorepo",
   "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
+    "node": ">=22.0.0"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*",
+    "infra/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",

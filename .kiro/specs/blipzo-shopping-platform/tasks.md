@@ -143,7 +143,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
   - Ensure all auth-service unit and property tests pass. Verify `cdk synth` still succeeds. Ask the user if questions arise.
 
 - [ ] 6. Product_Service Lambda
-  - [ ] 6.1 Scaffold product-service and implement product creation
+  - [x] 6.1 Scaffold product-service and implement product creation
     - Create `services/product-service/` with standard Middy handler structure
     - Implement `POST /products`: validate with `createProductSchema`, generate pre-signed S3 PUT URLs for each image, write product record to DynamoDB only after all uploads are confirmed; if any S3 upload fails return `503` and write nothing to DynamoDB
     - Set `GSI1PK = CATEGORY#{primaryCategory}`, `GSI1SK = CREATED#{createdAt}`, `GSI2PK = SELLER#{sellerId}`, `GSI2SK = CREATED#{createdAt}`, `searchTokens = lowercase(name + ' ' + description)`
