@@ -1,0 +1,33 @@
+{
+  "name": "@blipzo/address-service",
+  "version": "0.0.1",
+  "description": "BlipZo Address Service - CRUD for Buyer delivery addresses and default address management",
+  "private": true,
+  "type": "module",
+  "main": "./dist/handler.js",
+  "types": "./dist/handler.d.ts",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run",
+    "test:property": "vitest run --config vitest.property.config.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1049.0",
+    "@aws-sdk/lib-dynamodb": "^3.1049.0",
+    "@blipzo/shared": "*",
+    "@middy/core": "^5.5.0",
+    "@middy/http-error-handler": "^5.5.0",
+    "@middy/http-json-body-parser": "^5.5.0",
+    "http-errors": "^2.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/http-errors": "^2.0.4",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}

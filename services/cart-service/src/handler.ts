@@ -1,0 +1,118 @@
+import middy from '@middy/core';
+import httpErrorHandler from '@middy/http-error-handler';
+import httpJsonBodyParser from '@middy/http-json-body-parser';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
+import { getCart, putCartItem, removeCartItem, clearCart } from './service.js';
+import { extractBuyerId, validateCartItemInput, extractProductIdFromPath } from './validators.js';
+
+/**
+ * GET /cart — returns the buyer's cart with enriched product data, subtotals, and total.
+ * Queries carts table with PK = BUYER#{buyerId}, batch-gets product details,
+ * computes subtotal = round(price * quantity, 2) per item and total = round(sum(subtotals), 2).
+ *
+ * Requirements: 8.5, 8.7
+ */
+const rawGetCartHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const buyerId = extractBuyerId(event);
+  const cart = await getCart(buyerId);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cart),
+  };
+};
+
+export const getCartHandler = middy(rawGetCartHandler).use(
+  httpErrorHandler({
+    fallbackMessage: 'An unexpected error occurred. Please try again later.',
+  }),
+);
+
+/**
+ * PUT /cart/items — adds or updates a cart item.
+ * Validates quantity (0–999); if quantity = 0 calls DeleteItem;
+ * else verifies product exists and quantity ≤ stockQuantity (else 400 INSUFFICIENT_STOCK),
+ * PutItem replacing existing entry.
+ *
+ * Requirements: 8.1, 8.2, 8.3, 8.4, 8.7, 8.8
+ */
+const rawPutCartItemHandler = async (
+  event: APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  const buyerId = extractBuyerId(event);
+  const { productId, quantity } = validateCartItemInput(event);
+  const cart = await putCartItem(buyerId, productId, quantity);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cart),
+  };
+};
+
+export const putCartItemHandler = middy(rawPutCartItemHandler)
+  .use(httpJsonBodyParser())
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
+
+/**
+ * DELETE /cart/items/{productId} — removes a single item from the cart.
+ * DeleteItem, returns updated cart.
+ *
+ * Requirements: 8.3, 8.7
+ */
+const rawRemoveCartItemHandler = async (
+  event: APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  const buyerId = extractBuyerId(event);
+  const productId = extractProductIdFromPath(event);
+  const cart = await removeCartItem(buyerId, productId);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cart),
+  };
+};
+
+export const removeCartItemHandler = middy(rawRemoveCartItemHandler).use(
+  httpErrorHandler({
+    fallbackMessage: 'An unexpected error occurred. Please try again later.',
+  }),
+);
+
+/**
+ * DELETE /cart — clears the entire cart for the buyer.
+ * BatchWriteItem to delete all items, returns empty cart.
+ *
+ * Requirements: 8.6, 8.7
+ */
+const rawClearCartHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const buyerId = extractBuyerId(event);
+  const cart = await clearCart(buyerId);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cart),
+  };
+};
+
+export const clearCartHandler = middy(rawClearCartHandler).use(
+  httpErrorHandler({
+    fallbackMessage: 'An unexpected error occurred. Please try again later.',
+  }),
+);

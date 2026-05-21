@@ -1,7 +1,11 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { describe, it, expect } from 'vitest';
 
-import { validateCreateProductInput, extractSellerId } from './validators.js';
+import {
+  validateCreateProductInput,
+  extractSellerId,
+  validateSellerPolicyInput,
+} from './validators.js';
 
 function createMockEvent(
   body: unknown,
@@ -165,5 +169,103 @@ describe('extractSellerId', () => {
   it('should throw 401 when no authorizer present', () => {
     const event = createMockEvent({});
     expect(() => extractSellerId(event)).toThrow('Unauthorized');
+  });
+});
+
+describe('validateSellerPolicyInput', () => {
+  it('should accept a valid seller policy with all fields', () => {
+    const event = createMockEvent({
+      returnWindowDays: 7,
+      exchangeAllowed: true,
+      conditions: 'Item must be in original packaging',
+    });
+    const result = validateSellerPolicyInput(event);
+
+    expect(result.returnWindowDays).toBe(7);
+    expect(result.exchangeAllowed).toBe(true);
+    expect(result.conditions).toBe('Item must be in original packaging');
+  });
+
+  it('should accept a valid seller policy without optional conditions', () => {
+    const event = createMockEvent({
+      returnWindowDays: 14,
+      exchangeAllowed: false,
+    });
+    const result = validateSellerPolicyInput(event);
+
+    expect(result.returnWindowDays).toBe(14);
+    expect(result.exchangeAllowed).toBe(false);
+    expect(result.conditions).toBeUndefined();
+  });
+
+  it('should accept returnWindowDays = 0 (non-returnable)', () => {
+    const event = createMockEvent({
+      returnWindowDays: 0,
+      exchangeAllowed: false,
+    });
+    const result = validateSellerPolicyInput(event);
+
+    expect(result.returnWindowDays).toBe(0);
+  });
+
+  it('should accept returnWindowDays = 30 (maximum)', () => {
+    const event = createMockEvent({
+      returnWindowDays: 30,
+      exchangeAllowed: true,
+    });
+    const result = validateSellerPolicyInput(event);
+
+    expect(result.returnWindowDays).toBe(30);
+  });
+
+  it('should reject when body is missing', () => {
+    const event = createMockEvent(null);
+    expect(() => validateSellerPolicyInput(event)).toThrow('Request body is required');
+  });
+
+  it('should reject when returnWindowDays exceeds 30', () => {
+    const event = createMockEvent({
+      returnWindowDays: 31,
+      exchangeAllowed: true,
+    });
+    expect(() => validateSellerPolicyInput(event)).toThrow('Validation failed');
+  });
+
+  it('should reject when returnWindowDays is negative', () => {
+    const event = createMockEvent({
+      returnWindowDays: -1,
+      exchangeAllowed: true,
+    });
+    expect(() => validateSellerPolicyInput(event)).toThrow('Validation failed');
+  });
+
+  it('should reject when returnWindowDays is not an integer', () => {
+    const event = createMockEvent({
+      returnWindowDays: 7.5,
+      exchangeAllowed: true,
+    });
+    expect(() => validateSellerPolicyInput(event)).toThrow('Validation failed');
+  });
+
+  it('should reject when exchangeAllowed is not a boolean', () => {
+    const event = createMockEvent({
+      returnWindowDays: 7,
+      exchangeAllowed: 'yes',
+    });
+    expect(() => validateSellerPolicyInput(event)).toThrow('Validation failed');
+  });
+
+  it('should reject when returnWindowDays is missing', () => {
+    const event = createMockEvent({
+      exchangeAllowed: true,
+    });
+    expect(() => validateSellerPolicyInput(event)).toThrow('Validation failed');
+  });
+
+  it('should reject when exchangeAllowed is missing', () => {
+    const event = createMockEvent({
+      returnWindowDays: 7,
+    });
+    expect(() => validateSellerPolicyInput(event)).toThrow('Validation failed');
   });
 });

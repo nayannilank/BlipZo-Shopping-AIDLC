@@ -1,0 +1,19 @@
+
+> @blipzo/order-service@0.0.1 test:unit
+> vitest run
+
+
+ RUN  v2.1.9 /Users/nayannilank/Desktop/Nayan/Projects/BlipZo-Shopping-AIDLC/services/order-service
+
+stderr | src/cancel-order.test.ts > cancelOrder > should still return Cancelled order even if refundStatus DynamoDB update fails
+Failed to update refundStatus in DynamoDB
+
+ ✓ src/cancel-order.test.ts (14 tests) 4ms
+ ✓ src/return-exchange.test.ts (17 tests) 4ms
+ ✓ src/order-history.test.ts (17 tests) 24ms
+
+ Test Files  3 passed (3)
+      Tests  48 passed (48)
+   Start at  20:59:50
+   Duration  1.15s (transform 268ms, setup 0ms, collect 488ms, tests 31ms, environment 0ms, prepare 611ms)
+

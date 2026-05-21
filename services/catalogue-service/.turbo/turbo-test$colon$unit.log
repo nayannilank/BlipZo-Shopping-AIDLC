@@ -1,0 +1,15 @@
+
+> @blipzo/catalogue-service@0.0.1 test:unit
+> vitest run
+
+
+ RUN  v2.1.9 /Users/nayannilank/Desktop/Nayan/Projects/BlipZo-Shopping-AIDLC/services/catalogue-service
+
+ ✓ src/validators.test.ts (16 tests) 2ms
+ ✓ src/service.test.ts (22 tests) 8ms
+
+ Test Files  2 passed (2)
+      Tests  38 passed (38)
+   Start at  20:59:50
+   Duration  1.08s (transform 255ms, setup 0ms, collect 222ms, tests 10ms, environment 2ms, prepare 329ms)
+

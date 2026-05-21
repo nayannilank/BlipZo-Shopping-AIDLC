@@ -1,0 +1,15 @@
+
+> @blipzo/wishlist-service@0.0.1 test:unit
+> vitest run
+
+
+ RUN  v2.1.9 /Users/nayannilank/Desktop/Nayan/Projects/BlipZo-Shopping-AIDLC/services/wishlist-service
+
+ ✓ src/service.test.ts (13 tests) 3ms
+ ✓ src/validators.test.ts (11 tests) 4ms
+
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  20:59:50
+   Duration  1.20s (transform 183ms, setup 0ms, collect 313ms, tests 7ms, environment 0ms, prepare 507ms)
+

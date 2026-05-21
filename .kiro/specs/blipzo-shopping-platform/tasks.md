@@ -150,13 +150,13 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return `201` with full `ProductRecord`
     - _Requirements: 5.1, 5.2, 5.8_
 
-  - [ ]\* 6.2 Write property tests for product creation
+  - [ ] 6.2 Write property tests for product creation
     - **Property 11: Valid product creation persists all fields and returns a unique ID**
     - **Property 12: Invalid product fields are rejected with field-specific errors**
     - **Property 15: S3 upload failure prevents partial product creation (atomicity)**
     - **Validates: Requirements 5.1, 5.2, 5.8**
 
-  - [ ] 6.3 Implement product update and delete handlers
+  - [x] 6.3 Implement product update and delete handlers
     - Implement `PATCH /products/{productId}`: read product, assert `sellerId === requestingUserId` (else `403`), validate supplied fields with `updateProductSchema`, apply partial update to DynamoDB using `UpdateExpression` for only supplied fields, return updated `ProductRecord`
     - Implement `DELETE /products/{productId}`: read product, assert ownership, set `isDeleted = true` in DynamoDB, return `200`
     - Implement `GET /products/seller/me`: query GSI2 with `SELLER#{sellerId}`, return paginated list
@@ -167,7 +167,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 14: Product update modifies only the supplied fields**
     - **Validates: Requirements 5.4, 5.5, 5.6**
 
-  - [ ] 6.5 Implement Seller_Policy handler
+  - [x] 6.5 Implement Seller_Policy handler
     - Implement `POST /products/{productId}/policy`: assert product ownership, validate `sellerPolicySchema` (returnWindowDays 0–30, exchangeAllowed boolean, optional conditions string), write `sellerPolicy` map onto the product DynamoDB item with a new `policyVersion` UUID and `createdAt` timestamp
     - Return `200` with updated `ProductRecord` including `sellerPolicy`
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
@@ -178,8 +178,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test policy update stores new `policyVersion` UUID
     - _Requirements: 5.2, 5.3, 14.1_
 
-- [ ] 7. Catalogue_Service Lambda
-  - [ ] 7.1 Scaffold catalogue-service and implement category browsing
+- [x] 7. Catalogue_Service Lambda
+  - [x] 7.1 Scaffold catalogue-service and implement category browsing
     - Create `services/catalogue-service/` with standard Middy handler structure (read-only DynamoDB access)
     - Implement `GET /catalogue/categories`: scan the Categories table and return all category IDs and names
     - Implement `GET /catalogue/categories/{categoryId}`: validate `categoryId` exists, query GSI1 with `PK = CATEGORY#{categoryId}`, filter `isDeleted = false`, apply cursor-based pagination (base64-encode `LastEvaluatedKey`), return `CatalogueListResponse`
@@ -191,7 +191,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 17: Catalogue pagination stays within bounds and cursors are consistent**
     - **Validates: Requirements 6.1, 6.5**
 
-  - [ ] 7.3 Implement product detail and search handlers
+  - [x] 7.3 Implement product detail and search handlers
     - Implement `GET /catalogue/products/{productId}`: `GetItem` by `PRODUCT#{productId}`, return `404` if not found or `isDeleted = true`, else return full product detail including `sellerPolicy` summary
     - Implement `GET /catalogue/search`: validate `q` (1–100 non-whitespace chars), query GSI1 with `FilterExpression contains(searchTokens, lowercase(q))`, apply pagination, return `CatalogueListResponse`
     - _Requirements: 6.2, 6.3, 6.6, 6.7_
@@ -206,8 +206,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test cursor decoding/encoding round trip
     - _Requirements: 6.3, 6.4, 6.7_
 
-- [ ] 8. Wishlist_Service Lambda
-  - [ ] 8.1 Scaffold wishlist-service and implement add/remove/get handlers
+- [x] 8. Wishlist_Service Lambda
+  - [x] 8.1 Scaffold wishlist-service and implement add/remove/get handlers
     - Create `services/wishlist-service/` with standard Middy handler structure
     - Implement `GET /wishlist`: query `blipzo-{env}-wishlists` with `PK = BUYER#{buyerId}`, batch-get product details from Products table, enrich each item with `name`, `price`, `primaryImageUrl`, `isAvailable` (false if `isDeleted = true`)
     - Implement `POST /wishlist/items`: verify product exists in Products table (else `404`), use `TransactWriteItems` to check counter item `SK=COUNT < 200` and `PutItem` the wishlist entry atomically; if already present return current wishlist unchanged
@@ -229,7 +229,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - _Requirements: 7.4, 7.8, 7.9_
 
 - [ ] 9. Cart_Service Lambda
-  - [ ] 9.1 Scaffold cart-service and implement cart handlers
+  - [x] 9.1 Scaffold cart-service and implement cart handlers
     - Create `services/cart-service/` with standard Middy handler structure
     - Implement `PUT /cart/items`: validate `quantity` (0–999); if `quantity = 0` call `DeleteItem`; else verify product exists and `quantity ≤ stockQuantity` (else `400 INSUFFICIENT_STOCK`), `PutItem` replacing existing entry
     - Implement `GET /cart`: query `blipzo-{env}-carts` with `PK = BUYER#{buyerId}`, batch-get product details, compute `subtotal = round(price * quantity, 2)` per item and `total = round(sum(subtotals), 2)`, return `CartResponse`
@@ -250,8 +250,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test clear cart returns empty `CartResponse`
     - _Requirements: 8.3, 8.7, 8.8_
 
-- [ ] 10. Address_Service Lambda
-  - [ ] 10.1 Scaffold address-service and implement CRUD handlers
+- [x] 10. Address_Service Lambda
+  - [x] 10.1 Scaffold address-service and implement CRUD handlers
     - Create `services/address-service/` with standard Middy handler structure
     - Implement `POST /addresses`: validate with `addressSchema` (fullName, E.164 phone, line1, city, state, postalCode, country), `PutItem` with `PK = BUYER#{buyerId}`, `SK = ADDRESS#{uuid}`, return `201` with `AddressRecord`
     - Implement `GET /addresses`: query by `PK = BUYER#{buyerId}`, return all addresses
@@ -259,7 +259,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Implement `DELETE /addresses/{addressId}`: assert ownership, `DeleteItem`, return `200`
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.7_
 
-  - [ ] 10.2 Implement default address handler
+  - [x] 10.2 Implement default address handler
     - Implement `POST /addresses/{addressId}/default`: use `TransactWriteItems` to set `isDefault = true` on the target address and `isDefault = false` on the previously default address in a single atomic write
     - _Requirements: 9.6_
 
@@ -273,8 +273,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test `404` for update/delete of address owned by another buyer
     - _Requirements: 9.2, 9.7_
 
-- [ ] 11. Payment_Service Lambda
-  - [ ] 11.1 Scaffold payment-service and implement mock payment handler
+- [x] 11. Payment_Service Lambda
+  - [x] 11.1 Scaffold payment-service and implement mock payment handler
     - Create `services/payment-service/` with standard Middy handler structure (invoked Lambda-to-Lambda, no API Gateway route)
     - Implement `processPayment(PaymentRequest): Promise<PaymentResponse>`: for UPI/CreditCard/DebitCard return `{ success: true, transactionId: uuid(), paymentStatus: 'Paid' }`; for CashOnDelivery return `{ success: true, paymentStatus: 'Pending' }`; for unsupported method throw `400 VALIDATION_ERROR`
     - Write `PaymentRecord` to `blipzo-{env}-payments` table with `orderId`, `method`, `status`, `transactionId` — never write `mockCardLast4`, `mockUpiRef`, or any credential field
@@ -286,8 +286,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test DynamoDB write never includes card/UPI fields
     - _Requirements: 11.1, 11.2, 11.3, 11.5_
 
-- [ ] 12. Order_Service Lambda
-  - [ ] 12.1 Scaffold order-service and implement checkout handler
+- [x] 12. Order_Service Lambda
+  - [x] 12.1 Scaffold order-service and implement checkout handler
     - Create `services/order-service/` with standard Middy handler structure
     - Implement `POST /orders/checkout`: (1) validate `CheckoutRequest`; (2) query cart items; (3) batch-get product stock — if any item has `quantity > stockQuantity` return `400 INSUFFICIENT_STOCK` listing out-of-stock items; (4) invoke Payment Lambda via AWS SDK; (5) use `TransactWriteItems` to atomically create `OrderRecord` + decrement all stock quantities; (6) clear buyer cart via `BatchWriteItem`; (7) return `201` with `OrderRecord`
     - Set `paymentStatus = 'Paid'` for non-CoD, `'Pending'` for CoD; `orderStatus = 'Confirmed'`; snapshot delivery address from Address table
@@ -299,7 +299,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 30: Checkout persists all required order fields**
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.6**
 
-  - [ ] 12.3 Implement order history and detail handlers
+  - [x] 12.3 Implement order history and detail handlers
     - Implement `GET /orders`: query GSI1 (`BUYER#{buyerId}`) with `ScanIndexForward=false`, support `limit` (1–100, default 20) and cursor pagination, return paginated `OrderRecord` summaries
     - Implement `GET /orders/{orderId}`: `GetItem`, assert `buyerId === requestingUserId` (else `404`), return full `OrderRecord`
     - _Requirements: 12.1, 12.2, 12.3_
@@ -309,7 +309,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 32: Order ownership is enforced — buyers cannot see other buyers' orders**
     - **Validates: Requirements 12.1, 12.3**
 
-  - [ ] 12.5 Implement order cancellation handler
+  - [x] 12.5 Implement order cancellation handler
     - Implement `POST /orders/{orderId}/cancel`: assert ownership, check `orderStatus` is `Confirmed` or `Processing` (else `400 INVALID_STATUS`), update `orderStatus = 'Cancelled'`, invoke Payment Lambda mock refund for non-CoD orders; if refund succeeds set `refundStatus = 'Completed'`; if refund fails set `refundStatus = 'Pending'` (do not roll back cancellation)
     - _Requirements: 12.4, 12.5, 12.6_
 
@@ -318,7 +318,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 34: Refund failure during cancellation sets refund status to Pending**
     - **Validates: Requirements 12.4, 12.5, 12.6**
 
-  - [ ] 12.7 Implement return/exchange request handlers
+  - [x] 12.7 Implement return/exchange request handlers
     - Implement `POST /orders/{orderId}/return-exchange`: assert ownership, assert `orderStatus = 'Delivered'`, read `sellerPolicy` from product record, check `returnWindowDays > 0` and request is within window (else `400`), create `ReturnExchangeRequest` record with `policyVersionAtRequest` snapshot, return `201` with `requestId`
     - Implement `GET /orders/return-exchange/{requestId}`: assert ownership, return `ReturnExchangeRequest` with current status and `sellerNotes`
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 14.3, 14.4_
@@ -335,7 +335,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test return request for non-delivered order returns `400`
     - _Requirements: 10.1, 10.5, 12.6, 13.3_
 
-- [ ] 13. Checkpoint — All backend services
+- [x] 13. Checkpoint — All backend services
   - Ensure all service unit and property tests pass. Run `pnpm turbo typecheck` across all services. Ask the user if questions arise.
 
 - [ ] 14. Observability middleware (all services)

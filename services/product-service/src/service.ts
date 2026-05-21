@@ -1,11 +1,29 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { CreateProductRequest, ProductRecord, ImageUpload } from '@blipzo/shared';
+import type {
+  CreateProductRequest,
+  ProductRecord,
+  ImageUpload,
+  UpdateProductSchemaInput,
+  SellerPolicy,
+  SellerPolicySchemaInput,
+} from '@blipzo/shared';
 import { v4 as uuidv4 } from 'uuid';
 
-import { createS3UploadFailedError, createServiceUnavailableError } from './errors.js';
+import {
+  createForbiddenError,
+  createNotFoundError,
+  createS3UploadFailedError,
+  createServiceUnavailableError,
+} from './errors.js';
 
 const dynamoDbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
@@ -168,4 +186,355 @@ export async function createProduct(
     product: productRecord,
     uploadUrls,
   };
+}
+
+/**
+ * Maps a DynamoDB item to a ProductRecord, handling optional sellerPolicy
+ * in a way compatible with exactOptionalPropertyTypes.
+ */
+function mapItemToProductRecord(item: Record<string, unknown>): ProductRecord {
+  const record: ProductRecord = {
+    productId: item['productId'] as string,
+    sellerId: item['sellerId'] as string,
+    name: item['name'] as string,
+    description: item['description'] as string,
+    price: item['price'] as number,
+    stockQuantity: item['stockQuantity'] as number,
+    categories: item['categories'] as string[],
+    imageUrls: item['imageUrls'] as string[],
+    isDeleted: item['isDeleted'] as boolean,
+    createdAt: item['createdAt'] as string,
+    updatedAt: item['updatedAt'] as string,
+  };
+
+  if (item['sellerPolicy']) {
+    record.sellerPolicy = item['sellerPolicy'] as SellerPolicy;
+  }
+
+  return record;
+}
+
+/**
+ * Retrieves a product by ID from DynamoDB.
+ * Returns the ProductRecord or throws 404 if not found.
+ */
+export async function getProductById(productId: string): Promise<ProductRecord> {
+  try {
+    const command = new GetCommand({
+      TableName: getProductsTableName(),
+      Key: {
+        PK: `PRODUCT#${productId}`,
+        SK: 'METADATA',
+      },
+    });
+
+    const result = await docClient.send(command);
+
+    if (!result.Item) {
+      createNotFoundError('Product not found');
+    }
+
+    return mapItemToProductRecord(result.Item as Record<string, unknown>);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error;
+    }
+    createServiceUnavailableError();
+  }
+}
+
+/**
+ * Asserts that the requesting user owns the product.
+ * Throws 403 if sellerId does not match.
+ *
+ * Requirements: 5.4, 5.6
+ */
+export function assertOwnership(product: ProductRecord, requestingUserId: string): void {
+  if (product.sellerId !== requestingUserId) {
+    createForbiddenError();
+  }
+}
+
+/**
+ * Updates a product with only the supplied fields using DynamoDB UpdateExpression.
+ * Only fields present in the validated input are updated.
+ *
+ * Requirements: 5.5, 5.7
+ */
+export async function updateProduct(
+  productId: string,
+  input: UpdateProductSchemaInput,
+  sellerId: string,
+): Promise<ProductRecord> {
+  // Step 1: Read the existing product
+  const existingProduct = await getProductById(productId);
+
+  // Step 2: Assert ownership
+  assertOwnership(existingProduct, sellerId);
+
+  // Step 3: Build UpdateExpression for only supplied fields
+  const now = new Date().toISOString();
+  const expressionAttributeNames: Record<string, string> = {};
+  const expressionAttributeValues: Record<string, unknown> = {};
+  const updateExpressions: string[] = [];
+
+  // Always update updatedAt
+  expressionAttributeNames['#updatedAt'] = 'updatedAt';
+  expressionAttributeValues[':updatedAt'] = now;
+  updateExpressions.push('#updatedAt = :updatedAt');
+
+  if (input.name !== undefined) {
+    expressionAttributeNames['#name'] = 'name';
+    expressionAttributeValues[':name'] = input.name;
+    updateExpressions.push('#name = :name');
+
+    // Update searchTokens when name changes
+    const description = input.description ?? existingProduct.description;
+    expressionAttributeNames['#searchTokens'] = 'searchTokens';
+    expressionAttributeValues[':searchTokens'] = generateSearchTokens(input.name, description);
+    updateExpressions.push('#searchTokens = :searchTokens');
+  }
+
+  if (input.description !== undefined) {
+    expressionAttributeNames['#description'] = 'description';
+    expressionAttributeValues[':description'] = input.description;
+    updateExpressions.push('#description = :description');
+
+    // Update searchTokens when description changes (if name wasn't already updated)
+    if (input.name === undefined) {
+      const name = existingProduct.name;
+      expressionAttributeNames['#searchTokens'] = 'searchTokens';
+      expressionAttributeValues[':searchTokens'] = generateSearchTokens(name, input.description);
+      updateExpressions.push('#searchTokens = :searchTokens');
+    }
+  }
+
+  if (input.price !== undefined) {
+    expressionAttributeNames['#price'] = 'price';
+    expressionAttributeValues[':price'] = input.price;
+    updateExpressions.push('#price = :price');
+  }
+
+  if (input.stockQuantity !== undefined) {
+    expressionAttributeNames['#stockQuantity'] = 'stockQuantity';
+    expressionAttributeValues[':stockQuantity'] = input.stockQuantity;
+    updateExpressions.push('#stockQuantity = :stockQuantity');
+  }
+
+  if (input.categories !== undefined) {
+    expressionAttributeNames['#categories'] = 'categories';
+    expressionAttributeValues[':categories'] = input.categories;
+    updateExpressions.push('#categories = :categories');
+
+    // Update GSI1PK if primary category changes
+    const newPrimaryCategory = input.categories[0] ?? '';
+    expressionAttributeNames['#GSI1PK'] = 'GSI1PK';
+    expressionAttributeValues[':GSI1PK'] = `CATEGORY#${newPrimaryCategory}`;
+    updateExpressions.push('#GSI1PK = :GSI1PK');
+  }
+
+  // Step 4: Execute the update
+  try {
+    const updateCommand = new UpdateCommand({
+      TableName: getProductsTableName(),
+      Key: {
+        PK: `PRODUCT#${productId}`,
+        SK: 'METADATA',
+      },
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: 'ALL_NEW',
+    });
+
+    const result = await docClient.send(updateCommand);
+    const item = result.Attributes;
+    if (!item) {
+      throw new Error('Update returned no attributes');
+    }
+
+    return mapItemToProductRecord(item as Record<string, unknown>);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error;
+    }
+    createServiceUnavailableError();
+  }
+}
+
+/**
+ * Soft-deletes a product by setting isDeleted = true.
+ * Does not physically remove the DynamoDB item.
+ *
+ * Requirements: 5.3, 5.4
+ */
+export async function deleteProduct(productId: string, sellerId: string): Promise<void> {
+  // Step 1: Read the existing product
+  const existingProduct = await getProductById(productId);
+
+  // Step 2: Assert ownership
+  assertOwnership(existingProduct, sellerId);
+
+  // Step 3: Set isDeleted = true
+  const now = new Date().toISOString();
+
+  try {
+    const updateCommand = new UpdateCommand({
+      TableName: getProductsTableName(),
+      Key: {
+        PK: `PRODUCT#${productId}`,
+        SK: 'METADATA',
+      },
+      UpdateExpression: 'SET #isDeleted = :isDeleted, #updatedAt = :updatedAt',
+      ExpressionAttributeNames: {
+        '#isDeleted': 'isDeleted',
+        '#updatedAt': 'updatedAt',
+      },
+      ExpressionAttributeValues: {
+        ':isDeleted': true,
+        ':updatedAt': now,
+      },
+    });
+
+    await docClient.send(updateCommand);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error;
+    }
+    createServiceUnavailableError();
+  }
+}
+
+export interface PaginatedProductsResult {
+  items: ProductRecord[];
+  nextCursor?: string;
+}
+
+/**
+ * Lists all products for a seller using GSI2 (SellerProducts).
+ * Supports cursor-based pagination.
+ *
+ * Requirements: 5.3
+ */
+export async function listSellerProducts(
+  sellerId: string,
+  limit: number = 20,
+  cursor?: string,
+): Promise<PaginatedProductsResult> {
+  try {
+    const queryInput: Record<string, unknown> = {
+      TableName: getProductsTableName(),
+      IndexName: 'GSI2-SellerProducts',
+      KeyConditionExpression: '#gsi2pk = :gsi2pk',
+      ExpressionAttributeNames: {
+        '#gsi2pk': 'GSI2PK',
+      },
+      ExpressionAttributeValues: {
+        ':gsi2pk': `SELLER#${sellerId}`,
+      },
+      Limit: limit,
+      ScanIndexForward: false, // Most recent first
+    };
+
+    if (cursor) {
+      try {
+        const decodedCursor = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8')) as Record<
+          string,
+          unknown
+        >;
+        queryInput['ExclusiveStartKey'] = decodedCursor;
+      } catch {
+        // Invalid cursor, ignore and start from beginning
+      }
+    }
+
+    const command = new QueryCommand(queryInput as ConstructorParameters<typeof QueryCommand>[0]);
+    const result = await docClient.send(command);
+
+    const items: ProductRecord[] = (result.Items ?? []).map((item) =>
+      mapItemToProductRecord(item as Record<string, unknown>),
+    );
+
+    const paginatedResult: PaginatedProductsResult = { items };
+    if (result.LastEvaluatedKey) {
+      paginatedResult.nextCursor = Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString(
+        'base64',
+      );
+    }
+
+    return paginatedResult;
+  } catch (error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error;
+    }
+    createServiceUnavailableError();
+  }
+}
+
+/**
+ * Sets or updates the Seller Policy on a product.
+ * Asserts product ownership, generates a new policyVersion UUID and createdAt timestamp,
+ * writes the sellerPolicy map onto the product DynamoDB item.
+ *
+ * Requirements: 14.1, 14.2, 14.3, 14.4
+ */
+export async function setSellerPolicy(
+  productId: string,
+  input: SellerPolicySchemaInput,
+  sellerId: string,
+): Promise<ProductRecord> {
+  // Step 1: Read the existing product
+  const existingProduct = await getProductById(productId);
+
+  // Step 2: Assert ownership
+  assertOwnership(existingProduct, sellerId);
+
+  // Step 3: Build the SellerPolicy with new policyVersion and createdAt
+  const now = new Date().toISOString();
+  const policyVersion = uuidv4();
+
+  const sellerPolicy: SellerPolicy = {
+    returnWindowDays: input.returnWindowDays,
+    exchangeAllowed: input.exchangeAllowed,
+    policyVersion,
+    createdAt: now,
+  };
+
+  if (input.conditions !== undefined) {
+    sellerPolicy.conditions = input.conditions;
+  }
+
+  // Step 4: Write sellerPolicy map onto the product DynamoDB item
+  try {
+    const updateCommand = new UpdateCommand({
+      TableName: getProductsTableName(),
+      Key: {
+        PK: `PRODUCT#${productId}`,
+        SK: 'METADATA',
+      },
+      UpdateExpression: 'SET #sellerPolicy = :sellerPolicy, #updatedAt = :updatedAt',
+      ExpressionAttributeNames: {
+        '#sellerPolicy': 'sellerPolicy',
+        '#updatedAt': 'updatedAt',
+      },
+      ExpressionAttributeValues: {
+        ':sellerPolicy': sellerPolicy,
+        ':updatedAt': now,
+      },
+      ReturnValues: 'ALL_NEW',
+    });
+
+    const result = await docClient.send(updateCommand);
+    const item = result.Attributes;
+    if (!item) {
+      throw new Error('Update returned no attributes');
+    }
+
+    return mapItemToProductRecord(item as Record<string, unknown>);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error;
+    }
+    createServiceUnavailableError();
+  }
 }
