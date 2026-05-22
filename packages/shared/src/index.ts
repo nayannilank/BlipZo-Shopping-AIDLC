@@ -97,3 +97,8 @@ export type {
 export { addressSchema, updateAddressSchema } from './schemas/address.schema.js';
 
 export type { AddressSchemaInput, UpdateAddressSchemaInput } from './schemas/address.schema.js';
+
+// Middleware exports
+export { structuredLogger } from './middleware/logger.middleware.js';
+
+export type { LoggerMiddlewareOptions } from './middleware/logger.middleware.js';

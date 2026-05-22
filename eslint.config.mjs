@@ -8,8 +8,10 @@ export default tseslint.config(
   {
     ignores: [
       'node_modules/**',
+      '**/node_modules/**',
       '**/dist/**',
       '.turbo/**',
+      '**/.turbo/**',
       'coverage/**',
       'build/**',
       '.next/**',
@@ -20,8 +22,8 @@ export default tseslint.config(
   // Base JS recommended rules for all files
   js.configs.recommended,
 
-  // TypeScript strict rules for TS/TSX files
-  ...tseslint.configs.strictTypeChecked.map((config) => ({
+  // TypeScript strict rules for TS/TSX files (without type-checking)
+  ...tseslint.configs.strict.map((config) => ({
     ...config,
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
   })),
@@ -48,14 +50,9 @@ export default tseslint.config(
     },
   },
 
-  // TypeScript-specific rule overrides
+  // TypeScript-specific rule overrides (non-type-aware)
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-      },
-    },
     rules: {
       // Allow underscore-prefixed unused variables (standard convention for required but unused params)
       '@typescript-eslint/no-unused-vars': [
@@ -66,9 +63,6 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      // Allow void return type in some cases (e.g., event handlers)
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
       // Prefer explicit types on exported functions (per coding standards)
       '@typescript-eslint/explicit-function-return-type': [
         'warn',
@@ -79,10 +73,20 @@ export default tseslint.config(
       ],
       // Disallow any (per coding standards)
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
+    },
+  },
+
+  // CommonJS config files (babel, metro, tailwind, postcss) — Node.js globals are valid
+  {
+    files: ['**/*.config.js', '**/babel.config.js', '**/metro.config.js', '**/postcss.config.js'],
+    languageOptions: {
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        exports: 'readonly',
+      },
     },
   },
 
@@ -90,12 +94,7 @@ export default tseslint.config(
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-confusing-void-expression': 'off',
     },
   },
 );

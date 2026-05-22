@@ -1,3 +1,4 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
@@ -47,6 +48,7 @@ const rawCreateProductHandler = async (
 
 export const createProductHandler = middy(rawCreateProductHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'product-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -79,6 +81,7 @@ const rawUpdateProductHandler = async (
 
 export const updateProductHandler = middy(rawUpdateProductHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'product-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -109,6 +112,7 @@ const rawDeleteProductHandler = async (
 
 export const deleteProductHandler = middy(rawDeleteProductHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'product-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -141,11 +145,13 @@ const rawListSellerProductsHandler = async (
   };
 };
 
-export const listSellerProductsHandler = middy(rawListSellerProductsHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const listSellerProductsHandler = middy(rawListSellerProductsHandler)
+  .use(structuredLogger({ service: 'product-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * POST /products/{productId}/policy — thin handler for setting/updating seller policy.
@@ -174,6 +180,7 @@ const rawSetSellerPolicyHandler = async (
 
 export const setSellerPolicyHandler = middy(rawSetSellerPolicyHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'product-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',

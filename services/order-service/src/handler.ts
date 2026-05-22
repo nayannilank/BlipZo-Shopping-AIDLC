@@ -1,8 +1,10 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
+import { emitOrderPlacementSuccess } from './metrics.js';
 import {
   cancelOrder,
   checkout,
@@ -39,6 +41,9 @@ const rawCheckoutHandler = async (event: APIGatewayProxyEvent): Promise<APIGatew
   const input = validateCheckoutInput(event);
   const orderRecord = await checkout(buyerId, input);
 
+  // Requirement 16.4: Emit OrderPlacementSuccess metric on successful checkout
+  await emitOrderPlacementSuccess();
+
   return {
     statusCode: 201,
     headers: {
@@ -50,6 +55,7 @@ const rawCheckoutHandler = async (event: APIGatewayProxyEvent): Promise<APIGatew
 
 export const checkoutHandler = middy(rawCheckoutHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'order-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -83,11 +89,13 @@ const rawOrderHistoryHandler = async (
   };
 };
 
-export const orderHistoryHandler = middy(rawOrderHistoryHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const orderHistoryHandler = middy(rawOrderHistoryHandler)
+  .use(structuredLogger({ service: 'order-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * GET /orders/{orderId} — returns full order detail for the authenticated buyer.
@@ -112,11 +120,13 @@ const rawOrderDetailHandler = async (
   };
 };
 
-export const orderDetailHandler = middy(rawOrderDetailHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const orderDetailHandler = middy(rawOrderDetailHandler)
+  .use(structuredLogger({ service: 'order-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * POST /orders/{orderId}/cancel — cancels an eligible order.
@@ -148,11 +158,13 @@ const rawCancelOrderHandler = async (
   };
 };
 
-export const cancelOrderHandler = middy(rawCancelOrderHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const cancelOrderHandler = middy(rawCancelOrderHandler)
+  .use(structuredLogger({ service: 'order-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * POST /orders/{orderId}/return-exchange — submits a return/exchange request for a delivered order.
@@ -186,6 +198,7 @@ const rawReturnExchangeHandler = async (
 
 export const returnExchangeHandler = middy(rawReturnExchangeHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'order-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -215,8 +228,10 @@ const rawGetReturnExchangeHandler = async (
   };
 };
 
-export const getReturnExchangeHandler = middy(rawGetReturnExchangeHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const getReturnExchangeHandler = middy(rawGetReturnExchangeHandler)
+  .use(structuredLogger({ service: 'order-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );

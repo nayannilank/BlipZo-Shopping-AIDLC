@@ -1,3 +1,4 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
@@ -26,11 +27,13 @@ const rawGetCartHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewa
   };
 };
 
-export const getCartHandler = middy(rawGetCartHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const getCartHandler = middy(rawGetCartHandler)
+  .use(structuredLogger({ service: 'cart-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * PUT /cart/items — adds or updates a cart item.
@@ -58,6 +61,7 @@ const rawPutCartItemHandler = async (
 
 export const putCartItemHandler = middy(rawPutCartItemHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'cart-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -86,11 +90,13 @@ const rawRemoveCartItemHandler = async (
   };
 };
 
-export const removeCartItemHandler = middy(rawRemoveCartItemHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const removeCartItemHandler = middy(rawRemoveCartItemHandler)
+  .use(structuredLogger({ service: 'cart-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * DELETE /cart — clears the entire cart for the buyer.
@@ -111,8 +117,10 @@ const rawClearCartHandler = async (event: APIGatewayProxyEvent): Promise<APIGate
   };
 };
 
-export const clearCartHandler = middy(rawClearCartHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const clearCartHandler = middy(rawClearCartHandler)
+  .use(structuredLogger({ service: 'cart-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );

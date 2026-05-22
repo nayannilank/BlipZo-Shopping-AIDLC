@@ -1,3 +1,4 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
@@ -42,6 +43,7 @@ const rawCreateAddressHandler = async (
 
 export const createAddressHandler = middy(rawCreateAddressHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'address-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -69,11 +71,13 @@ const rawListAddressesHandler = async (
   };
 };
 
-export const listAddressesHandler = middy(rawListAddressesHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const listAddressesHandler = middy(rawListAddressesHandler)
+  .use(structuredLogger({ service: 'address-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * PATCH /addresses/{addressId} — updates an address owned by the authenticated buyer.
@@ -101,6 +105,7 @@ const rawUpdateAddressHandler = async (
 
 export const updateAddressHandler = middy(rawUpdateAddressHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'address-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -129,11 +134,13 @@ const rawDeleteAddressHandler = async (
   };
 };
 
-export const deleteAddressHandler = middy(rawDeleteAddressHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const deleteAddressHandler = middy(rawDeleteAddressHandler)
+  .use(structuredLogger({ service: 'address-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * POST /addresses/{addressId}/default — sets an address as the default for the authenticated buyer.
@@ -158,8 +165,10 @@ const rawSetDefaultAddressHandler = async (
   };
 };
 
-export const setDefaultAddressHandler = middy(rawSetDefaultAddressHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const setDefaultAddressHandler = middy(rawSetDefaultAddressHandler)
+  .use(structuredLogger({ service: 'address-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );

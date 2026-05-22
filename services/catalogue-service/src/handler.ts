@@ -1,7 +1,9 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
+import { catalogueLatencyMetrics } from './metrics.js';
 import {
   listCategories,
   listProductsByCategory,
@@ -34,11 +36,14 @@ const rawListCategoriesHandler = async (
   };
 };
 
-export const listCategoriesHandler = middy(rawListCategoriesHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const listCategoriesHandler = middy(rawListCategoriesHandler)
+  .use(catalogueLatencyMetrics())
+  .use(structuredLogger({ service: 'catalogue-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * GET /catalogue/categories/{categoryId} — browse products by category.
@@ -67,11 +72,14 @@ const rawListProductsByCategoryHandler = async (
   };
 };
 
-export const listProductsByCategoryHandler = middy(rawListProductsByCategoryHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const listProductsByCategoryHandler = middy(rawListProductsByCategoryHandler)
+  .use(catalogueLatencyMetrics())
+  .use(structuredLogger({ service: 'catalogue-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * GET /catalogue/products/{productId} — returns full product detail.
@@ -96,11 +104,14 @@ const rawGetProductDetailHandler = async (
   };
 };
 
-export const getProductDetailHandler = middy(rawGetProductDetailHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const getProductDetailHandler = middy(rawGetProductDetailHandler)
+  .use(catalogueLatencyMetrics())
+  .use(structuredLogger({ service: 'catalogue-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * GET /catalogue/search — search products by query string.
@@ -128,8 +139,11 @@ const rawSearchProductsHandler = async (
   };
 };
 
-export const searchProductsHandler = middy(rawSearchProductsHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const searchProductsHandler = middy(rawSearchProductsHandler)
+  .use(catalogueLatencyMetrics())
+  .use(structuredLogger({ service: 'catalogue-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );

@@ -338,14 +338,14 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
 - [x] 13. Checkpoint — All backend services
   - Ensure all service unit and property tests pass. Run `pnpm turbo typecheck` across all services. Ask the user if questions arise.
 
-- [ ] 14. Observability middleware (all services)
-  - [ ] 14.1 Implement structured logger Middy middleware
+- [x] 14. Observability middleware (all services)
+  - [x] 14.1 Implement structured logger Middy middleware
     - Create `packages/shared/src/middleware/logger.middleware.ts`: a Middy middleware that emits a structured JSON log entry on every request containing `correlationId` (from `@middy/correlation-ids`), `service`, `timestamp`, and `statusCode`
     - On unhandled error log `errorType` and `message` only — no stack trace, no JWT, no password, no payment credential
     - Apply middleware to all eight Lambda handlers
     - _Requirements: 16.1, 16.2_
 
-  - [ ] 14.2 Implement CloudWatch custom metrics emission
+  - [x] 14.2 Implement CloudWatch custom metrics emission
     - Add `aws-embedded-metrics` to order-service, payment-service, and catalogue-service
     - Emit `OrderPlacementSuccess` metric on successful checkout, `PaymentFailureCount` on payment failure, `CatalogueResponseLatency` (duration in ms) on every catalogue response
     - _Requirements: 16.4_
@@ -355,8 +355,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - **Property 38: Error logs do not contain stack traces or sensitive data**
     - **Validates: Requirements 16.1, 16.2**
 
-- [ ] 15. Web application (`apps/web`)
-  - [ ] 15.1 Scaffold web app with Vite + React 19 + Tailwind
+- [x] 15. Web application (`apps/web`)
+  - [x] 15.1 Scaffold web app with Vite + React 19 + Tailwind
     - Create `apps/web/` with Vite + React 19 + TypeScript template
     - Install and configure Tailwind CSS, React Router, Zustand, TanStack Query, React Hook Form, Zod, Axios
     - Create `src/api/client.ts`: Axios instance with `VITE_API_BASE_URL`, request interceptor attaching `Authorization: Bearer <token>`, response interceptor for 401 → token refresh → retry
@@ -364,39 +364,39 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Add `navigator.onLine` listener in `ui.store.ts`; queue non-critical mutations for retry on reconnect
     - _Requirements: 18.1, 18.4, 18.5_
 
-  - [ ] 15.2 Implement auth pages (Register, Login, OTP)
+  - [x] 15.2 Implement auth pages (Register, Login, OTP)
     - Create `src/pages/Auth/RegisterPage.tsx`: React Hook Form + Zod `registerSchema` from `@blipzo/shared`, role selector (Buyer/Seller), call `POST /auth/register`, redirect to login on success
     - Create `src/pages/Auth/LoginPage.tsx`: email/password form, call `POST /auth/login`, store tokens in `auth.store`, redirect to home
     - Create `src/pages/Auth/OtpPage.tsx`: phone input → `POST /auth/otp/request`; OTP input → `POST /auth/otp/verify`; store tokens on success
     - Implement protected route wrapper that redirects unauthenticated users to `/login`
     - _Requirements: 1.1, 2.1, 3.1, 3.2, 18.1_
 
-  - [ ] 15.3 Implement catalogue pages (Home, Category, Product Detail, Search)
+  - [x] 15.3 Implement catalogue pages (Home, Category, Product Detail, Search)
     - Create `src/pages/Home/HomePage.tsx`: display category list fetched via TanStack Query from `GET /catalogue/categories`
     - Create `src/pages/ProductDetail/ProductDetailPage.tsx`: fetch `GET /catalogue/products/{productId}`, display all product fields, seller policy summary, Add to Cart / Add to Wishlist buttons
     - Create `src/pages/Home/CategoryPage.tsx`: paginated product grid from `GET /catalogue/categories/{categoryId}` with infinite scroll or next-page button
     - Create search bar component calling `GET /catalogue/search?q=...` with debounce; display results in a paginated grid
     - _Requirements: 6.1, 6.2, 6.5, 6.6, 18.1_
 
-  - [ ] 15.4 Implement wishlist page
+  - [x] 15.4 Implement wishlist page
     - Create `src/pages/Wishlist/WishlistPage.tsx`: fetch `GET /wishlist`, display enriched items with availability badge, Remove button calling `DELETE /wishlist/items/{productId}`
     - Add to Wishlist button on product detail calls `POST /wishlist/items` with optimistic update via TanStack Query mutation
     - _Requirements: 7.2, 7.5, 7.7, 18.1_
 
-  - [ ] 15.5 Implement cart page and checkout flow
+  - [x] 15.5 Implement cart page and checkout flow
     - Create `src/pages/Cart/CartPage.tsx`: fetch `GET /cart`, display items with quantity controls (PUT /cart/items), line subtotals, cart total, Clear Cart button, Proceed to Checkout button
     - Create `src/pages/Checkout/CheckoutPage.tsx`: address selector (fetch `GET /addresses`), payment method selector (UPI/CreditCard/DebitCard/CoD), Order Summary, Place Order button calling `POST /orders/checkout`
     - On success redirect to order confirmation page showing `orderId` and status
     - _Requirements: 8.1, 8.5, 8.6, 10.1, 18.1_
 
-  - [ ] 15.6 Implement orders pages (History, Detail, Cancel, Return/Exchange)
+  - [x] 15.6 Implement orders pages (History, Detail, Cancel, Return/Exchange)
     - Create `src/pages/Orders/OrdersPage.tsx`: paginated order history from `GET /orders`, each row showing order ID, date, total, status
     - Create `src/pages/Orders/OrderDetailPage.tsx`: full order detail, Cancel button (visible for Confirmed/Processing), Return/Exchange button (visible for Delivered)
     - Implement cancel flow: `POST /orders/{orderId}/cancel`, show refund status
     - Implement return/exchange form: type selector (Return/Exchange), submit `POST /orders/{orderId}/return-exchange`, show request ID
     - _Requirements: 12.1, 12.2, 12.4, 13.1, 18.1_
 
-  - [ ] 15.7 Implement seller dashboard
+  - [x] 15.7 Implement seller dashboard
     - Create `src/pages/SellerDashboard/` with route guard requiring `role === 'Seller'`
     - Product list page: fetch `GET /products/seller/me`, display with Edit and Delete actions
     - Add Product form: multi-step form with product fields + image upload (up to 10 files, validated client-side for size ≤ 10 MB and type JPEG/PNG/WebP), calls `POST /products`
@@ -404,7 +404,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Policy configuration form: return window, exchange toggle, conditions, calls `POST /products/{productId}/policy`
     - _Requirements: 5.1, 5.3, 5.5, 14.1, 18.1_
 
-  - [ ] 15.8 Implement address management page
+  - [x] 15.8 Implement address management page
     - Create `src/pages/Profile/AddressesPage.tsx`: list addresses, Add Address form (React Hook Form + `addressSchema`), Edit, Delete, Set Default actions
     - _Requirements: 9.1, 9.3, 9.4, 9.5, 9.6, 18.1_
 
@@ -420,8 +420,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Viewport tests at 320px, 768px, 1280px, 1920px
     - _Requirements: 18.1_
 
-- [ ] 16. Mobile application (`apps/mobile`)
-  - [ ] 16.1 Scaffold mobile app with Expo + React Native + NativeWind
+- [x] 16. Mobile application (`apps/mobile`)
+  - [x] 16.1 Scaffold mobile app with Expo + React Native + NativeWind
     - Create `apps/mobile/` using `npx create-expo-app` with TypeScript template
     - Install NativeWind, Zustand, TanStack Query, React Navigation (Stack + Bottom Tabs), Axios, `expo-secure-store`
     - Create `src/api/client.ts`: same Axios interceptor pattern as web; store tokens in `expo-secure-store` (never plain AsyncStorage)
@@ -429,29 +429,29 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Configure `RootNavigator.tsx`, `BuyerTabs.tsx` (Home, Search, Cart, Orders, Profile), `SellerStack.tsx`
     - _Requirements: 18.2, 18.4, 18.5_
 
-  - [ ] 16.2 Implement auth screens (Register, Login, OTP)
+  - [x] 16.2 Implement auth screens (Register, Login, OTP)
     - Create `src/screens/Auth/RegisterScreen.tsx`, `LoginScreen.tsx`, `OtpScreen.tsx` mirroring web auth flows using React Native form components and `@blipzo/shared` Zod schemas for validation
     - _Requirements: 1.1, 2.1, 3.1, 18.2_
 
-  - [ ] 16.3 Implement catalogue screens (Home, Category, Product Detail, Search)
+  - [x] 16.3 Implement catalogue screens (Home, Category, Product Detail, Search)
     - Create `src/screens/Home/HomeScreen.tsx`: category grid using `FlatList`
     - Create `src/screens/Home/CategoryScreen.tsx`: paginated product list with `FlatList` + `onEndReached` for infinite scroll
     - Create `src/screens/ProductDetail/ProductDetailScreen.tsx`: full product detail, image carousel, Add to Cart / Wishlist buttons
     - Create `src/screens/Search/SearchScreen.tsx`: search bar with debounce, results `FlatList`
     - _Requirements: 6.1, 6.2, 6.5, 6.6, 18.2_
 
-  - [ ] 16.4 Implement wishlist, cart, and checkout screens
+  - [x] 16.4 Implement wishlist, cart, and checkout screens
     - Create `src/screens/Wishlist/WishlistScreen.tsx`: wishlist items with availability badge and remove action
     - Create `src/screens/Cart/CartScreen.tsx`: cart items with quantity stepper, subtotals, total, checkout button
     - Create `src/screens/Checkout/CheckoutScreen.tsx`: address picker, payment method picker, order summary, Place Order button
     - _Requirements: 7.7, 8.5, 10.1, 18.2_
 
-  - [ ] 16.5 Implement orders and address screens
+  - [x] 16.5 Implement orders and address screens
     - Create `src/screens/Orders/OrdersScreen.tsx` and `OrderDetailScreen.tsx` with cancel and return/exchange flows
     - Create `src/screens/Profile/AddressesScreen.tsx` with full CRUD and default address selection
     - _Requirements: 12.1, 12.4, 13.1, 9.1, 18.2_
 
-  - [ ] 16.6 Implement seller dashboard screens
+  - [x] 16.6 Implement seller dashboard screens
     - Create `src/screens/SellerDashboard/` with product list, add/edit product forms (including image picker using `expo-image-picker`), and policy configuration form
     - _Requirements: 5.1, 5.5, 14.1, 18.2_
 
@@ -465,7 +465,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Registration → Login → Browse → Add to cart → Checkout on Android emulator (API 26+)
     - _Requirements: 18.2_
 
-- [ ] 17. Checkpoint — Web and Mobile applications
+- [x] 17. Checkpoint — Web and Mobile applications
   - Ensure all web and mobile unit tests pass. Verify `pnpm turbo typecheck` passes across all apps. Ask the user if questions arise.
 
 - [ ] 18. CI/CD pipeline (GitHub Actions)

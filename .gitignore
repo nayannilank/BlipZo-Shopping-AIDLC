@@ -1,1 +1,33 @@
+# Dependencies
 node_modules
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Turbo
+.turbo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+*.swp
+*.swo
+
+# Coverage
+coverage
+
+# CDK
+infra/cdk/cdk.out
+
+# Expo
+.expo

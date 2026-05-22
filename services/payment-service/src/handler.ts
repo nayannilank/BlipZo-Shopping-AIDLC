@@ -1,9 +1,11 @@
 import type { PaymentResponse } from '@blipzo/shared';
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import type { Context } from 'aws-lambda';
 
 import { createInternalError } from './errors.js';
+import { emitPaymentFailureCount } from './metrics.js';
 import { processPayment } from './service.js';
 import { validatePaymentRequest } from './validators.js';
 
@@ -65,6 +67,9 @@ const rawHandler = async (
         fields?: Record<string, string>;
       };
 
+      // Requirement 16.4: Emit PaymentFailureCount metric on payment failure
+      await emitPaymentFailureCount();
+
       return {
         success: false,
         error: {
@@ -76,12 +81,16 @@ const rawHandler = async (
     }
 
     // Requirement 11.4: Internal error returns standardized error response
+    // Requirement 16.4: Emit PaymentFailureCount metric on internal payment failure
+    await emitPaymentFailureCount();
     createInternalError();
   }
 };
 
-export const handler = middy(rawHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred during payment processing.',
-  }),
-);
+export const handler = middy(rawHandler)
+  .use(structuredLogger({ service: 'payment-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred during payment processing.',
+    }),
+  );

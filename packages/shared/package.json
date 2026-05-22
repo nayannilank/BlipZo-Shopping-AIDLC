@@ -15,12 +15,16 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run"
   },
   "devDependencies": {
-    "typescript": "^5.5.0"
+    "@types/aws-lambda": "^8.10.145",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
   },
   "dependencies": {
+    "@middy/core": "^5.5.0",
     "zod": "^4.4.3"
   }
 }

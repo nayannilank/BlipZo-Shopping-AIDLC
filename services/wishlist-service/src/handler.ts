@@ -1,3 +1,4 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
@@ -32,11 +33,13 @@ const rawGetWishlistHandler = async (
   };
 };
 
-export const getWishlistHandler = middy(rawGetWishlistHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const getWishlistHandler = middy(rawGetWishlistHandler)
+  .use(structuredLogger({ service: 'wishlist-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
 
 /**
  * POST /wishlist/items — adds a product to the buyer's wishlist.
@@ -65,6 +68,7 @@ const rawAddToWishlistHandler = async (
 
 export const addToWishlistHandler = middy(rawAddToWishlistHandler)
   .use(httpJsonBodyParser())
+  .use(structuredLogger({ service: 'wishlist-service' }))
   .use(
     httpErrorHandler({
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
@@ -94,8 +98,10 @@ const rawRemoveFromWishlistHandler = async (
   };
 };
 
-export const removeFromWishlistHandler = middy(rawRemoveFromWishlistHandler).use(
-  httpErrorHandler({
-    fallbackMessage: 'An unexpected error occurred. Please try again later.',
-  }),
-);
+export const removeFromWishlistHandler = middy(rawRemoveFromWishlistHandler)
+  .use(structuredLogger({ service: 'wishlist-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
