@@ -163,7 +163,7 @@ export function LoginScreen(): React.JSX.Element {
               accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
               accessibilityRole="button"
             >
-              <Text className="text-sm font-medium text-indigo-600">
+              <Text className="text-sm font-medium text-blue-600">
                 {showPassword ? 'Hide' : 'Show'}
               </Text>
             </TouchableOpacity>
@@ -175,7 +175,7 @@ export function LoginScreen(): React.JSX.Element {
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-indigo-400' : 'bg-indigo-600'}`}
+          className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-blue-400' : 'bg-blue-600'}`}
           onPress={() => void handleLogin()}
           disabled={isLoading}
           accessibilityLabel="Sign in"
@@ -213,7 +213,7 @@ export function LoginScreen(): React.JSX.Element {
             accessibilityLabel="Go to registration"
             accessibilityRole="link"
           >
-            <Text className="text-sm font-semibold text-indigo-600">Sign Up</Text>
+            <Text className="text-sm font-semibold text-blue-600">Sign Up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -75,4 +75,13 @@ export function createInvalidStatusError(message) {
     error['code'] = ORDER_ERROR_CODES.INVALID_STATUS;
     throw error;
 }
+/**
+ * Creates a 400 RETURN_WINDOW_EXPIRED error when return/exchange request is outside the window.
+ * Requirements: 13.2, 14.3
+ */
+export function createReturnWindowError(message) {
+    const error = createError(400, message, { expose: true });
+    error['code'] = 'RETURN_WINDOW_EXPIRED';
+    throw error;
+}
 //# sourceMappingURL=errors.js.map

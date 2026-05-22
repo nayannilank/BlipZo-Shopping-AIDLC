@@ -115,7 +115,7 @@ function CartItem({
             onDecrement={handleDecrement}
             disabled={isUpdating}
           />
-          <Text className="text-base font-bold text-indigo-600">₹{item.subtotal.toFixed(2)}</Text>
+          <Text className="text-base font-bold text-blue-600">₹{item.subtotal.toFixed(2)}</Text>
         </View>
       </View>
       <TouchableOpacity
@@ -230,7 +230,7 @@ export function CartScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading cart...</Text>
       </View>
     );
@@ -244,7 +244,7 @@ export function CartScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 px-6 py-3 rounded-lg"
+          className="mt-4 bg-blue-600 px-6 py-3 rounded-lg"
           onPress={() => {
             void refetch();
           }}
@@ -282,7 +282,7 @@ export function CartScreen(): React.JSX.Element {
             onRefresh={() => {
               void refetch();
             }}
-            tintColor="#4F46E5"
+            tintColor="#2563EB"
           />
         }
         ListHeaderComponent={
@@ -301,7 +301,7 @@ export function CartScreen(): React.JSX.Element {
           <Text className="text-xl font-bold text-gray-900">₹{cart.total.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
-          className="bg-indigo-600 rounded-lg py-3.5 items-center"
+          className="bg-blue-600 rounded-lg py-3.5 items-center"
           onPress={handleCheckout}
           activeOpacity={0.7}
           accessibilityRole="button"

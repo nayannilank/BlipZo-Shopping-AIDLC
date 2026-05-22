@@ -278,7 +278,7 @@ function AddressFormModal({
             <View className="px-6 py-4 border-t border-gray-100">
               <TouchableOpacity
                 className={`rounded-lg py-3.5 items-center ${
-                  isSubmitting ? 'bg-gray-300' : 'bg-indigo-600'
+                  isSubmitting ? 'bg-gray-300' : 'bg-blue-600'
                 }`}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
@@ -318,7 +318,7 @@ function AddressCard({
   return (
     <View
       className={`bg-white mx-4 my-2 rounded-xl p-4 border ${
-        address.isDefault ? 'border-indigo-300' : 'border-gray-100'
+        address.isDefault ? 'border-blue-300' : 'border-gray-100'
       }`}
       accessibilityLabel={`${address.fullName}, ${address.line1}, ${address.city}${address.isDefault ? ', default address' : ''}`}
     >
@@ -326,8 +326,8 @@ function AddressCard({
         <View className="flex-row items-center">
           <Text className="text-sm font-semibold text-gray-900">{address.fullName}</Text>
           {address.isDefault && (
-            <View className="ml-2 bg-indigo-100 rounded px-1.5 py-0.5">
-              <Text className="text-xs font-medium text-indigo-700">Default</Text>
+            <View className="ml-2 bg-blue-100 rounded px-1.5 py-0.5">
+              <Text className="text-xs font-medium text-blue-700">Default</Text>
             </View>
           )}
         </View>
@@ -356,9 +356,9 @@ function AddressCard({
             accessibilityLabel="Set as default address"
           >
             {isSettingDefault ? (
-              <ActivityIndicator size="small" color="#4F46E5" />
+              <ActivityIndicator size="small" color="#2563EB" />
             ) : (
-              <Text className="text-xs font-medium text-indigo-600">Set Default</Text>
+              <Text className="text-xs font-medium text-blue-600">Set Default</Text>
             )}
           </TouchableOpacity>
         )}
@@ -544,7 +544,7 @@ export function AddressesScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading addresses...</Text>
       </View>
     );
@@ -558,7 +558,7 @@ export function AddressesScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 px-6 py-3 rounded-lg"
+          className="mt-4 bg-blue-600 px-6 py-3 rounded-lg"
           onPress={() => {
             void refetch();
           }}
@@ -586,7 +586,7 @@ export function AddressesScreen(): React.JSX.Element {
             onRefresh={() => {
               void refetch();
             }}
-            tintColor="#4F46E5"
+            tintColor="#2563EB"
           />
         }
         ListEmptyComponent={
@@ -612,7 +612,7 @@ export function AddressesScreen(): React.JSX.Element {
       {/* Add Address Button */}
       <View className="bg-white border-t border-gray-200 px-4 py-4">
         <TouchableOpacity
-          className="bg-indigo-600 rounded-lg py-3.5 items-center"
+          className="bg-blue-600 rounded-lg py-3.5 items-center"
           onPress={() => {
             setShowForm(true);
           }}

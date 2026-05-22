@@ -46,7 +46,7 @@ function AddressPicker({
           <TouchableOpacity
             key={address.addressId}
             className={`rounded-lg p-3 mb-2 border ${
-              isSelected ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 bg-white'
+              isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'
             }`}
             onPress={() => {
               onSelect(address.addressId);
@@ -59,17 +59,17 @@ function AddressPicker({
             <View className="flex-row items-center">
               <View
                 className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3 ${
-                  isSelected ? 'border-indigo-600' : 'border-gray-300'
+                  isSelected ? 'border-blue-600' : 'border-gray-300'
                 }`}
               >
-                {isSelected && <View className="w-2.5 h-2.5 rounded-full bg-indigo-600" />}
+                {isSelected && <View className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center">
                   <Text className="text-sm font-semibold text-gray-900">{address.fullName}</Text>
                   {address.isDefault && (
-                    <View className="ml-2 bg-indigo-100 rounded px-1.5 py-0.5">
-                      <Text className="text-xs text-indigo-700">Default</Text>
+                    <View className="ml-2 bg-blue-100 rounded px-1.5 py-0.5">
+                      <Text className="text-xs text-blue-700">Default</Text>
                     </View>
                   )}
                 </View>
@@ -104,7 +104,7 @@ function PaymentMethodPicker({
           <TouchableOpacity
             key={method.value}
             className={`rounded-lg p-3 mb-2 border ${
-              isSelected ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 bg-white'
+              isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'
             }`}
             onPress={() => {
               onSelect(method.value);
@@ -117,10 +117,10 @@ function PaymentMethodPicker({
             <View className="flex-row items-center">
               <View
                 className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3 ${
-                  isSelected ? 'border-indigo-600' : 'border-gray-300'
+                  isSelected ? 'border-blue-600' : 'border-gray-300'
                 }`}
               >
-                {isSelected && <View className="w-2.5 h-2.5 rounded-full bg-indigo-600" />}
+                {isSelected && <View className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
               </View>
               <View>
                 <Text className="text-sm font-semibold text-gray-900">{method.label}</Text>
@@ -211,7 +211,7 @@ export function CheckoutScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading checkout...</Text>
       </View>
     );
@@ -284,7 +284,7 @@ export function CheckoutScreen(): React.JSX.Element {
             ))}
             <View className="flex-row justify-between pt-3 mt-1">
               <Text className="text-base font-bold text-gray-900">Total</Text>
-              <Text className="text-base font-bold text-indigo-600">₹{cart.total.toFixed(2)}</Text>
+              <Text className="text-base font-bold text-blue-600">₹{cart.total.toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -294,7 +294,7 @@ export function CheckoutScreen(): React.JSX.Element {
       <View className="bg-white border-t border-gray-200 px-4 py-4">
         <TouchableOpacity
           className={`rounded-lg py-3.5 items-center ${
-            canPlaceOrder ? 'bg-indigo-600' : 'bg-gray-300'
+            canPlaceOrder ? 'bg-blue-600' : 'bg-gray-300'
           }`}
           onPress={handlePlaceOrder}
           disabled={!canPlaceOrder}

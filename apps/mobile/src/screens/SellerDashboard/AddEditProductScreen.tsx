@@ -303,7 +303,7 @@ function ProductForm({
   if (mode === 'edit' && isLoadingProduct) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading product...</Text>
       </View>
     );
@@ -484,9 +484,7 @@ function ProductForm({
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-lg py-4 items-center ${
-            isSubmitting ? 'bg-indigo-400' : 'bg-indigo-600'
-          }`}
+          className={`rounded-lg py-4 items-center ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600'}`}
           onPress={handleSubmit}
           disabled={isSubmitting}
           activeOpacity={0.7}

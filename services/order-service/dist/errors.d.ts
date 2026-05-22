@@ -46,4 +46,9 @@ export declare function createNotFoundError(message: string): never;
  * Creates a 400 INVALID_STATUS error for operations on orders in wrong state.
  */
 export declare function createInvalidStatusError(message: string): never;
+/**
+ * Creates a 400 RETURN_WINDOW_EXPIRED error when return/exchange request is outside the window.
+ * Requirements: 13.2, 14.3
+ */
+export declare function createReturnWindowError(message: string): never;
 //# sourceMappingURL=errors.d.ts.map

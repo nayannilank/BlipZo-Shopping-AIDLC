@@ -198,7 +198,7 @@ export function OtpScreen(): React.JSX.Element {
 
             {/* Request OTP Button */}
             <TouchableOpacity
-              className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-indigo-400' : 'bg-indigo-600'}`}
+              className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-blue-400' : 'bg-blue-600'}`}
               onPress={() => void handleRequestOtp()}
               disabled={isLoading}
               accessibilityLabel="Send OTP"
@@ -239,7 +239,7 @@ export function OtpScreen(): React.JSX.Element {
 
             {/* Verify OTP Button */}
             <TouchableOpacity
-              className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-indigo-400' : 'bg-indigo-600'}`}
+              className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-blue-400' : 'bg-blue-600'}`}
               onPress={() => void handleVerifyOtp()}
               disabled={isLoading}
               accessibilityLabel="Verify OTP"
@@ -262,7 +262,7 @@ export function OtpScreen(): React.JSX.Element {
               accessibilityLabel="Resend OTP"
               accessibilityRole="button"
             >
-              <Text className="text-center text-sm font-medium text-indigo-600">
+              <Text className="text-center text-sm font-medium text-blue-600">
                 Didn&apos;t receive the code? Resend
               </Text>
             </TouchableOpacity>
@@ -278,7 +278,7 @@ export function OtpScreen(): React.JSX.Element {
             accessibilityLabel="Back to email login"
             accessibilityRole="link"
           >
-            <Text className="text-sm font-semibold text-indigo-600">← Back to Email Login</Text>
+            <Text className="text-sm font-semibold text-blue-600">← Back to Email Login</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

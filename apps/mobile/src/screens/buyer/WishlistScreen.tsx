@@ -59,7 +59,7 @@ function WishlistItem({
           <Text className="text-base font-semibold text-gray-900" numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-bold text-indigo-600 mt-1">
+          <Text className="text-lg font-bold text-blue-600 mt-1">
             ₹{item.price.toLocaleString()}
           </Text>
         </View>
@@ -135,7 +135,7 @@ export function WishlistScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading wishlist...</Text>
       </View>
     );
@@ -149,7 +149,7 @@ export function WishlistScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 px-6 py-3 rounded-lg"
+          className="mt-4 bg-blue-600 px-6 py-3 rounded-lg"
           onPress={() => {
             void refetch();
           }}
@@ -187,7 +187,7 @@ export function WishlistScreen(): React.JSX.Element {
             onRefresh={() => {
               void refetch();
             }}
-            tintColor="#4F46E5"
+            tintColor="#2563EB"
           />
         }
         ListHeaderComponent={

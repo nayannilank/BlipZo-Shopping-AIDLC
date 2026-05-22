@@ -18,13 +18,13 @@ type HomeNavigationProp = NativeStackNavigationProp<{
 }>;
 
 const CATEGORY_COLORS = [
-  '#EEF2FF', // indigo-50
+  '#EFF6FF', // blue-50 (brand primary surface)
   '#F0FDF4', // green-50
   '#FFF7ED', // orange-50
   '#FDF2F8', // pink-50
   '#F0F9FF', // sky-50
   '#FFFBEB', // amber-50
-  '#F5F3FF', // violet-50
+  '#FAF5FF', // purple-50 (brand secondary surface)
   '#ECFDF5', // emerald-50
 ];
 
@@ -96,7 +96,7 @@ export function HomeScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading categories...</Text>
       </View>
     );
@@ -110,7 +110,7 @@ export function HomeScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 px-6 py-3 rounded-lg"
+          className="mt-4 bg-blue-600 px-6 py-3 rounded-lg"
           onPress={() => {
             void refetch();
           }}
@@ -146,7 +146,7 @@ export function HomeScreen(): React.JSX.Element {
             onRefresh={() => {
               void refetch();
             }}
-            tintColor="#4F46E5"
+            tintColor="#2563EB"
           />
         }
         ListHeaderComponent={

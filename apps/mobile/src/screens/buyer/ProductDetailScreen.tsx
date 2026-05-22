@@ -71,7 +71,7 @@ function ImageCarousel({ imageUrls }: { imageUrls: string[] }): React.JSX.Elemen
             <View
               key={`dot-${String(index)}`}
               className={`w-2 h-2 rounded-full mx-1 ${
-                index === activeIndex ? 'bg-indigo-600' : 'bg-gray-300'
+                index === activeIndex ? 'bg-blue-600' : 'bg-gray-300'
               }`}
             />
           ))}
@@ -152,7 +152,7 @@ export function ProductDetailScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading product details...</Text>
       </View>
     );
@@ -181,7 +181,7 @@ export function ProductDetailScreen(): React.JSX.Element {
         <View className="px-4 py-4">
           <Text className="text-2xl font-bold text-gray-900">{product.name}</Text>
 
-          <Text className="mt-2 text-2xl font-bold text-indigo-600">
+          <Text className="mt-2 text-2xl font-bold text-blue-600">
             ₹{product.price.toLocaleString()}
           </Text>
 
@@ -257,7 +257,7 @@ export function ProductDetailScreen(): React.JSX.Element {
       {/* Action Buttons */}
       <View className="flex-row px-4 py-3 border-t border-gray-200 bg-white">
         <TouchableOpacity
-          className="flex-1 mr-2 border border-indigo-600 rounded-lg py-3 items-center"
+          className="flex-1 mr-2 border border-blue-600 rounded-lg py-3 items-center"
           onPress={handleAddToWishlist}
           disabled={addToWishlistMutation.isPending}
           activeOpacity={0.7}
@@ -265,15 +265,15 @@ export function ProductDetailScreen(): React.JSX.Element {
           accessibilityLabel="Add to wishlist"
         >
           {addToWishlistMutation.isPending ? (
-            <ActivityIndicator size="small" color="#4F46E5" />
+            <ActivityIndicator size="small" color="#2563EB" />
           ) : (
-            <Text className="text-indigo-600 font-semibold">♡ Wishlist</Text>
+            <Text className="text-blue-600 font-semibold">♡ Wishlist</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
           className={`flex-1 ml-2 rounded-lg py-3 items-center ${
-            inStock ? 'bg-indigo-600' : 'bg-gray-300'
+            inStock ? 'bg-blue-600' : 'bg-gray-300'
           }`}
           onPress={handleAddToCart}
           disabled={!inStock || addToCartMutation.isPending}

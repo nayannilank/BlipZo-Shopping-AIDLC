@@ -76,6 +76,35 @@ export default tseslint.config(
     },
   },
 
+  // Browser globals for web app source files
+  {
+    files: ['apps/web/src/**/*.js', 'apps/web/src/**/*.ts', 'apps/web/src/**/*.tsx'],
+    languageOptions: {
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        console: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        HTMLElement: 'readonly',
+        Event: 'readonly',
+        FormData: 'readonly',
+        FileReader: 'readonly',
+        Blob: 'readonly',
+        File: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
+      },
+    },
+  },
+
   // CommonJS config files (babel, metro, tailwind, postcss) — Node.js globals are valid
   {
     files: ['**/*.config.js', '**/babel.config.js', '**/metro.config.js', '**/postcss.config.js'],
@@ -92,9 +121,17 @@ export default tseslint.config(
 
   // Relaxed rules for test files — test assertions and mocks often require unsafe patterns
   {
-    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx', '**/tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 );

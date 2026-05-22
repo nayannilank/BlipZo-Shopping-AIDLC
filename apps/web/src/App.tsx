@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 
+import { Header } from './components/ui/Header';
 import { useUiStore } from './stores/ui.store';
 
 function App(): React.ReactElement {
@@ -16,7 +17,10 @@ function App(): React.ReactElement {
           You are currently offline. Some features may be unavailable.
         </div>
       )}
-      <Outlet />
+      <Header />
+      <main>
+        <Outlet />
+      </main>
     </div>
   );
 }

@@ -102,3 +102,16 @@ export type { AddressSchemaInput, UpdateAddressSchemaInput } from './schemas/add
 export { structuredLogger } from './middleware/logger.middleware.js';
 
 export type { LoggerMiddlewareOptions } from './middleware/logger.middleware.js';
+
+// Design token exports
+export {
+  blue,
+  purple,
+  neutral,
+  semantic,
+  brand,
+  foreground,
+  designTokens,
+} from './design-tokens/index.js';
+
+export type { ColorShade, BrandColorVariant, DesignTokens } from './design-tokens/index.js';

@@ -54,7 +54,7 @@ function ProductCard({
           <Text className="text-base font-semibold text-gray-900" numberOfLines={2}>
             {product.name}
           </Text>
-          <Text className="text-sm text-indigo-600 font-medium mt-1">
+          <Text className="text-sm text-blue-600 font-medium mt-1">
             {`₹${product.price.toLocaleString()}`}
           </Text>
           <View className="flex-row items-center mt-1">
@@ -79,7 +79,7 @@ function ProductCard({
       {!product.isDeleted && (
         <View className="flex-row mt-3 pt-3 border-t border-gray-100">
           <TouchableOpacity
-            className="flex-1 mr-1 bg-indigo-50 rounded-md py-2 items-center"
+            className="flex-1 mr-1 bg-blue-50 rounded-md py-2 items-center"
             onPress={() => {
               onEdit(product);
             }}
@@ -87,7 +87,7 @@ function ProductCard({
             accessibilityRole="button"
             accessibilityLabel={`Edit ${product.name}`}
           >
-            <Text className="text-indigo-600 text-sm font-medium">Edit</Text>
+            <Text className="text-blue-600 text-sm font-medium">Edit</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -197,7 +197,7 @@ export function SellerProductListScreen(): React.JSX.Element {
           Start by adding your first product to your store.
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 rounded-lg px-6 py-3"
+          className="mt-4 bg-blue-600 rounded-lg px-6 py-3"
           onPress={handleAddProduct}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -213,7 +213,7 @@ export function SellerProductListScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading your products...</Text>
       </View>
     );
@@ -227,7 +227,7 @@ export function SellerProductListScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 rounded-lg px-6 py-3"
+          className="mt-4 bg-blue-600 rounded-lg px-6 py-3"
           onPress={() => {
             void refetch();
           }}
@@ -257,7 +257,7 @@ export function SellerProductListScreen(): React.JSX.Element {
             onRefresh={() => {
               void refetch();
             }}
-            colors={['#4F46E5']}
+            colors={['#2563EB']}
           />
         }
       />
@@ -265,7 +265,7 @@ export function SellerProductListScreen(): React.JSX.Element {
       {/* Floating Add Button */}
       {products.length > 0 && (
         <TouchableOpacity
-          className="absolute bottom-6 right-6 w-14 h-14 bg-indigo-600 rounded-full items-center justify-center shadow-lg"
+          className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full items-center justify-center shadow-lg"
           onPress={handleAddProduct}
           activeOpacity={0.7}
           accessibilityRole="button"

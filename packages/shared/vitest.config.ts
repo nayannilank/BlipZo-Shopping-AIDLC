@@ -5,6 +5,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts'],
-    root: './packages/shared',
+    passWithNoTests: true,
   },
 });

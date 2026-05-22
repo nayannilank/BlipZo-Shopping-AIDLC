@@ -11,7 +11,8 @@
     "apps/*",
     "packages/*",
     "services/*",
-    "infra/*"
+    "infra/*",
+    "tests/*"
   ],
   "scripts": {
     "build": "turbo run build",
@@ -20,6 +21,7 @@
     "test:unit": "turbo run test:unit",
     "test:property": "turbo run test:property",
     "test:integration": "turbo run test:integration",
+    "generate:splash": "node scripts/generate-splash.mjs",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky"
   },
@@ -36,11 +38,11 @@
   },
   "lint-staged": {
     "*.{ts,tsx,mts,cts}": [
-      "eslint --fix",
+      "eslint --fix --no-warn-ignored",
       "prettier --write"
     ],
     "*.{js,mjs,cjs,jsx}": [
-      "eslint --fix",
+      "eslint --fix --no-warn-ignored",
       "prettier --write"
     ],
     "*.{json,md,yaml,yml}": [

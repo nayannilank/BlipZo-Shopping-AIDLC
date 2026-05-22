@@ -63,7 +63,7 @@ function SearchResultCard({
         <Text className="text-sm font-medium text-gray-900" numberOfLines={2}>
           {item.name}
         </Text>
-        <Text className="mt-1 text-base font-bold text-indigo-600">
+        <Text className="mt-1 text-base font-bold text-blue-600">
           ₹{item.price.toLocaleString()}
         </Text>
         <View className="flex-row items-center mt-1">
@@ -125,7 +125,7 @@ export function SearchScreen(): React.JSX.Element {
     if (!isFetchingNextPage) return null;
     return (
       <View className="py-4 items-center">
-        <ActivityIndicator size="small" color="#4F46E5" />
+        <ActivityIndicator size="small" color="#2563EB" />
       </View>
     );
   }, [isFetchingNextPage]);
@@ -143,7 +143,7 @@ export function SearchScreen(): React.JSX.Element {
     if (isLoading) {
       return (
         <View className="flex-1 items-center justify-center pt-20">
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text className="mt-3 text-gray-500">Searching...</Text>
         </View>
       );

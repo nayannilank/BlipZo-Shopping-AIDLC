@@ -61,8 +61,8 @@ export function ProfileScreen(): React.JSX.Element {
     <View className="flex-1 bg-gray-50">
       {/* User Info */}
       <View className="bg-white mx-4 mt-4 rounded-xl p-4 border border-gray-100 items-center">
-        <View className="w-16 h-16 rounded-full bg-indigo-100 items-center justify-center mb-3">
-          <Text className="text-2xl font-bold text-indigo-600">{role?.charAt(0) ?? 'U'}</Text>
+        <View className="w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-3">
+          <Text className="text-2xl font-bold text-blue-600">{role?.charAt(0) ?? 'U'}</Text>
         </View>
         <Text className="text-base font-semibold text-gray-900">
           {role === 'Buyer' ? 'Buyer Account' : 'Account'}

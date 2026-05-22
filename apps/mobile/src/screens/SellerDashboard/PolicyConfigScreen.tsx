@@ -119,7 +119,7 @@ export function PolicyConfigScreen(): React.JSX.Element {
   if (isLoadingProduct) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading product policy...</Text>
       </View>
     );
@@ -192,8 +192,8 @@ export function PolicyConfigScreen(): React.JSX.Element {
               onValueChange={(value) => {
                 setForm((prev) => ({ ...prev, exchangeAllowed: value }));
               }}
-              trackColor={{ false: '#D1D5DB', true: '#818CF8' }}
-              thumbColor={form.exchangeAllowed ? '#4F46E5' : '#F3F4F6'}
+              trackColor={{ false: '#D1D5DB', true: '#60A5FA' }}
+              thumbColor={form.exchangeAllowed ? '#2563EB' : '#F3F4F6'}
               accessibilityLabel="Allow exchanges toggle"
               accessibilityRole="switch"
             />
@@ -243,7 +243,7 @@ export function PolicyConfigScreen(): React.JSX.Element {
         {/* Submit Button */}
         <TouchableOpacity
           className={`rounded-lg py-4 items-center ${
-            policyMutation.isPending ? 'bg-indigo-400' : 'bg-indigo-600'
+            policyMutation.isPending ? 'bg-blue-400' : 'bg-blue-600'
           }`}
           onPress={handleSubmit}
           disabled={policyMutation.isPending}

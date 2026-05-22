@@ -159,7 +159,7 @@ export async function addToWishlist(buyerId, productId) {
         const existingResult = await docClient.send(existingItemCommand);
         if (existingResult.Item) {
             // Product already in wishlist — return current wishlist unchanged (Requirement 7.3)
-            return getWishlist(buyerId);
+            return await getWishlist(buyerId);
         }
         // Step 3: Use TransactWriteItems to atomically check capacity and add item
         const now = new Date().toISOString();
@@ -202,16 +202,15 @@ export async function addToWishlist(buyerId, productId) {
         });
         await docClient.send(transactCommand);
         // Step 4: Return updated wishlist
-        return getWishlist(buyerId);
+        return await getWishlist(buyerId);
     }
     catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error;
         }
         // Handle TransactionCanceledException for capacity exceeded
-        if (error instanceof Error &&
-            error.name === 'TransactionCanceledException') {
-            const message = error.message ?? '';
+        if (error instanceof Error && error.name === 'TransactionCanceledException') {
+            const message = error.message;
             // If the condition check on the counter failed, capacity is exceeded
             if (message.includes('ConditionalCheckFailed')) {
                 // Check if it's the counter condition (first item) or the duplicate condition (second item)
@@ -255,7 +254,7 @@ export async function removeFromWishlist(buyerId, productId) {
         const existingResult = await docClient.send(existingItemCommand);
         if (!existingResult.Item) {
             // Item not in wishlist — return current wishlist unchanged (Requirement 7.6)
-            return getWishlist(buyerId);
+            return await getWishlist(buyerId);
         }
         // Step 2: Delete the item and decrement the counter atomically
         const transactCommand = new TransactWriteCommand({
@@ -291,7 +290,7 @@ export async function removeFromWishlist(buyerId, productId) {
         });
         await docClient.send(transactCommand);
         // Step 3: Return updated wishlist
-        return getWishlist(buyerId);
+        return await getWishlist(buyerId);
     }
     catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {

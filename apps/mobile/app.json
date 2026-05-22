@@ -8,14 +8,14 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#4F46E5"
+      "backgroundColor": "#2563EB"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#4F46E5"
+        "backgroundColor": "#2563EB"
       },
       "package": "com.blipzo.mobile"
     },
@@ -23,6 +23,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.blipzo.mobile"
     },
-    "plugins": ["expo-secure-store"]
+    "plugins": ["expo-secure-store", "expo-splash-screen"]
   }
 }

@@ -42,9 +42,7 @@ export function validatePaymentRequest(payload) {
         }
         // Check if the error is specifically about unsupported method
         const methodIssue = result.error.issues.find((issue) => issue.path.includes('method'));
-        const message = methodIssue
-            ? 'Unsupported payment method'
-            : 'Validation failed';
+        const message = methodIssue ? 'Unsupported payment method' : 'Validation failed';
         createValidationError(message, fields);
     }
     const data = result.data;

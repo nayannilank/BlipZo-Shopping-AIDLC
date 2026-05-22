@@ -1,5 +1,4 @@
-import type { AddressRecord } from '@blipzo/shared';
-import type { AddressSchemaInput, UpdateAddressSchemaInput } from '@blipzo/shared';
+import type { AddressRecord, AddressSchemaInput, UpdateAddressSchemaInput } from '@blipzo/shared';
 /**
  * Creates a new address for the buyer.
  * PutItem with PK = BUYER#{buyerId}, SK = ADDRESS#{uuid}.
@@ -29,4 +28,13 @@ export declare function updateAddress(buyerId: string, addressId: string, input:
  * Requirements: 9.4, 9.7
  */
 export declare function deleteAddress(buyerId: string, addressId: string): Promise<void>;
+/**
+ * Sets an address as the default for the buyer.
+ * Uses TransactWriteItems to atomically:
+ * 1. Set isDefault = true on the target address
+ * 2. Set isDefault = false on the previously default address (if any)
+ *
+ * Requirement 9.6
+ */
+export declare function setDefaultAddress(buyerId: string, addressId: string): Promise<AddressRecord>;
 //# sourceMappingURL=service.d.ts.map

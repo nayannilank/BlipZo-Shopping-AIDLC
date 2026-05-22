@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
+import { HeaderLogo } from '../components/HeaderLogo';
 import { AddressesScreen } from '../screens/buyer/AddressesScreen';
 import { CartScreen } from '../screens/buyer/CartScreen';
 import { CategoryScreen } from '../screens/buyer/CategoryScreen';
@@ -13,6 +14,8 @@ import { ProductDetailScreen } from '../screens/buyer/ProductDetailScreen';
 import { ProfileScreen } from '../screens/buyer/ProfileScreen';
 import { SearchScreen } from '../screens/buyer/SearchScreen';
 import { WishlistScreen } from '../screens/buyer/WishlistScreen';
+
+import { brandHeaderOptions, brandTabBarOptions } from './theme';
 
 export type HomeStackParamList = {
   HomeMain: undefined;
@@ -58,8 +61,12 @@ const Tab = createBottomTabNavigator<BuyerTabParamList>();
 
 function HomeStackScreen(): React.JSX.Element {
   return (
-    <HomeStack.Navigator>
-      <HomeStack.Screen name="HomeMain" component={HomeScreen} options={{ title: 'Home' }} />
+    <HomeStack.Navigator screenOptions={brandHeaderOptions}>
+      <HomeStack.Screen
+        name="HomeMain"
+        component={HomeScreen}
+        options={{ headerTitle: () => <HeaderLogo /> }}
+      />
       <HomeStack.Screen
         name="Category"
         component={CategoryScreen}
@@ -76,11 +83,11 @@ function HomeStackScreen(): React.JSX.Element {
 
 function SearchStackScreen(): React.JSX.Element {
   return (
-    <SearchStack.Navigator>
+    <SearchStack.Navigator screenOptions={brandHeaderOptions}>
       <SearchStack.Screen
         name="SearchMain"
         component={SearchScreen}
-        options={{ title: 'Search' }}
+        options={{ headerTitle: () => <HeaderLogo /> }}
       />
       <SearchStack.Screen
         name="ProductDetail"
@@ -93,8 +100,12 @@ function SearchStackScreen(): React.JSX.Element {
 
 function CartStackScreen(): React.JSX.Element {
   return (
-    <CartStack.Navigator>
-      <CartStack.Screen name="CartMain" component={CartScreen} options={{ title: 'Cart' }} />
+    <CartStack.Navigator screenOptions={brandHeaderOptions}>
+      <CartStack.Screen
+        name="CartMain"
+        component={CartScreen}
+        options={{ headerTitle: () => <HeaderLogo /> }}
+      />
       <CartStack.Screen
         name="Checkout"
         component={CheckoutScreen}
@@ -106,11 +117,11 @@ function CartStackScreen(): React.JSX.Element {
 
 function OrdersStackScreen(): React.JSX.Element {
   return (
-    <OrdersStack.Navigator>
+    <OrdersStack.Navigator screenOptions={brandHeaderOptions}>
       <OrdersStack.Screen
         name="OrdersMain"
         component={OrdersScreen}
-        options={{ title: 'Orders' }}
+        options={{ headerTitle: () => <HeaderLogo /> }}
       />
       <OrdersStack.Screen
         name="OrderDetail"
@@ -123,11 +134,11 @@ function OrdersStackScreen(): React.JSX.Element {
 
 function ProfileStackScreen(): React.JSX.Element {
   return (
-    <ProfileStack.Navigator>
+    <ProfileStack.Navigator screenOptions={brandHeaderOptions}>
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{ title: 'Profile' }}
+        options={{ headerTitle: () => <HeaderLogo /> }}
       />
       <ProfileStack.Screen
         name="Addresses"
@@ -143,12 +154,7 @@ export function BuyerTabs(): React.JSX.Element {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#4F46E5',
-        tabBarInactiveTintColor: '#6B7280',
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E7EB',
-        },
+        ...brandTabBarOptions,
       }}
     >
       <Tab.Screen name="HomeTab" component={HomeStackScreen} options={{ title: 'Home' }} />
@@ -157,7 +163,12 @@ export function BuyerTabs(): React.JSX.Element {
       <Tab.Screen
         name="Wishlist"
         component={WishlistScreen}
-        options={{ title: 'Wishlist', headerShown: true }}
+        options={{
+          title: 'Wishlist',
+          headerShown: true,
+          ...brandHeaderOptions,
+          headerTitle: () => <HeaderLogo />,
+        }}
       />
       <Tab.Screen name="OrdersTab" component={OrdersStackScreen} options={{ title: 'Orders' }} />
       <Tab.Screen name="ProfileTab" component={ProfileStackScreen} options={{ title: 'Profile' }} />

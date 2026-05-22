@@ -1,7 +1,8 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
-import { createAddress, listAddresses, updateAddress, deleteAddress } from './service.js';
+import { createAddress, listAddresses, updateAddress, deleteAddress, setDefaultAddress, } from './service.js';
 import { extractBuyerId, validateCreateAddressInput, validateUpdateAddressInput, extractAddressIdFromPath, } from './validators.js';
 /**
  * POST /addresses — creates a new address for the authenticated buyer.
@@ -24,6 +25,7 @@ const rawCreateAddressHandler = async (event) => {
 };
 export const createAddressHandler = middy(rawCreateAddressHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'address-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -44,7 +46,9 @@ const rawListAddressesHandler = async (event) => {
         body: JSON.stringify({ addresses }),
     };
 };
-export const listAddressesHandler = middy(rawListAddressesHandler).use(httpErrorHandler({
+export const listAddressesHandler = middy(rawListAddressesHandler)
+    .use(structuredLogger({ service: 'address-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 /**
@@ -69,6 +73,7 @@ const rawUpdateAddressHandler = async (event) => {
 };
 export const updateAddressHandler = middy(rawUpdateAddressHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'address-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -90,7 +95,33 @@ const rawDeleteAddressHandler = async (event) => {
         body: JSON.stringify({ message: 'Address deleted successfully' }),
     };
 };
-export const deleteAddressHandler = middy(rawDeleteAddressHandler).use(httpErrorHandler({
+export const deleteAddressHandler = middy(rawDeleteAddressHandler)
+    .use(structuredLogger({ service: 'address-service' }))
+    .use(httpErrorHandler({
+    fallbackMessage: 'An unexpected error occurred. Please try again later.',
+}));
+/**
+ * POST /addresses/{addressId}/default — sets an address as the default for the authenticated buyer.
+ * Uses TransactWriteItems to atomically set isDefault = true on the target address
+ * and isDefault = false on the previously default address.
+ *
+ * Requirement 9.6
+ */
+const rawSetDefaultAddressHandler = async (event) => {
+    const buyerId = extractBuyerId(event);
+    const addressId = extractAddressIdFromPath(event);
+    const address = await setDefaultAddress(buyerId, addressId);
+    return {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(address),
+    };
+};
+export const setDefaultAddressHandler = middy(rawSetDefaultAddressHandler)
+    .use(structuredLogger({ service: 'address-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 //# sourceMappingURL=handler.js.map

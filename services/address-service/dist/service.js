@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand, } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, TransactWriteCommand, UpdateCommand, } from '@aws-sdk/lib-dynamodb';
 import { createNotFoundError, createServiceUnavailableError } from './errors.js';
 const dynamoDbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
@@ -224,9 +224,125 @@ function mapItemToAddressRecord(item) {
         state: item['state'],
         postalCode: item['postalCode'],
         country: item['country'],
-        isDefault: item['isDefault'] ?? false,
+        isDefault: item['isDefault'] === true,
         createdAt: item['createdAt'],
         updatedAt: item['updatedAt'],
     };
+}
+/**
+ * Sets an address as the default for the buyer.
+ * Uses TransactWriteItems to atomically:
+ * 1. Set isDefault = true on the target address
+ * 2. Set isDefault = false on the previously default address (if any)
+ *
+ * Requirement 9.6
+ */
+export async function setDefaultAddress(buyerId, addressId) {
+    const tableName = getAddressesTableName();
+    try {
+        // Step 1: Assert ownership — verify the target address exists and belongs to the buyer
+        const targetAddress = await getAddressItem(buyerId, addressId);
+        if (!targetAddress) {
+            createNotFoundError(`Address '${addressId}' not found`);
+        }
+        // If the target address is already the default, return it as-is
+        if (targetAddress['isDefault'] === true) {
+            return mapItemToAddressRecord(targetAddress);
+        }
+        // Step 2: Find the currently default address (if any)
+        const allAddresses = await findCurrentDefaultAddress(buyerId);
+        const now = new Date().toISOString();
+        // Step 3: Build TransactWriteItems for atomic update
+        const transactItems = [
+            {
+                // Set isDefault = true on the target address
+                Update: {
+                    TableName: tableName,
+                    Key: {
+                        PK: `BUYER#${buyerId}`,
+                        SK: `ADDRESS#${addressId}`,
+                    },
+                    UpdateExpression: 'SET #isDefault = :true, #updatedAt = :now',
+                    ExpressionAttributeNames: {
+                        '#isDefault': 'isDefault',
+                        '#updatedAt': 'updatedAt',
+                    },
+                    ExpressionAttributeValues: {
+                        ':true': true,
+                        ':now': now,
+                    },
+                },
+            },
+        ];
+        // If there's a previously default address, unset it
+        if (allAddresses) {
+            transactItems.push({
+                Update: {
+                    TableName: tableName,
+                    Key: {
+                        PK: `BUYER#${buyerId}`,
+                        SK: `ADDRESS#${allAddresses.addressId}`,
+                    },
+                    UpdateExpression: 'SET #isDefault = :false, #updatedAt = :now',
+                    ExpressionAttributeNames: {
+                        '#isDefault': 'isDefault',
+                        '#updatedAt': 'updatedAt',
+                    },
+                    ExpressionAttributeValues: {
+                        ':false': false,
+                        ':now': now,
+                    },
+                },
+            });
+        }
+        const transactCommand = new TransactWriteCommand({
+            TransactItems: transactItems,
+        });
+        await docClient.send(transactCommand);
+        // Step 4: Return the updated target address
+        return mapItemToAddressRecord({
+            ...targetAddress,
+            isDefault: true,
+            updatedAt: now,
+        });
+    }
+    catch (error) {
+        if (error && typeof error === 'object' && 'statusCode' in error) {
+            throw error;
+        }
+        createServiceUnavailableError();
+    }
+}
+/**
+ * Finds the currently default address for a buyer.
+ * Returns the addressId of the default address, or null if none is set.
+ */
+async function findCurrentDefaultAddress(buyerId) {
+    const tableName = getAddressesTableName();
+    const queryCommand = new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :skPrefix)',
+        FilterExpression: '#isDefault = :true',
+        ExpressionAttributeNames: {
+            '#pk': 'PK',
+            '#sk': 'SK',
+            '#isDefault': 'isDefault',
+        },
+        ExpressionAttributeValues: {
+            ':pk': `BUYER#${buyerId}`,
+            ':skPrefix': 'ADDRESS#',
+            ':true': true,
+        },
+    });
+    const result = await docClient.send(queryCommand);
+    const items = result.Items ?? [];
+    if (items.length === 0) {
+        return null;
+    }
+    // Return the first default address found
+    const defaultItem = items[0];
+    const sk = defaultItem?.['SK'];
+    const addressId = typeof sk === 'string' ? sk.replace('ADDRESS#', '') : '';
+    return { addressId };
 }
 //# sourceMappingURL=service.js.map

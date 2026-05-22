@@ -186,7 +186,7 @@ export function RegisterScreen(): React.JSX.Element {
               accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
               accessibilityRole="button"
             >
-              <Text className="text-sm font-medium text-indigo-600">
+              <Text className="text-sm font-medium text-blue-600">
                 {showPassword ? 'Hide' : 'Show'}
               </Text>
             </TouchableOpacity>
@@ -205,7 +205,7 @@ export function RegisterScreen(): React.JSX.Element {
           <View className="flex-row gap-3">
             <TouchableOpacity
               className={`flex-1 rounded-lg border-2 px-4 py-3 ${
-                role === 'Buyer' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300 bg-white'
+                role === 'Buyer' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white'
               }`}
               onPress={() => {
                 setRole('Buyer');
@@ -216,7 +216,7 @@ export function RegisterScreen(): React.JSX.Element {
             >
               <Text
                 className={`text-center text-sm font-semibold ${
-                  role === 'Buyer' ? 'text-indigo-700' : 'text-gray-600'
+                  role === 'Buyer' ? 'text-blue-700' : 'text-gray-600'
                 }`}
               >
                 Buy Products
@@ -224,7 +224,7 @@ export function RegisterScreen(): React.JSX.Element {
             </TouchableOpacity>
             <TouchableOpacity
               className={`flex-1 rounded-lg border-2 px-4 py-3 ${
-                role === 'Seller' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300 bg-white'
+                role === 'Seller' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white'
               }`}
               onPress={() => {
                 setRole('Seller');
@@ -235,7 +235,7 @@ export function RegisterScreen(): React.JSX.Element {
             >
               <Text
                 className={`text-center text-sm font-semibold ${
-                  role === 'Seller' ? 'text-indigo-700' : 'text-gray-600'
+                  role === 'Seller' ? 'text-blue-700' : 'text-gray-600'
                 }`}
               >
                 Sell Products
@@ -247,7 +247,7 @@ export function RegisterScreen(): React.JSX.Element {
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-indigo-400' : 'bg-indigo-600'}`}
+          className={`rounded-lg px-4 py-4 ${isLoading ? 'bg-blue-400' : 'bg-blue-600'}`}
           onPress={() => void handleRegister()}
           disabled={isLoading}
           accessibilityLabel="Create account"
@@ -271,7 +271,7 @@ export function RegisterScreen(): React.JSX.Element {
             accessibilityLabel="Go to login"
             accessibilityRole="link"
           >
-            <Text className="text-sm font-semibold text-indigo-600">Sign In</Text>
+            <Text className="text-sm font-semibold text-blue-600">Sign In</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

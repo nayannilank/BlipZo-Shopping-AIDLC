@@ -1,3 +1,4 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
@@ -21,7 +22,9 @@ const rawGetCartHandler = async (event) => {
         body: JSON.stringify(cart),
     };
 };
-export const getCartHandler = middy(rawGetCartHandler).use(httpErrorHandler({
+export const getCartHandler = middy(rawGetCartHandler)
+    .use(structuredLogger({ service: 'cart-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 /**
@@ -46,6 +49,7 @@ const rawPutCartItemHandler = async (event) => {
 };
 export const putCartItemHandler = middy(rawPutCartItemHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'cart-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -67,7 +71,9 @@ const rawRemoveCartItemHandler = async (event) => {
         body: JSON.stringify(cart),
     };
 };
-export const removeCartItemHandler = middy(rawRemoveCartItemHandler).use(httpErrorHandler({
+export const removeCartItemHandler = middy(rawRemoveCartItemHandler)
+    .use(structuredLogger({ service: 'cart-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 /**
@@ -87,7 +93,9 @@ const rawClearCartHandler = async (event) => {
         body: JSON.stringify(cart),
     };
 };
-export const clearCartHandler = middy(rawClearCartHandler).use(httpErrorHandler({
+export const clearCartHandler = middy(rawClearCartHandler)
+    .use(structuredLogger({ service: 'cart-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 //# sourceMappingURL=handler.js.map

@@ -94,9 +94,7 @@ function ReturnExchangeModal({
 
           <TouchableOpacity
             className={`rounded-lg p-4 mb-3 border ${
-              selectedType === 'Return'
-                ? 'border-indigo-600 bg-indigo-50'
-                : 'border-gray-200 bg-white'
+              selectedType === 'Return' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'
             }`}
             onPress={() => {
               setSelectedType('Return');
@@ -109,11 +107,11 @@ function ReturnExchangeModal({
             <View className="flex-row items-center">
               <View
                 className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3 ${
-                  selectedType === 'Return' ? 'border-indigo-600' : 'border-gray-300'
+                  selectedType === 'Return' ? 'border-blue-600' : 'border-gray-300'
                 }`}
               >
                 {selectedType === 'Return' && (
-                  <View className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                  <View className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                 )}
               </View>
               <View>
@@ -126,7 +124,7 @@ function ReturnExchangeModal({
           <TouchableOpacity
             className={`rounded-lg p-4 mb-6 border ${
               selectedType === 'Exchange'
-                ? 'border-indigo-600 bg-indigo-50'
+                ? 'border-blue-600 bg-blue-50'
                 : 'border-gray-200 bg-white'
             }`}
             onPress={() => {
@@ -140,11 +138,11 @@ function ReturnExchangeModal({
             <View className="flex-row items-center">
               <View
                 className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3 ${
-                  selectedType === 'Exchange' ? 'border-indigo-600' : 'border-gray-300'
+                  selectedType === 'Exchange' ? 'border-blue-600' : 'border-gray-300'
                 }`}
               >
                 {selectedType === 'Exchange' && (
-                  <View className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                  <View className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                 )}
               </View>
               <View>
@@ -167,7 +165,7 @@ function ReturnExchangeModal({
             </TouchableOpacity>
             <TouchableOpacity
               className={`flex-1 ml-2 rounded-lg py-3 items-center ${
-                isSubmitting ? 'bg-gray-300' : 'bg-indigo-600'
+                isSubmitting ? 'bg-gray-300' : 'bg-blue-600'
               }`}
               onPress={() => {
                 onSubmit(selectedType);
@@ -268,7 +266,7 @@ export function OrderDetailScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading order details...</Text>
       </View>
     );
@@ -282,7 +280,7 @@ export function OrderDetailScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 px-6 py-3 rounded-lg"
+          className="mt-4 bg-blue-600 px-6 py-3 rounded-lg"
           onPress={() => {
             void refetch();
           }}
@@ -335,7 +333,7 @@ export function OrderDetailScreen(): React.JSX.Element {
           ))}
           <View className="flex-row justify-between pt-3 mt-1">
             <Text className="text-base font-bold text-gray-900">Total</Text>
-            <Text className="text-base font-bold text-indigo-600">
+            <Text className="text-base font-bold text-blue-600">
               ₹{order.totalAmount.toFixed(2)}
             </Text>
           </View>
@@ -423,7 +421,7 @@ export function OrderDetailScreen(): React.JSX.Element {
             )}
             {canReturnExchange && (
               <TouchableOpacity
-                className="rounded-lg py-3.5 items-center border border-indigo-300 bg-indigo-50 mt-3"
+                className="rounded-lg py-3.5 items-center border border-blue-300 bg-blue-50 mt-3"
                 onPress={() => {
                   setShowReturnModal(true);
                 }}
@@ -431,7 +429,7 @@ export function OrderDetailScreen(): React.JSX.Element {
                 accessibilityRole="button"
                 accessibilityLabel="Request return or exchange"
               >
-                <Text className="text-sm font-semibold text-indigo-600">Return / Exchange</Text>
+                <Text className="text-sm font-semibold text-blue-600">Return / Exchange</Text>
               </TouchableOpacity>
             )}
           </View>

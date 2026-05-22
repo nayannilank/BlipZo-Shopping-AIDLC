@@ -1,3 +1,4 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
@@ -25,6 +26,7 @@ const rawRegisterHandler = async (event) => {
 };
 export const registerHandler = middy(rawRegisterHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'auth-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -52,6 +54,7 @@ const rawLoginHandler = async (event) => {
 };
 export const loginHandler = middy(rawLoginHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'auth-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -76,6 +79,7 @@ const rawOtpRequestHandler = async (event) => {
 };
 export const otpRequestHandler = middy(rawOtpRequestHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'auth-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -103,6 +107,7 @@ const rawOtpVerifyHandler = async (event) => {
 };
 export const otpVerifyHandler = middy(rawOtpVerifyHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'auth-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -127,6 +132,7 @@ const rawTokenRefreshHandler = async (event) => {
 };
 export const tokenRefreshHandler = middy(rawTokenRefreshHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'auth-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));

@@ -1,8 +1,9 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
 import { getWishlist, addToWishlist, removeFromWishlist } from './service.js';
-import { extractBuyerId, validateAddToWishlistInput, extractProductIdFromPath } from './validators.js';
+import { extractBuyerId, validateAddToWishlistInput, extractProductIdFromPath, } from './validators.js';
 /**
  * GET /wishlist — returns the buyer's wishlist with enriched product data.
  * Queries wishlists table with PK = BUYER#{buyerId}, batch-gets product details,
@@ -21,7 +22,9 @@ const rawGetWishlistHandler = async (event) => {
         body: JSON.stringify(wishlist),
     };
 };
-export const getWishlistHandler = middy(rawGetWishlistHandler).use(httpErrorHandler({
+export const getWishlistHandler = middy(rawGetWishlistHandler)
+    .use(structuredLogger({ service: 'wishlist-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 /**
@@ -47,6 +50,7 @@ const rawAddToWishlistHandler = async (event) => {
 };
 export const addToWishlistHandler = middy(rawAddToWishlistHandler)
     .use(httpJsonBodyParser())
+    .use(structuredLogger({ service: 'wishlist-service' }))
     .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
@@ -69,7 +73,9 @@ const rawRemoveFromWishlistHandler = async (event) => {
         body: JSON.stringify(wishlist),
     };
 };
-export const removeFromWishlistHandler = middy(rawRemoveFromWishlistHandler).use(httpErrorHandler({
+export const removeFromWishlistHandler = middy(rawRemoveFromWishlistHandler)
+    .use(structuredLogger({ service: 'wishlist-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred. Please try again later.',
 }));
 //# sourceMappingURL=handler.js.map

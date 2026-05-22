@@ -1,6 +1,6 @@
+import type { PaymentResponse } from '@blipzo/shared';
 import middy from '@middy/core';
 import type { Context } from 'aws-lambda';
-import type { PaymentResponse } from '@blipzo/shared';
 /**
  * Lambda event shape for Lambda-to-Lambda invocation.
  * The Payment_Service is invoked directly by Order_Service via AWS SDK,
@@ -26,6 +26,6 @@ interface PaymentErrorResponse {
         fields?: Record<string, string>;
     };
 }
-export declare const handler: middy.MiddyfiedHandler<PaymentLambdaEvent, PaymentResponse | PaymentErrorResponse, Error, Context, {}>;
+export declare const handler: middy.MiddyfiedHandler<import("aws-lambda").APIGatewayProxyEvent & PaymentLambdaEvent, PaymentResponse | PaymentErrorResponse, Error, Context, {}>;
 export {};
 //# sourceMappingURL=handler.d.ts.map

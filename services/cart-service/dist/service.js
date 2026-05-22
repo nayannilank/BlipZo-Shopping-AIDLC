@@ -29,7 +29,7 @@ export async function putCartItem(buyerId, productId, quantity) {
                 },
             });
             await docClient.send(deleteCommand);
-            return getCart(buyerId);
+            return await getCart(buyerId);
         }
         // Step 1: Verify product exists and check stock (Requirements 8.4, 8.8)
         const getProductCommand = new GetCommand({
@@ -62,7 +62,7 @@ export async function putCartItem(buyerId, productId, quantity) {
         });
         await docClient.send(putCommand);
         // Step 3: Return updated cart
-        return getCart(buyerId);
+        return await getCart(buyerId);
     }
     catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
@@ -207,7 +207,7 @@ export async function removeCartItem(buyerId, productId) {
             },
         });
         await docClient.send(deleteCommand);
-        return getCart(buyerId);
+        return await getCart(buyerId);
     }
     catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {

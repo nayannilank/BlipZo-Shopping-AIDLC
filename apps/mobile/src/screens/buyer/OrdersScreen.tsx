@@ -76,7 +76,7 @@ function OrderListItem({
       </Text>
       <View className="flex-row items-center justify-between mt-2">
         <Text className="text-xs text-gray-500">{formattedDate}</Text>
-        <Text className="text-base font-bold text-indigo-600">₹{order.totalAmount.toFixed(2)}</Text>
+        <Text className="text-base font-bold text-blue-600">₹{order.totalAmount.toFixed(2)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -134,7 +134,7 @@ export function OrdersScreen(): React.JSX.Element {
     if (!isFetchingNextPage) return null;
     return (
       <View className="py-4 items-center">
-        <ActivityIndicator size="small" color="#4F46E5" />
+        <ActivityIndicator size="small" color="#2563EB" />
       </View>
     );
   }, [isFetchingNextPage]);
@@ -142,7 +142,7 @@ export function OrdersScreen(): React.JSX.Element {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text className="mt-3 text-gray-500">Loading orders...</Text>
       </View>
     );
@@ -156,7 +156,7 @@ export function OrdersScreen(): React.JSX.Element {
           {error instanceof Error ? error.message : 'An unexpected error occurred'}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-indigo-600 px-6 py-3 rounded-lg"
+          className="mt-4 bg-blue-600 px-6 py-3 rounded-lg"
           onPress={() => {
             void refetch();
           }}
@@ -197,7 +197,7 @@ export function OrdersScreen(): React.JSX.Element {
             onRefresh={() => {
               void handleRefresh();
             }}
-            tintColor="#4F46E5"
+            tintColor="#2563EB"
           />
         }
         ListHeaderComponent={

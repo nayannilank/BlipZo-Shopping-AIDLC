@@ -150,7 +150,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return `201` with full `ProductRecord`
     - _Requirements: 5.1, 5.2, 5.8_
 
-  - [ ] 6.2 Write property tests for product creation
+  - [~] 6.2 Write property tests for product creation
     - **Property 11: Valid product creation persists all fields and returns a unique ID**
     - **Property 12: Invalid product fields are rejected with field-specific errors**
     - **Property 15: S3 upload failure prevents partial product creation (atomicity)**
@@ -468,20 +468,20 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
 - [x] 17. Checkpoint — Web and Mobile applications
   - Ensure all web and mobile unit tests pass. Verify `pnpm turbo typecheck` passes across all apps. Ask the user if questions arise.
 
-- [ ] 18. CI/CD pipeline (GitHub Actions)
-  - [ ] 18.1 Create validate workflow
+- [x] 18. CI/CD pipeline (GitHub Actions)
+  - [x] 18.1 Create validate workflow
     - Create `.github/workflows/ci.yml` triggered on `push` to `main` and all `pull_request` events
     - Steps: `actions/checkout@v4`, `pnpm/action-setup@v3`, `pnpm install --frozen-lockfile`, `pnpm turbo typecheck`, `pnpm turbo lint`, `pnpm turbo test:unit`, `pnpm turbo test:property`, `pnpm turbo test:integration`
     - Cache pnpm store using `actions/cache` keyed on `pnpm-lock.yaml` hash
     - _Requirements: 17.3_
 
-  - [ ] 18.2 Create deploy-dev job
+  - [x] 18.2 Create deploy-dev job
     - Add `deploy-dev` job to `ci.yml` with `needs: validate` and `if: github.ref == 'refs/heads/main'`
     - Steps: `pnpm turbo build`, `cd infra/cdk && npx cdk deploy BlipzoStack-dev --require-approval never`
     - Configure AWS credentials via `aws-actions/configure-aws-credentials` using GitHub OIDC (no long-lived access keys)
     - _Requirements: 17.2, 17.3, 17.4_
 
-  - [ ] 18.3 Add security scanning step
+  - [x] 18.3 Add security scanning step
     - Add `pnpm audit --audit-level=high` step to the validate job to fail the pipeline on high-severity dependency vulnerabilities
     - Add `cdk synth` step to validate CloudFormation output before deploy
     - _Requirements: 17.3_
@@ -490,8 +490,8 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Verify `turbo.json` pipeline tasks have correct `dependsOn` and `outputs` by running `pnpm turbo run build --dry-run` and asserting expected task graph
     - _Requirements: 17.3_
 
-- [ ] 19. Integration tests and E2E tests
-  - [ ] 19.1 Write backend integration tests (Vitest + AWS SDK)
+- [x] 19. Integration tests and E2E tests
+  - [x] 19.1 Write backend integration tests (Vitest + AWS SDK)
     - Create `tests/integration/` at repo root
     - Auth flow: register → login → verify JWT claims → refresh token
     - Product flow: create product → update product → delete product → verify soft-delete
@@ -503,7 +503,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return/exchange flow: checkout → (simulate delivery) → submit return request → verify policy snapshot
     - _Requirements: 15.1, 15.2, 17.3_
 
-  - [ ] 19.2 Write API Gateway RBAC integration tests
+  - [x] 19.2 Write API Gateway RBAC integration tests
     - Test Buyer JWT on Seller-only endpoints returns `403`
     - Test Seller JWT on Buyer-only endpoints returns `403`
     - Test missing JWT on protected endpoints returns `401`
@@ -515,24 +515,24 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Auth login endpoint: 50 virtual users, assert p99 < 5000ms (cold start budget)
     - _Requirements: 15.2, 15.4_
 
-- [ ] 20. Final checkpoint — Full platform
+- [x] 20. Final checkpoint — Full platform
   - Ensure all unit, property, integration, and E2E tests pass. Run `pnpm turbo typecheck` and `pnpm turbo lint` with zero errors. Verify `cdk synth` succeeds for all three environments. Ask the user if questions arise.
 
-- [ ] 21. Design tokens and color theme setup
-  - [ ] 21.1 Define shared design tokens (color palette) in the shared package
+- [x] 21. Design tokens and color theme setup
+  - [x] 21.1 Define shared design tokens (color palette) in the shared package
     - Create `packages/shared/src/design-tokens/colors.ts` exporting the blue and purple color palette as named constants (e.g., `brand.primary` for blue, `brand.secondary` for purple) with light/dark shades for hover, active, and disabled states
     - Include WCAG AA-compliant foreground colors for each background shade (ensure contrast ratio ≥ 4.5:1 for normal text, ≥ 3:1 for large text)
     - Export a `designTokens` object consumable by both Tailwind CSS config and NativeWind theme config
     - Add barrel export from `packages/shared/src/index.ts`
     - _Requirements: 20.3, 20.4_
 
-  - [ ] 21.2 Apply blue-purple color theme to web app (Tailwind config)
+  - [x] 21.2 Apply blue-purple color theme to web app (Tailwind config)
     - Update `apps/web/tailwind.config.ts` to import color tokens from `@blipzo/shared` and extend the Tailwind theme with `colors.brand.primary` (blue) and `colors.brand.secondary` (purple)
     - Update global CSS / Tailwind base layer to apply brand colors to buttons, links, headers, and navigation elements
     - Verify all color combinations meet WCAG AA contrast ratio requirements
     - _Requirements: 20.1, 20.4_
 
-  - [ ] 21.3 Apply blue-purple color theme to mobile app (NativeWind/theme config)
+  - [x] 21.3 Apply blue-purple color theme to mobile app (NativeWind/theme config)
     - Update `apps/mobile/tailwind.config.ts` (NativeWind) to import color tokens from `@blipzo/shared` and extend the theme with the same brand primary (blue) and secondary (purple) colors
     - Update shared navigation theme and component styles to use brand colors for buttons, links, headers, and tab bar
     - Verify all color combinations meet WCAG AA contrast ratio requirements
@@ -543,26 +543,26 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test that the exported token structure matches the expected schema for both Tailwind and NativeWind consumption
     - _Requirements: 20.3, 20.4_
 
-- [ ] 22. Logo asset setup and integration
-  - [ ] 22.1 Copy and configure logo asset for web and mobile
+- [x] 22. Logo asset setup and integration
+  - [x] 22.1 Copy and configure logo asset for web and mobile
     - Copy `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` to `apps/web/public/logo.png` for the web app
     - Copy `/Users/nayannilank/Desktop/Nayan/Projects/Logo_Fun.png` to `apps/mobile/assets/logo.png` for the mobile app
     - Generate required splash screen asset sizes from the logo for Expo (e.g., `splash.png` at recommended 1284×2778 resolution with the logo centered on a brand-colored background)
     - _Requirements: 19.1, 19.2, 19.4_
 
-  - [ ] 22.2 Add logo to web app header/navigation
+  - [x] 22.2 Add logo to web app header/navigation
     - Update the web app's header/navigation component to display the logo image (`/logo.png`) with proper `alt` text ("BlipZo")
     - Apply CSS to maintain original aspect ratio (`object-fit: contain` or equivalent) without distortion
     - Ensure the logo is responsive and appropriately sized across all breakpoints (320px–1920px)
     - _Requirements: 19.1, 19.4_
 
-  - [ ] 22.3 Add logo to mobile app header/navigation
+  - [x] 22.3 Add logo to mobile app header/navigation
     - Update the mobile app's navigation header (React Navigation) to display the logo image from `assets/logo.png`
     - Use `resizeMode: 'contain'` to maintain original aspect ratio without distortion
     - Ensure the logo renders correctly on various Android screen densities
     - _Requirements: 19.2, 19.4_
 
-  - [ ] 22.4 Configure mobile splash screen with logo
+  - [x] 22.4 Configure mobile splash screen with logo
     - Update `apps/mobile/app.json` (or `app.config.ts`) to configure the Expo splash screen with the logo centered on a brand-colored background (using the primary blue from design tokens)
     - Set `splash.resizeMode` to `contain` to maintain aspect ratio
     - Ensure the splash screen displays until the app is fully loaded (use `expo-splash-screen` `preventAutoHideAsync` / `hideAsync` pattern in the root component)
@@ -574,7 +574,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Test that the logo element has appropriate accessibility properties
     - _Requirements: 19.1, 19.2, 19.4_
 
-- [ ] 23. Checkpoint — Branding and theme
+- [x] 23. Checkpoint — Branding and theme
   - Ensure all design token tests pass. Verify logo renders correctly in web and mobile headers. Verify splash screen displays on mobile app launch. Run `pnpm turbo typecheck` with zero errors. Ask the user if questions arise.
 
 ## Notes

@@ -1,8 +1,10 @@
+import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
+import { createInternalError } from './errors.js';
+import { emitPaymentFailureCount } from './metrics.js';
 import { processPayment } from './service.js';
 import { validatePaymentRequest } from './validators.js';
-import { createInternalError } from './errors.js';
 /**
  * Payment Lambda handler — invoked Lambda-to-Lambda by Order_Service.
  * No API Gateway route is exposed for this service.
@@ -24,6 +26,8 @@ const rawHandler = async (event, _context) => {
         // Handle known HTTP errors (from validators/service)
         if (error && typeof error === 'object' && 'statusCode' in error) {
             const httpError = error;
+            // Requirement 16.4: Emit PaymentFailureCount metric on payment failure
+            await emitPaymentFailureCount();
             return {
                 success: false,
                 error: {
@@ -34,10 +38,14 @@ const rawHandler = async (event, _context) => {
             };
         }
         // Requirement 11.4: Internal error returns standardized error response
+        // Requirement 16.4: Emit PaymentFailureCount metric on internal payment failure
+        await emitPaymentFailureCount();
         createInternalError();
     }
 };
-export const handler = middy(rawHandler).use(httpErrorHandler({
+export const handler = middy(rawHandler)
+    .use(structuredLogger({ service: 'payment-service' }))
+    .use(httpErrorHandler({
     fallbackMessage: 'An unexpected error occurred during payment processing.',
 }));
 //# sourceMappingURL=handler.js.map

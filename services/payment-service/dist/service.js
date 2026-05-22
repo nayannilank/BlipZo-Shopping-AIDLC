@@ -80,6 +80,7 @@ async function writePaymentRecord(record) {
     // Security assertion: ensure no sensitive fields are present
     for (const field of SENSITIVE_FIELDS) {
         if (field in item) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete item[field];
         }
     }

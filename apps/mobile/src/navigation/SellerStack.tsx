@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
+import { HeaderLogo } from '../components/HeaderLogo';
 import { SellerProfileScreen } from '../screens/seller/SellerProfileScreen';
 import {
   SellerProductListScreen,
@@ -10,6 +11,8 @@ import {
 } from '../screens/SellerDashboard';
 import type { SellerDashboardParamList } from '../screens/SellerDashboard';
 
+import { brandHeaderOptions } from './theme';
+
 export type SellerStackParamList = SellerDashboardParamList & {
   SellerProfile: undefined;
 };
@@ -18,17 +21,11 @@ const Stack = createNativeStackNavigator<SellerStackParamList>();
 
 export function SellerStack(): React.JSX.Element {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#4F46E5' },
-        headerTintColor: '#FFFFFF',
-        headerTitleStyle: { fontWeight: '600' },
-      }}
-    >
+    <Stack.Navigator screenOptions={brandHeaderOptions}>
       <Stack.Screen
         name="ProductList"
         component={SellerProductListScreen}
-        options={{ title: 'My Products' }}
+        options={{ headerTitle: () => <HeaderLogo /> }}
       />
       <Stack.Screen
         name="AddProduct"
