@@ -45,6 +45,11 @@ jobs:
           role-to-assume: arn:aws:iam::165030184891:role/cdk-hnb659fds-deploy-role-165030184891-ap-south-1
           aws-region: ap-south-1
 
+      - name: Debug GitHub Context
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Ref: $GITHUB_REF"
+
       - name: Verify identity
         run: aws sts get-caller-identity
 
