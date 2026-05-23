@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "BlipZo cloud-native e-commerce platform monorepo",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "packageManager": "npm@11.6.2",
   "workspaces": [
