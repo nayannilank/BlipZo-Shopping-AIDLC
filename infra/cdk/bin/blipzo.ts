@@ -13,7 +13,7 @@ import { BlipzoStack } from '../lib/BlipzoStack';
 
 const app = new cdk.App();
 
-const stages = ['dev', 'qa', 'prod'] as const;
+const stages = ['qa', 'prod'] as const;
 
 for (const stageName of stages) {
   new BlipzoStack(app, `BlipzoStack-${stageName}`, {
