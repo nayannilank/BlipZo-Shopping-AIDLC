@@ -150,7 +150,7 @@ Full-stack implementation of the BlipZo cloud-native e-commerce platform. The pl
     - Return `201` with full `ProductRecord`
     - _Requirements: 5.1, 5.2, 5.8_
 
-  - [~] 6.2 Write property tests for product creation
+  - [ ] 6.2 Write property tests for product creation
     - **Property 11: Valid product creation persists all fields and returns a unique ID**
     - **Property 12: Invalid product fields are rejected with field-specific errors**
     - **Property 15: S3 upload failure prevents partial product creation (atomicity)**
