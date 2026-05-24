@@ -19423,29 +19423,43 @@ var getReturnExchangeHandler = core_default(rawGetReturnExchangeHandler).use(str
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "GET /orders":
-      return orderHistoryHandler(event, context);
+      response = await orderHistoryHandler(event, context);
+      break;
     case "POST /orders/checkout":
-      return checkoutHandler(event, context);
+      response = await checkoutHandler(event, context);
+      break;
     case "GET /orders/{orderId}":
-      return orderDetailHandler(event, context);
+      response = await orderDetailHandler(event, context);
+      break;
     case "POST /orders/{orderId}/cancel":
-      return cancelOrderHandler(event, context);
+      response = await cancelOrderHandler(event, context);
+      break;
     case "POST /orders/{orderId}/return-exchange":
-      return returnExchangeHandler(event, context);
+      response = await returnExchangeHandler(event, context);
+      break;
     case "GET /orders/return-exchange/{requestId}":
-      return getReturnExchangeHandler(event, context);
+      response = await getReturnExchangeHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

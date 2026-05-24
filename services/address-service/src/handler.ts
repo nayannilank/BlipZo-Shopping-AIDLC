@@ -173,6 +173,12 @@ export const setDefaultAddressHandler = middy(rawSetDefaultAddressHandler)
     }),
   );
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Correlation-Id',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+};
+
 /**
  * Main Lambda entry point — routes requests to the appropriate handler
  * based on HTTP method and API Gateway resource path.
@@ -184,22 +190,33 @@ export const handler = async (
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
 
+  let response: APIGatewayProxyResult;
+
   switch (route) {
     case 'GET /addresses':
-      return listAddressesHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await listAddressesHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /addresses':
-      return createAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await createAddressHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'PATCH /addresses/{addressId}':
-      return updateAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await updateAddressHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'DELETE /addresses/{addressId}':
-      return deleteAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await deleteAddressHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /addresses/{addressId}/default':
-      return setDefaultAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await setDefaultAddressHandler(event, context)) as APIGatewayProxyResult;
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
       };
   }
+
+  // Add CORS headers to every response
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };

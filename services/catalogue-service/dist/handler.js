@@ -18692,25 +18692,37 @@ var searchProductsHandler = core_default(rawSearchProductsHandler).use(catalogue
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "GET /catalogue/categories":
-      return listCategoriesHandler(event, context);
+      response = await listCategoriesHandler(event, context);
+      break;
     case "GET /catalogue/categories/{categoryId}":
-      return listProductsByCategoryHandler(event, context);
+      response = await listProductsByCategoryHandler(event, context);
+      break;
     case "GET /catalogue/search":
-      return searchProductsHandler(event, context);
+      response = await searchProductsHandler(event, context);
+      break;
     case "GET /catalogue/products/{productId}":
-      return getProductDetailHandler(event, context);
+      response = await getProductDetailHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

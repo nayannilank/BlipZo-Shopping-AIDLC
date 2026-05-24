@@ -16701,29 +16701,43 @@ var getProductHandler = core_default(rawGetProductHandler).use(structuredLogger(
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "POST /products":
-      return createProductHandler(event, context);
+      response = await createProductHandler(event, context);
+      break;
     case "GET /products/{productId}":
-      return getProductHandler(event, context);
+      response = await getProductHandler(event, context);
+      break;
     case "PATCH /products/{productId}":
-      return updateProductHandler(event, context);
+      response = await updateProductHandler(event, context);
+      break;
     case "DELETE /products/{productId}":
-      return deleteProductHandler(event, context);
+      response = await deleteProductHandler(event, context);
+      break;
     case "POST /products/{productId}/policy":
-      return setSellerPolicyHandler(event, context);
+      response = await setSellerPolicyHandler(event, context);
+      break;
     case "GET /products/seller/me":
-      return listSellerProductsHandler(event, context);
+      response = await listSellerProductsHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

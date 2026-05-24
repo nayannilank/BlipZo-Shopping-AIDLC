@@ -16442,23 +16442,34 @@ var removeFromWishlistHandler = core_default(rawRemoveFromWishlistHandler).use(s
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "GET /wishlist":
-      return getWishlistHandler(event, context);
+      response = await getWishlistHandler(event, context);
+      break;
     case "POST /wishlist/items":
-      return addToWishlistHandler(event, context);
+      response = await addToWishlistHandler(event, context);
+      break;
     case "DELETE /wishlist/items/{productId}":
-      return removeFromWishlistHandler(event, context);
+      response = await removeFromWishlistHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

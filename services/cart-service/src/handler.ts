@@ -125,6 +125,12 @@ export const clearCartHandler = middy(rawClearCartHandler)
     }),
   );
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Correlation-Id',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+};
+
 /**
  * Main Lambda entry point — routes requests to the appropriate handler
  * based on HTTP method and API Gateway resource path.
@@ -136,20 +142,30 @@ export const handler = async (
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
 
+  let response: APIGatewayProxyResult;
+
   switch (route) {
     case 'GET /cart':
-      return getCartHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await getCartHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'DELETE /cart':
-      return clearCartHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await clearCartHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'PUT /cart/items':
-      return putCartItemHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await putCartItemHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'DELETE /cart/items/{productId}':
-      return removeCartItemHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await removeCartItemHandler(event, context)) as APIGatewayProxyResult;
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
       };
   }
+
+  // Add CORS headers to every response
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };

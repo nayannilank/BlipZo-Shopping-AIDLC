@@ -236,6 +236,12 @@ export const getReturnExchangeHandler = middy(rawGetReturnExchangeHandler)
     }),
   );
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Correlation-Id',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+};
+
 /**
  * Main Lambda entry point — routes requests to the appropriate handler
  * based on HTTP method and API Gateway resource path.
@@ -247,24 +253,36 @@ export const handler = async (
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
 
+  let response: APIGatewayProxyResult;
+
   switch (route) {
     case 'GET /orders':
-      return orderHistoryHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await orderHistoryHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /orders/checkout':
-      return checkoutHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await checkoutHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'GET /orders/{orderId}':
-      return orderDetailHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await orderDetailHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /orders/{orderId}/cancel':
-      return cancelOrderHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await cancelOrderHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /orders/{orderId}/return-exchange':
-      return returnExchangeHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await returnExchangeHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'GET /orders/return-exchange/{requestId}':
-      return getReturnExchangeHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await getReturnExchangeHandler(event, context)) as APIGatewayProxyResult;
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
       };
   }
+
+  // Add CORS headers to every response
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };

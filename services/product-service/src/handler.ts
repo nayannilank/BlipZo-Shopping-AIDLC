@@ -215,6 +215,12 @@ export const getProductHandler = middy(rawGetProductHandler)
     }),
   );
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Correlation-Id',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+};
+
 /**
  * Main Lambda entry point — routes requests to the appropriate handler
  * based on HTTP method and API Gateway resource path.
@@ -226,24 +232,36 @@ export const handler = async (
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
 
+  let response: APIGatewayProxyResult;
+
   switch (route) {
     case 'POST /products':
-      return createProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await createProductHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'GET /products/{productId}':
-      return getProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await getProductHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'PATCH /products/{productId}':
-      return updateProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await updateProductHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'DELETE /products/{productId}':
-      return deleteProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await deleteProductHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /products/{productId}/policy':
-      return setSellerPolicyHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await setSellerPolicyHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'GET /products/seller/me':
-      return listSellerProductsHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await listSellerProductsHandler(event, context)) as APIGatewayProxyResult;
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
       };
   }
+
+  // Add CORS headers to every response
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };

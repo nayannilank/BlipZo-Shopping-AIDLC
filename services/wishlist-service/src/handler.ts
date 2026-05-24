@@ -106,6 +106,12 @@ export const removeFromWishlistHandler = middy(rawRemoveFromWishlistHandler)
     }),
   );
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Correlation-Id',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+};
+
 /**
  * Main Lambda entry point — routes requests to the appropriate handler
  * based on HTTP method and API Gateway resource path.
@@ -117,18 +123,27 @@ export const handler = async (
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
 
+  let response: APIGatewayProxyResult;
+
   switch (route) {
     case 'GET /wishlist':
-      return getWishlistHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await getWishlistHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'POST /wishlist/items':
-      return addToWishlistHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await addToWishlistHandler(event, context)) as APIGatewayProxyResult;
+      break;
     case 'DELETE /wishlist/items/{productId}':
-      return removeFromWishlistHandler(event, context) as Promise<APIGatewayProxyResult>;
+      response = (await removeFromWishlistHandler(event, context)) as APIGatewayProxyResult;
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
       };
   }
+
+  // Add CORS headers to every response
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };

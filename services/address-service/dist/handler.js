@@ -16521,27 +16521,40 @@ var setDefaultAddressHandler = core_default(rawSetDefaultAddressHandler).use(str
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "GET /addresses":
-      return listAddressesHandler(event, context);
+      response = await listAddressesHandler(event, context);
+      break;
     case "POST /addresses":
-      return createAddressHandler(event, context);
+      response = await createAddressHandler(event, context);
+      break;
     case "PATCH /addresses/{addressId}":
-      return updateAddressHandler(event, context);
+      response = await updateAddressHandler(event, context);
+      break;
     case "DELETE /addresses/{addressId}":
-      return deleteAddressHandler(event, context);
+      response = await deleteAddressHandler(event, context);
+      break;
     case "POST /addresses/{addressId}/default":
-      return setDefaultAddressHandler(event, context);
+      response = await setDefaultAddressHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

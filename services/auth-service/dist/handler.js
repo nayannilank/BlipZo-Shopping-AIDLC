@@ -16742,27 +16742,40 @@ var tokenRefreshHandler = core_default(rawTokenRefreshHandler).use(http_json_bod
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "POST /auth/register":
-      return registerHandler(event, context);
+      response = await registerHandler(event, context);
+      break;
     case "POST /auth/login":
-      return loginHandler(event, context);
+      response = await loginHandler(event, context);
+      break;
     case "POST /auth/otp/request":
-      return otpRequestHandler(event, context);
+      response = await otpRequestHandler(event, context);
+      break;
     case "POST /auth/otp/verify":
-      return otpVerifyHandler(event, context);
+      response = await otpVerifyHandler(event, context);
+      break;
     case "POST /auth/token/refresh":
-      return tokenRefreshHandler(event, context);
+      response = await tokenRefreshHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

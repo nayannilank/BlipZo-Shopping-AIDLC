@@ -16444,25 +16444,37 @@ var clearCartHandler = core_default(rawClearCartHandler).use(structuredLogger({ 
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
 );
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Correlation-Id",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+};
 var handler = async (event, context) => {
   const { httpMethod, resource } = event;
   const route = `${httpMethod} ${resource}`;
+  let response;
   switch (route) {
     case "GET /cart":
-      return getCartHandler(event, context);
+      response = await getCartHandler(event, context);
+      break;
     case "DELETE /cart":
-      return clearCartHandler(event, context);
+      response = await clearCartHandler(event, context);
+      break;
     case "PUT /cart/items":
-      return putCartItemHandler(event, context);
+      response = await putCartItemHandler(event, context);
+      break;
     case "DELETE /cart/items/{productId}":
-      return removeCartItemHandler(event, context);
+      response = await removeCartItemHandler(event, context);
+      break;
     default:
-      return {
+      response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
       };
   }
+  response.headers = { ...response.headers, ...CORS_HEADERS };
+  return response;
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
