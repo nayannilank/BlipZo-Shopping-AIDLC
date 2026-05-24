@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
@@ -48,6 +49,22 @@ export class ApiStack extends cdk.NestedStack {
     const resourceName = (suffix: string): string => `blipzo-${stageName}-${suffix}`;
 
     // -------------------------------------------------------------------------
+    // CloudWatch Logs Role for API Gateway (account-level setting)
+    // -------------------------------------------------------------------------
+    const apiGatewayCloudWatchRole = new iam.Role(this, 'ApiGatewayCloudWatchRole', {
+      assumedBy: new iam.ServicePrincipal('apigateway.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AmazonAPIGatewayPushToCloudWatchLogs',
+        ),
+      ],
+    });
+
+    const account = new apigateway.CfnAccount(this, 'ApiGatewayAccount', {
+      cloudWatchRoleArn: apiGatewayCloudWatchRole.roleArn,
+    });
+
+    // -------------------------------------------------------------------------
     // Access Log Group
     // -------------------------------------------------------------------------
     const accessLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
@@ -62,6 +79,7 @@ export class ApiStack extends cdk.NestedStack {
     this.api = new apigateway.RestApi(this, 'BlipzoApi', {
       restApiName: resourceName('api'),
       description: `BlipZo Shopping Platform REST API (${stageName})`,
+      cloudWatchRole: false, // We manage the account-level role ourselves above
       deployOptions: {
         stageName,
         tracingEnabled: true, // X-Ray tracing
@@ -94,6 +112,9 @@ export class ApiStack extends cdk.NestedStack {
         allowCredentials: true,
       },
     });
+
+    // Ensure the API Gateway account setting is created before the API deployment
+    this.api.node.addDependency(account);
 
     // -------------------------------------------------------------------------
     // Cognito Authorizer
