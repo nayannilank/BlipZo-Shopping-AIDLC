@@ -2,10 +2,11 @@ import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 import {
   createProduct,
+  getProductById,
   updateProduct,
   deleteProduct,
   listSellerProducts,
@@ -186,3 +187,63 @@ export const setSellerPolicyHandler = middy(rawSetSellerPolicyHandler)
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
     }),
   );
+
+/**
+ * GET /products/{productId} — thin handler for retrieving a single product by ID.
+ * Extracts productId from path, calls getProductById, returns 200 with ProductRecord.
+ */
+const rawGetProductHandler = async (
+  event: APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  const productId = extractProductId(event);
+  const product = await getProductById(productId);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(product),
+  };
+};
+
+export const getProductHandler = middy(rawGetProductHandler)
+  .use(structuredLogger({ service: 'product-service' }))
+  .use(
+    httpErrorHandler({
+      fallbackMessage: 'An unexpected error occurred. Please try again later.',
+    }),
+  );
+
+/**
+ * Main Lambda entry point — routes requests to the appropriate handler
+ * based on HTTP method and API Gateway resource path.
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent,
+  context: Context,
+): Promise<APIGatewayProxyResult> => {
+  const { httpMethod, resource } = event;
+  const route = `${httpMethod} ${resource}`;
+
+  switch (route) {
+    case 'POST /products':
+      return createProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'GET /products/{productId}':
+      return getProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'PATCH /products/{productId}':
+      return updateProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'DELETE /products/{productId}':
+      return deleteProductHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'POST /products/{productId}/policy':
+      return setSellerPolicyHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'GET /products/seller/me':
+      return listSellerProductsHandler(event, context) as Promise<APIGatewayProxyResult>;
+    default:
+      return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
+      };
+  }
+};

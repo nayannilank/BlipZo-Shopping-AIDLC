@@ -2,7 +2,7 @@ import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 import { getWishlist, addToWishlist, removeFromWishlist } from './service.js';
 import {
@@ -105,3 +105,30 @@ export const removeFromWishlistHandler = middy(rawRemoveFromWishlistHandler)
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
     }),
   );
+
+/**
+ * Main Lambda entry point — routes requests to the appropriate handler
+ * based on HTTP method and API Gateway resource path.
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent,
+  context: Context,
+): Promise<APIGatewayProxyResult> => {
+  const { httpMethod, resource } = event;
+  const route = `${httpMethod} ${resource}`;
+
+  switch (route) {
+    case 'GET /wishlist':
+      return getWishlistHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'POST /wishlist/items':
+      return addToWishlistHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'DELETE /wishlist/items/{productId}':
+      return removeFromWishlistHandler(event, context) as Promise<APIGatewayProxyResult>;
+    default:
+      return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
+      };
+  }
+};

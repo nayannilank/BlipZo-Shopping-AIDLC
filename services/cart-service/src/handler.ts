@@ -2,7 +2,7 @@ import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 import { getCart, putCartItem, removeCartItem, clearCart } from './service.js';
 import { extractBuyerId, validateCartItemInput, extractProductIdFromPath } from './validators.js';
@@ -124,3 +124,32 @@ export const clearCartHandler = middy(rawClearCartHandler)
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
     }),
   );
+
+/**
+ * Main Lambda entry point — routes requests to the appropriate handler
+ * based on HTTP method and API Gateway resource path.
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent,
+  context: Context,
+): Promise<APIGatewayProxyResult> => {
+  const { httpMethod, resource } = event;
+  const route = `${httpMethod} ${resource}`;
+
+  switch (route) {
+    case 'GET /cart':
+      return getCartHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'DELETE /cart':
+      return clearCartHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'PUT /cart/items':
+      return putCartItemHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'DELETE /cart/items/{productId}':
+      return removeCartItemHandler(event, context) as Promise<APIGatewayProxyResult>;
+    default:
+      return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
+      };
+  }
+};

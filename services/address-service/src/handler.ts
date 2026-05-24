@@ -2,7 +2,7 @@ import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 import {
   createAddress,
@@ -172,3 +172,34 @@ export const setDefaultAddressHandler = middy(rawSetDefaultAddressHandler)
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
     }),
   );
+
+/**
+ * Main Lambda entry point — routes requests to the appropriate handler
+ * based on HTTP method and API Gateway resource path.
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent,
+  context: Context,
+): Promise<APIGatewayProxyResult> => {
+  const { httpMethod, resource } = event;
+  const route = `${httpMethod} ${resource}`;
+
+  switch (route) {
+    case 'GET /addresses':
+      return listAddressesHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'POST /addresses':
+      return createAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'PATCH /addresses/{addressId}':
+      return updateAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'DELETE /addresses/{addressId}':
+      return deleteAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'POST /addresses/{addressId}/default':
+      return setDefaultAddressHandler(event, context) as Promise<APIGatewayProxyResult>;
+    default:
+      return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
+      };
+  }
+};

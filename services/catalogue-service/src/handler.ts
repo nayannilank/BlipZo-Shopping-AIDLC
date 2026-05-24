@@ -1,7 +1,7 @@
 import { structuredLogger } from '@blipzo/shared';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 import { catalogueLatencyMetrics } from './metrics.js';
 import {
@@ -147,3 +147,32 @@ export const searchProductsHandler = middy(rawSearchProductsHandler)
       fallbackMessage: 'An unexpected error occurred. Please try again later.',
     }),
   );
+
+/**
+ * Main Lambda entry point — routes requests to the appropriate handler
+ * based on HTTP method and API Gateway resource path.
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent,
+  context: Context,
+): Promise<APIGatewayProxyResult> => {
+  const { httpMethod, resource } = event;
+  const route = `${httpMethod} ${resource}`;
+
+  switch (route) {
+    case 'GET /catalogue/categories':
+      return listCategoriesHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'GET /catalogue/categories/{categoryId}':
+      return listProductsByCategoryHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'GET /catalogue/search':
+      return searchProductsHandler(event, context) as Promise<APIGatewayProxyResult>;
+    case 'GET /catalogue/products/{productId}':
+      return getProductDetailHandler(event, context) as Promise<APIGatewayProxyResult>;
+    default:
+      return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
+      };
+  }
+};
