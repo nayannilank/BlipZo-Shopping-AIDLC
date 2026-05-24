@@ -70,6 +70,7 @@ export class BlipzoStack extends cdk.Stack {
       tables: {
         otpTable: databaseStack.otpTable,
         productsTable: databaseStack.productsTable,
+        categoriesTable: databaseStack.categoriesTable,
         wishlistsTable: databaseStack.wishlistsTable,
         cartsTable: databaseStack.cartsTable,
         ordersTable: databaseStack.ordersTable,

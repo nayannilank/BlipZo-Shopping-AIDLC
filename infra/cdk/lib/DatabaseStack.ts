@@ -34,6 +34,9 @@ export class DatabaseStack extends cdk.NestedStack {
   /** Products table for product catalogue. */
   public readonly productsTable: dynamodb.Table;
 
+  /** Categories table for product categories. */
+  public readonly categoriesTable: dynamodb.Table;
+
   /** Wishlists table for buyer wishlists. */
   public readonly wishlistsTable: dynamodb.Table;
 
@@ -93,6 +96,16 @@ export class DatabaseStack extends cdk.NestedStack {
       removalPolicy,
     });
     this.productsTable = productsConstruct.table;
+
+    // -------------------------------------------------------------------------
+    // Categories Table — PK only (simple lookup table)
+    // -------------------------------------------------------------------------
+    const categoriesConstruct = new BlipzoTable(this, 'CategoriesTable', {
+      tableName: resourceName('categories'),
+      partitionKeyName: 'categoryId',
+      removalPolicy,
+    });
+    this.categoriesTable = categoriesConstruct.table;
 
     // -------------------------------------------------------------------------
     // Wishlists Table — PK + SK

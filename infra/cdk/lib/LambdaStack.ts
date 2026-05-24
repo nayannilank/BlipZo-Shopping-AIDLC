@@ -22,6 +22,7 @@ export interface LambdaStackProps extends cdk.NestedStackProps {
   readonly tables: {
     readonly otpTable: dynamodb.Table;
     readonly productsTable: dynamodb.Table;
+    readonly categoriesTable: dynamodb.Table;
     readonly wishlistsTable: dynamodb.Table;
     readonly cartsTable: dynamodb.Table;
     readonly ordersTable: dynamodb.Table;
@@ -143,11 +144,13 @@ export class LambdaStack extends cdk.NestedStack {
       handler: 'handler.handler',
       environment: {
         PRODUCTS_TABLE_NAME: tables.productsTable.tableName,
+        CATEGORIES_TABLE_NAME: tables.categoriesTable.tableName,
       },
     });
 
-    // Catalogue Lambda IAM: products table read-only
+    // Catalogue Lambda IAM: products table and categories table read-only
     tables.productsTable.grantReadData(catalogueLambda.function);
+    tables.categoriesTable.grantReadData(catalogueLambda.function);
 
     this.functions['catalogue'] = catalogueLambda.function;
 
