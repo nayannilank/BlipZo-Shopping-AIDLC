@@ -64,7 +64,7 @@ export function Header(): React.ReactElement {
             </Link>
             <Link
               to="/register"
-              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-brand-primary hover:bg-white/90 transition-colors"
+              className="rounded-md bg-white/20 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/30 transition-colors"
             >
               Sign Up
             </Link>
