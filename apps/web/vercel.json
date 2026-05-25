@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "cd ../.. && npm install && npx turbo build --filter=@blipzo/web",
+  "buildCommand": "cd ../.. && npm install && npx turbo build --filter=@blipzo/web --force",
   "outputDirectory": "dist",
   "installCommand": "echo 'skipped'",
   "rewrites": [{ "source": "/((?!assets|logo\\.png).*)", "destination": "/index.html" }]
