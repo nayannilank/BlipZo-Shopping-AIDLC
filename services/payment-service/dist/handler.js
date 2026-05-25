@@ -17639,7 +17639,11 @@ var emailSchema = external_exports.string().min(1, { message: "Email is required
 var e164PhoneSchema = external_exports.string().regex(e164PhoneRegex, {
   message: "Phone must be in E.164 format (+ followed by 7-15 digits)"
 });
+var usernameSchema = external_exports.string().min(3, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).max(30, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).regex(/^[a-zA-Z0-9_-]+$/, {
+  message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens"
+});
 var registerSchema = external_exports.object({
+  username: usernameSchema,
   email: emailSchema.optional(),
   phone: e164PhoneSchema,
   password: passwordSchema,

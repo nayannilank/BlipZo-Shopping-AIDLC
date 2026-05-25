@@ -47,10 +47,22 @@ export const e164PhoneSchema = z.string().regex(e164PhoneRegex, {
 });
 
 /**
+ * Username validation: 3-30 characters, alphanumeric, underscores, or hyphens.
+ */
+export const usernameSchema = z
+  .string()
+  .min(3, { message: 'Username must be 3-30 characters, alphanumeric, underscores, or hyphens' })
+  .max(30, { message: 'Username must be 3-30 characters, alphanumeric, underscores, or hyphens' })
+  .regex(/^[a-zA-Z0-9_-]+$/, {
+    message: 'Username must be 3-30 characters, alphanumeric, underscores, or hyphens',
+  });
+
+/**
  * Registration request schema.
- * Requirement 1.1: email or phone required, password with rules, role Buyer or Seller.
+ * Requirement 1.1: username required, email optional, phone required, password with rules, role Buyer or Seller.
  */
 export const registerSchema = z.object({
+  username: usernameSchema,
   email: emailSchema.optional(),
   phone: e164PhoneSchema,
   password: passwordSchema,

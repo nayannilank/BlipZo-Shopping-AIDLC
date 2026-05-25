@@ -15266,7 +15266,11 @@ var emailSchema = external_exports.string().min(1, { message: "Email is required
 var e164PhoneSchema = external_exports.string().regex(e164PhoneRegex, {
   message: "Phone must be in E.164 format (+ followed by 7-15 digits)"
 });
+var usernameSchema = external_exports.string().min(3, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).max(30, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).regex(/^[a-zA-Z0-9_-]+$/, {
+  message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens"
+});
 var registerSchema = external_exports.object({
+  username: usernameSchema,
   email: emailSchema.optional(),
   phone: e164PhoneSchema,
   password: passwordSchema,
@@ -16184,13 +16188,10 @@ var LOCKOUT_DURATION_MS = 15 * 60 * 1e3;
 var OTP_EXPIRY_SECONDS = 600;
 var MAX_OTP_ATTEMPTS = 3;
 async function registerUser(input) {
-  const { email: email3, phone, password, role } = input;
-  const username = email3 ?? phone;
-  if (!username) {
-    throw new Error("Either email or phone must be provided");
-  }
+  const { username, email: email3, phone, password, role } = input;
   const userAttributes = [
-    { Name: "custom:role", Value: role }
+    { Name: "custom:role", Value: role },
+    { Name: "preferred_username", Value: username }
   ];
   if (email3) {
     userAttributes.push({ Name: "email", Value: email3 });
@@ -16561,6 +16562,7 @@ function validateRegisterInput(event) {
   }
   const data = result.data;
   return {
+    username: data.username,
     email: data.email,
     phone: data.phone,
     password: data.password,

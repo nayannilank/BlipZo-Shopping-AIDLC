@@ -20,6 +20,7 @@ import type { AuthStackParamList } from '../../navigation/RootNavigator';
 type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
 interface FormErrors {
+  username?: string;
   email?: string;
   phone?: string;
   password?: string;
@@ -30,6 +31,7 @@ interface FormErrors {
 export function RegisterScreen(): React.JSX.Element {
   const navigation = useNavigation<RegisterNavigationProp>();
 
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +42,7 @@ export function RegisterScreen(): React.JSX.Element {
 
   function validateForm(): boolean {
     const input: RegisterSchemaInput = {
+      username: username.trim(),
       password,
       role,
       phone: phone.trim(),
@@ -72,6 +75,7 @@ export function RegisterScreen(): React.JSX.Element {
 
     try {
       const payload: RegisterSchemaInput = {
+        username: username.trim(),
         password,
         role,
         phone: phone.trim(),
@@ -114,6 +118,28 @@ export function RegisterScreen(): React.JSX.Element {
             <Text className="text-sm text-red-700">{errors.general}</Text>
           </View>
         ) : null}
+
+        {/* Username Input */}
+        <View className="mb-4">
+          <Text className="mb-1 text-sm font-medium text-gray-700">Username</Text>
+          <TextInput
+            className={`rounded-lg border px-4 py-3 text-base text-gray-900 ${
+              errors.username ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="johndoe123"
+            placeholderTextColor="#9CA3AF"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="username"
+            accessibilityLabel="Username"
+            accessibilityHint="Enter a username with 3-30 alphanumeric characters, underscores, or hyphens"
+          />
+          {errors.username ? (
+            <Text className="mt-1 text-xs text-red-500">{errors.username}</Text>
+          ) : null}
+        </View>
 
         {/* Email Input */}
         <View className="mb-4">

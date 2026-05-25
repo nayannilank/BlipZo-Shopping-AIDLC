@@ -77,16 +77,11 @@ const MAX_OTP_ATTEMPTS = 3;
  * Requirements: 1.1, 1.2, 1.3, 1.6, 1.7
  */
 export async function registerUser(input: RegisterRequest): Promise<RegisterResult> {
-  const { email, phone, password, role } = input;
-
-  // Determine the username — use email if provided, otherwise phone
-  const username = email ?? phone;
-  if (!username) {
-    throw new Error('Either email or phone must be provided');
-  }
+  const { username, email, phone, password, role } = input;
 
   const userAttributes: Array<{ Name: string; Value: string }> = [
     { Name: 'custom:role', Value: role },
+    { Name: 'preferred_username', Value: username },
   ];
 
   if (email) {

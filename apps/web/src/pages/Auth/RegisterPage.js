@@ -17,6 +17,7 @@ export function Component() {
   } = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      username: '',
       email: '',
       phone: '',
       password: '',
@@ -88,6 +89,33 @@ export function Component() {
             _jsxs('div', {
               className: 'space-y-4',
               children: [
+                _jsxs('div', {
+                  children: [
+                    _jsx('label', {
+                      htmlFor: 'username',
+                      className: 'block text-sm font-medium text-gray-700',
+                      children: 'Username',
+                    }),
+                    _jsx('input', {
+                      id: 'username',
+                      type: 'text',
+                      autoComplete: 'username',
+                      ...register('username'),
+                      className:
+                        'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm',
+                      placeholder: 'johndoe123',
+                      'aria-invalid': errors.username ? 'true' : 'false',
+                      'aria-describedby': errors.username ? 'username-error' : undefined,
+                    }),
+                    errors.username &&
+                      _jsx('p', {
+                        id: 'username-error',
+                        className: 'mt-1 text-sm text-red-600',
+                        role: 'alert',
+                        children: errors.username.message,
+                      }),
+                  ],
+                }),
                 _jsxs('div', {
                   children: [
                     _jsx('label', {

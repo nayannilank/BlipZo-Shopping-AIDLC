@@ -49,6 +49,7 @@ export function validateRegisterInput(event: APIGatewayProxyEvent): RegisterRequ
   const data = result.data;
 
   return {
+    username: data.username,
     email: data.email,
     phone: data.phone,
     password: data.password,
