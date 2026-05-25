@@ -1,5 +1,3 @@
-import { registerSchema } from '@blipzo/shared';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { jsx as _jsx, jsxs as _jsxs } from 'react/jsx-runtime';
 import { useForm } from 'react-hook-form';
@@ -19,7 +17,6 @@ export function Component() {
     formState: { errors },
     setValue,
   } = useForm({
-    resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -29,7 +26,13 @@ export function Component() {
       password: '',
       role: 'Buyer',
       dateOfBirth: '',
-      gender: undefined,
+      gender: '',
+      companyName: '',
+      companyUrl: '',
+      companyAddress: '',
+      tanPanNumber: '',
+      gstNumber: '',
+      inceptionDate: '',
     },
   });
 
@@ -54,7 +57,28 @@ export function Component() {
     setServerError(null);
     setIsSubmitting(true);
     try {
-      await apiClient.post('/auth/register', data);
+      // Clean payload: only include role-specific fields
+      const payload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.username,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role: selectedRole,
+      };
+      if (selectedRole === 'Buyer') {
+        payload.dateOfBirth = data.dateOfBirth;
+        payload.gender = data.gender;
+      } else {
+        payload.companyName = data.companyName;
+        payload.companyUrl = data.companyUrl;
+        payload.companyAddress = data.companyAddress;
+        payload.tanPanNumber = data.tanPanNumber;
+        payload.gstNumber = data.gstNumber;
+        payload.inceptionDate = data.inceptionDate;
+      }
+      await apiClient.post('/auth/register', payload);
       void navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
     } catch (error) {
       if (
