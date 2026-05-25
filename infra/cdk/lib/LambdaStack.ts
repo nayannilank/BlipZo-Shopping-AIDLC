@@ -97,6 +97,7 @@ export class LambdaStack extends cdk.NestedStack {
         effect: iam.Effect.ALLOW,
         actions: [
           'cognito-idp:AdminCreateUser',
+          'cognito-idp:AdminSetUserPassword',
           'cognito-idp:AdminInitiateAuth',
           'cognito-idp:AdminUpdateUserAttributes',
           'cognito-idp:AdminGetUser',
