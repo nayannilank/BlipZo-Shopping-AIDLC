@@ -15268,7 +15268,7 @@ var e164PhoneSchema = external_exports.string().regex(e164PhoneRegex, {
 });
 var registerSchema = external_exports.object({
   email: emailSchema.optional(),
-  phone: e164PhoneSchema.optional(),
+  phone: e164PhoneSchema,
   password: passwordSchema,
   role: external_exports.enum(["Buyer", "Seller"], {
     message: 'Role must be either "Buyer" or "Seller"'

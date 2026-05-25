@@ -52,7 +52,7 @@ export const e164PhoneSchema = z.string().regex(e164PhoneRegex, {
  */
 export const registerSchema = z.object({
   email: emailSchema.optional(),
-  phone: e164PhoneSchema.optional(),
+  phone: e164PhoneSchema,
   password: passwordSchema,
   role: z.enum(['Buyer', 'Seller'], {
     message: 'Role must be either "Buyer" or "Seller"',

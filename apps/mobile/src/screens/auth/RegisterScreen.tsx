@@ -42,8 +42,8 @@ export function RegisterScreen(): React.JSX.Element {
     const input: RegisterSchemaInput = {
       password,
       role,
+      phone: phone.trim(),
       ...(email.trim() ? { email: email.trim() } : {}),
-      ...(phone.trim() ? { phone: phone.trim() } : {}),
     };
 
     const result = registerSchema.safeParse(input);
@@ -57,11 +57,6 @@ export function RegisterScreen(): React.JSX.Element {
         }
       }
       setErrors(fieldErrors);
-      return false;
-    }
-
-    if (!email.trim() && !phone.trim()) {
-      setErrors({ general: 'Please provide either an email or phone number' });
       return false;
     }
 
@@ -79,8 +74,8 @@ export function RegisterScreen(): React.JSX.Element {
       const payload: RegisterSchemaInput = {
         password,
         role,
+        phone: phone.trim(),
         ...(email.trim() ? { email: email.trim() } : {}),
-        ...(phone.trim() ? { phone: phone.trim() } : {}),
       };
 
       await apiClient.post('/auth/register', payload);
@@ -143,7 +138,7 @@ export function RegisterScreen(): React.JSX.Element {
 
         {/* Phone Input */}
         <View className="mb-4">
-          <Text className="mb-1 text-sm font-medium text-gray-700">Phone (optional)</Text>
+          <Text className="mb-1 text-sm font-medium text-gray-700">Phone Number</Text>
           <TextInput
             className={`rounded-lg border px-4 py-3 text-base text-gray-900 ${
               errors.phone ? 'border-red-500' : 'border-gray-300'

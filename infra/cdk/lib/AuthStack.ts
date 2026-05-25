@@ -97,7 +97,8 @@ export class AuthStack extends cdk.NestedStack {
     this.userPoolClient = this.userPool.addClient('UserPoolClient', {
       userPoolClientName: resourceName('user-pool-client'),
       authFlows: {
-        userPassword: true,   // ALLOW_USER_PASSWORD_AUTH
+        userPassword: true, // ALLOW_USER_PASSWORD_AUTH
+        adminUserPassword: true, // ALLOW_ADMIN_USER_PASSWORD_AUTH (for Lambda AdminInitiateAuth)
         userSrp: false,
         custom: false,
       },

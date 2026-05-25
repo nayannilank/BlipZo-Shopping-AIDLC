@@ -1,6 +1,6 @@
 export interface RegisterRequest {
   email?: string;
-  phone?: string;
+  phone: string;
   password: string;
   role: 'Buyer' | 'Seller';
 }

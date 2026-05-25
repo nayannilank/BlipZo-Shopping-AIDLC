@@ -48,12 +48,12 @@ export function validateRegisterInput(event: APIGatewayProxyEvent): RegisterRequ
 
   const data = result.data;
 
-  // At least one of email or phone must be provided
-  if (!data.email && !data.phone) {
-    throw createError(400, 'Either email or phone is required for registration');
-  }
-
-  return data as RegisterRequest;
+  return {
+    email: data.email,
+    phone: data.phone,
+    password: data.password,
+    role: data.role,
+  } as RegisterRequest;
 }
 
 /**
