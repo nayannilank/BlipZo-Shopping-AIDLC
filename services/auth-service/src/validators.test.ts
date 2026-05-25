@@ -21,9 +21,11 @@ function createEvent(body: unknown): APIGatewayProxyEvent {
 }
 
 describe('validateRegisterInput', () => {
-  it('should return valid RegisterRequest for valid email registration', () => {
+  it('should return valid RegisterRequest for valid registration with email', () => {
     const event = createEvent({
+      username: 'johndoe',
       email: 'user@example.com',
+      phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Buyer',
     });
@@ -31,14 +33,17 @@ describe('validateRegisterInput', () => {
     const result = validateRegisterInput(event);
 
     expect(result).toEqual({
+      username: 'johndoe',
       email: 'user@example.com',
+      phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Buyer',
     });
   });
 
-  it('should return valid RegisterRequest for valid phone registration', () => {
+  it('should return valid RegisterRequest without email (optional)', () => {
     const event = createEvent({
+      username: 'seller_user',
       phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Seller',
@@ -47,6 +52,8 @@ describe('validateRegisterInput', () => {
     const result = validateRegisterInput(event);
 
     expect(result).toEqual({
+      username: 'seller_user',
+      email: undefined,
       phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Seller',
@@ -59,18 +66,30 @@ describe('validateRegisterInput', () => {
     expect(() => validateRegisterInput(event)).toThrow();
   });
 
-  it('should throw 400 when neither email nor phone is provided', () => {
+  it('should throw 400 when username is missing', () => {
     const event = createEvent({
+      phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Buyer',
     });
 
-    expect(() => validateRegisterInput(event)).toThrow('Either email or phone is required');
+    expect(() => validateRegisterInput(event)).toThrow();
+  });
+
+  it('should throw 400 when phone is missing', () => {
+    const event = createEvent({
+      username: 'johndoe',
+      password: 'SecurePass1',
+      role: 'Buyer',
+    });
+
+    expect(() => validateRegisterInput(event)).toThrow();
   });
 
   it('should throw 400 for invalid password (too short)', () => {
     const event = createEvent({
-      email: 'user@example.com',
+      username: 'johndoe',
+      phone: '+919876543210',
       password: 'Short1',
       role: 'Buyer',
     });
@@ -80,7 +99,9 @@ describe('validateRegisterInput', () => {
 
   it('should throw 400 for invalid role', () => {
     const event = createEvent({
+      username: 'johndoe',
       email: 'user@example.com',
+      phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Admin',
     });
@@ -90,7 +111,9 @@ describe('validateRegisterInput', () => {
 
   it('should throw 400 for invalid email format', () => {
     const event = createEvent({
+      username: 'johndoe',
       email: 'invalid-email',
+      phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Buyer',
     });
@@ -100,7 +123,30 @@ describe('validateRegisterInput', () => {
 
   it('should throw 400 for invalid phone format', () => {
     const event = createEvent({
+      username: 'johndoe',
       phone: '12345',
+      password: 'SecurePass1',
+      role: 'Buyer',
+    });
+
+    expect(() => validateRegisterInput(event)).toThrow();
+  });
+
+  it('should throw 400 for invalid username (too short)', () => {
+    const event = createEvent({
+      username: 'ab',
+      phone: '+919876543210',
+      password: 'SecurePass1',
+      role: 'Buyer',
+    });
+
+    expect(() => validateRegisterInput(event)).toThrow();
+  });
+
+  it('should throw 400 for invalid username (special characters)', () => {
+    const event = createEvent({
+      username: 'john doe!',
+      phone: '+919876543210',
       password: 'SecurePass1',
       role: 'Buyer',
     });
