@@ -82,6 +82,7 @@ export class BlipzoStack extends cdk.Stack {
       api: apiStack.api,
       authorizer: apiStack.authorizer,
       userPool: authStack.userPool,
+      userPoolClientId: authStack.userPoolClient.userPoolClientId,
     });
 
     // Observability (task 2.7) — CloudWatch log groups, alarms, dashboard, SNS

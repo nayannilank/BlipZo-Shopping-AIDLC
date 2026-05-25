@@ -24,6 +24,9 @@ export function mapCognitoError(error: unknown): never {
   if (error instanceof Error) {
     const errorName = error.name;
 
+    // Log the actual error name for debugging (visible in CloudWatch)
+    console.error(`[Cognito Error] ${errorName}: ${error.message}`);
+
     switch (errorName) {
       case 'UsernameExistsException':
         throw createError(409, 'An account with this email or phone is already registered', {
@@ -38,6 +41,7 @@ export function mapCognitoError(error: unknown): never {
         });
 
       case 'InvalidParameterException':
+      case 'InvalidPasswordException':
         throw createError(400, 'Invalid registration parameters', {
           expose: true,
         });

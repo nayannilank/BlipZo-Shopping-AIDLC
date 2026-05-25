@@ -42,6 +42,9 @@ export interface LambdaStackProps extends cdk.NestedStackProps {
 
   /** The Cognito User Pool from AuthStack. */
   readonly userPool: cognito.IUserPool;
+
+  /** The Cognito User Pool Client ID from AuthStack. */
+  readonly userPoolClientId: string;
 }
 
 /**
@@ -65,7 +68,7 @@ export class LambdaStack extends cdk.NestedStack {
   public constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
 
-    const { stageName, tables, bucket, api, authorizer, userPool } = props;
+    const { stageName, tables, bucket, api, authorizer, userPool, userPoolClientId } = props;
     this.functions = {};
 
     const servicesDir = path.join(__dirname, '..', '..', '..', 'services');
@@ -81,6 +84,7 @@ export class LambdaStack extends cdk.NestedStack {
       environment: {
         OTP_TABLE_NAME: tables.otpTable.tableName,
         USER_POOL_ID: userPool.userPoolId,
+        USER_POOL_CLIENT_ID: userPoolClientId,
         SECRETS_ARN: `arn:aws:secretsmanager:${this.region}:${this.account}:secret:blipzo/${stageName}/*`,
       },
     });

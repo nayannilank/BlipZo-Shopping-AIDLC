@@ -16094,6 +16094,7 @@ var AUTH_ERROR_CODES = {
 function mapCognitoError(error51) {
   if (error51 instanceof Error) {
     const errorName = error51.name;
+    console.error(`[Cognito Error] ${errorName}: ${error51.message}`);
     switch (errorName) {
       case "UsernameExistsException":
         throw (0, import_http_errors.default)(409, "An account with this email or phone is already registered", {
@@ -16106,6 +16107,7 @@ function mapCognitoError(error51) {
           expose: true
         });
       case "InvalidParameterException":
+      case "InvalidPasswordException":
         throw (0, import_http_errors.default)(400, "Invalid registration parameters", {
           expose: true
         });
