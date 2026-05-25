@@ -5,6 +5,7 @@ import {
   AdminInitiateAuthCommand,
   AdminGetUserCommand,
   AdminUpdateUserAttributesCommand,
+  AdminDeleteUserCommand,
   MessageActionType,
   AuthFlowType,
 } from '@aws-sdk/client-cognito-identity-provider';
@@ -56,6 +57,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
 const USER_POOL_ID = process.env['USER_POOL_ID'] ?? '';
 const USER_POOL_CLIENT_ID = process.env['USER_POOL_CLIENT_ID'] ?? '';
 const OTP_TABLE_NAME = process.env['OTP_TABLE_NAME'] ?? '';
+const USERS_TABLE_NAME = process.env['USERS_TABLE_NAME'] ?? '';
 const STAGE = process.env['STAGE'] ?? 'dev';
 
 /** Maximum consecutive failed login attempts before lockout */
@@ -72,12 +74,13 @@ const MAX_OTP_ATTEMPTS = 3;
 
 /**
  * Registers a new user in Cognito with the specified role.
- * Sets custom:role attribute at creation time.
+ * After Cognito user creation, stores extended profile data in the users DynamoDB table.
+ * If the DynamoDB write fails, rolls back by deleting the Cognito user.
  *
  * Requirements: 1.1, 1.2, 1.3, 1.6, 1.7
  */
 export async function registerUser(input: RegisterRequest): Promise<RegisterResult> {
-  const { username, email, phone, password, role } = input;
+  const { firstName, lastName, username, email, phone, password, role } = input;
 
   const userAttributes: Array<{ Name: string; Value: string }> = [
     { Name: 'custom:role', Value: role },
@@ -94,6 +97,8 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     userAttributes.push({ Name: 'phone_number_verified', Value: 'true' });
   }
 
+  let userId: string;
+
   try {
     // Create the user with a temporary password (suppressing welcome message)
     const createCommand = new AdminCreateUserCommand({
@@ -106,7 +111,7 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
 
     const createResponse = await cognitoClient.send(createCommand);
 
-    const userId = createResponse.User?.Attributes?.find((attr) => attr.Name === 'sub')?.Value;
+    userId = createResponse.User?.Attributes?.find((attr) => attr.Name === 'sub')?.Value ?? '';
 
     if (!userId) {
       throw new Error('Failed to retrieve user ID from Cognito response');
@@ -121,11 +126,6 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     });
 
     await cognitoClient.send(setPasswordCommand);
-
-    return {
-      userId,
-      message: 'Registration successful',
-    };
   } catch (error: unknown) {
     // If it's already an HTTP error (from our mapping), re-throw
     if (error instanceof Error && 'statusCode' in error) {
@@ -133,6 +133,62 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     }
     mapCognitoError(error);
   }
+
+  // Store extended profile in DynamoDB users table
+  try {
+    const profileItem: Record<string, unknown> = {
+      PK: `USER#${userId}`,
+      userId,
+      firstName,
+      lastName,
+      username,
+      email,
+      phone,
+      role,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (role === 'Buyer') {
+      profileItem['dateOfBirth'] = input.dateOfBirth;
+      profileItem['gender'] = input.gender;
+    } else {
+      profileItem['companyName'] = input.companyName;
+      profileItem['companyUrl'] = input.companyUrl;
+      profileItem['companyAddress'] = input.companyAddress;
+      profileItem['tanPanNumber'] = input.tanPanNumber;
+      profileItem['gstNumber'] = input.gstNumber;
+      profileItem['inceptionDate'] = input.inceptionDate;
+    }
+
+    const putCommand = new PutCommand({
+      TableName: USERS_TABLE_NAME,
+      Item: profileItem,
+    });
+
+    await docClient.send(putCommand);
+  } catch (profileError: unknown) {
+    // Rollback: delete the Cognito user since profile write failed
+    try {
+      const deleteCommand = new AdminDeleteUserCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: username,
+      });
+      await cognitoClient.send(deleteCommand);
+    } catch {
+      // Best-effort rollback — log but don't mask the original error
+      console.error('Failed to rollback Cognito user after DynamoDB write failure');
+    }
+
+    if (profileError instanceof Error && 'statusCode' in profileError) {
+      throw profileError;
+    }
+    throw new Error('Failed to store user profile');
+  }
+
+  return {
+    userId,
+    message: 'Registration successful',
+  };
 }
 
 /**

@@ -48,13 +48,35 @@ export function validateRegisterInput(event: APIGatewayProxyEvent): RegisterRequ
 
   const data = result.data;
 
+  if (data.role === 'Buyer') {
+    return {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      username: data.username,
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      role: data.role,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
+    };
+  }
+
   return {
+    firstName: data.firstName,
+    lastName: data.lastName,
     username: data.username,
     email: data.email,
     phone: data.phone,
     password: data.password,
     role: data.role,
-  } as RegisterRequest;
+    companyName: data.companyName,
+    companyUrl: data.companyUrl,
+    companyAddress: data.companyAddress,
+    tanPanNumber: data.tanPanNumber,
+    gstNumber: data.gstNumber,
+    inceptionDate: data.inceptionDate,
+  };
 }
 
 /**

@@ -77,6 +77,7 @@ export class BlipzoStack extends cdk.Stack {
         returnExchangeRequestsTable: databaseStack.returnExchangeRequestsTable,
         addressesTable: databaseStack.addressesTable,
         paymentsTable: databaseStack.paymentsTable,
+        usersTable: databaseStack.usersTable,
       },
       bucket: storageStack.productImagesBucket,
       api: apiStack.api,

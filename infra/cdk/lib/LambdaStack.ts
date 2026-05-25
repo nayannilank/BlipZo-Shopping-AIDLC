@@ -29,6 +29,7 @@ export interface LambdaStackProps extends cdk.NestedStackProps {
     readonly returnExchangeRequestsTable: dynamodb.Table;
     readonly addressesTable: dynamodb.Table;
     readonly paymentsTable: dynamodb.Table;
+    readonly usersTable: dynamodb.Table;
   };
 
   /** S3 bucket for product images from StorageStack. */
@@ -83,14 +84,16 @@ export class LambdaStack extends cdk.NestedStack {
       handler: 'handler.handler',
       environment: {
         OTP_TABLE_NAME: tables.otpTable.tableName,
+        USERS_TABLE_NAME: tables.usersTable.tableName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClientId,
         SECRETS_ARN: `arn:aws:secretsmanager:${this.region}:${this.account}:secret:blipzo/${stageName}/*`,
       },
     });
 
-    // Auth Lambda IAM: OTP table read/write, Cognito admin actions, Secrets Manager read
+    // Auth Lambda IAM: OTP table read/write, Users table read/write, Cognito admin actions, Secrets Manager read
     tables.otpTable.grantReadWriteData(authLambda.function);
+    tables.usersTable.grantReadWriteData(authLambda.function);
 
     authLambda.function.addToRolePolicy(
       new iam.PolicyStatement({

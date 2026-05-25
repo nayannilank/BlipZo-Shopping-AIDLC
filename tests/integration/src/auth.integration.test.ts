@@ -32,20 +32,36 @@ describe('Auth Service Integration Flow', () => {
   });
 
   describe('Register → Login → Verify JWT → Refresh Token', () => {
-    const testUsername = 'buyer-test';
-    const testEmail = 'buyer@blipzo.test';
-    const testPhone = '+1234567890';
-    const testPassword = 'SecurePass1';
-    const testRole = 'Buyer';
+    const buyerPayload = {
+      firstName: 'Test',
+      lastName: 'Buyer',
+      username: 'buyer-test',
+      email: 'buyer@blipzo.test',
+      phone: '+1234567890',
+      password: 'SecurePass1',
+      role: 'Buyer',
+      dateOfBirth: '2000-01-15',
+      gender: 'Male',
+    };
+
+    const sellerPayload = {
+      firstName: 'Test',
+      lastName: 'Seller',
+      username: 'seller-test',
+      email: 'seller@blipzo.test',
+      phone: '+1987654321',
+      password: 'SellerPass1',
+      role: 'Seller',
+      companyName: 'Test Corp',
+      companyUrl: 'https://testcorp.example.com',
+      companyAddress: '456 Commerce Ave, Delhi, India',
+      tanPanNumber: 'ABCDE1234F',
+      gstNumber: '22ABCDE1234F1Z5',
+      inceptionDate: '2020-06-15',
+    };
 
     it('should register a new buyer account successfully', async () => {
-      const event = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const event = createPostEvent('/auth/register', buyerPayload);
 
       const response = await registerHandler(event);
 
@@ -57,23 +73,11 @@ describe('Auth Service Integration Flow', () => {
 
     it('should reject duplicate registration', async () => {
       // Register first
-      const event1 = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const event1 = createPostEvent('/auth/register', buyerPayload);
       await registerHandler(event1);
 
       // Try to register again with same username
-      const event2 = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const event2 = createPostEvent('/auth/register', buyerPayload);
       const response = await registerHandler(event2);
 
       expect(response.statusCode).toBe(409);
@@ -81,19 +85,13 @@ describe('Auth Service Integration Flow', () => {
 
     it('should login with valid credentials and return JWT with correct claims', async () => {
       // Register first
-      const registerEvent = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const registerEvent = createPostEvent('/auth/register', buyerPayload);
       await registerHandler(registerEvent);
 
       // Login
       const loginEvent = createPostEvent('/auth/login', {
-        email: testEmail,
-        password: testPassword,
+        email: buyerPayload.email,
+        password: buyerPayload.password,
       });
       const response = await loginHandler(loginEvent);
 
@@ -115,18 +113,12 @@ describe('Auth Service Integration Flow', () => {
 
     it('should reject login with invalid credentials', async () => {
       // Register first
-      const registerEvent = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const registerEvent = createPostEvent('/auth/register', buyerPayload);
       await registerHandler(registerEvent);
 
       // Login with wrong password
       const loginEvent = createPostEvent('/auth/login', {
-        email: testEmail,
+        email: buyerPayload.email,
         password: 'WrongPassword1',
       });
       const response = await loginHandler(loginEvent);
@@ -136,18 +128,12 @@ describe('Auth Service Integration Flow', () => {
 
     it('should refresh token successfully', async () => {
       // Register and login
-      const registerEvent = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const registerEvent = createPostEvent('/auth/register', buyerPayload);
       await registerHandler(registerEvent);
 
       const loginEvent = createPostEvent('/auth/login', {
-        email: testEmail,
-        password: testPassword,
+        email: buyerPayload.email,
+        password: buyerPayload.password,
       });
       const loginResponse = await loginHandler(loginEvent);
       const loginBody = JSON.parse(loginResponse.body) as { refreshToken: string };
@@ -166,34 +152,28 @@ describe('Auth Service Integration Flow', () => {
 
     it('should lock account after 5 failed login attempts', async () => {
       // Register
-      const registerEvent = createPostEvent('/auth/register', {
-        username: testUsername,
-        email: testEmail,
-        phone: testPhone,
-        password: testPassword,
-        role: testRole,
-      });
+      const registerEvent = createPostEvent('/auth/register', buyerPayload);
       await registerHandler(registerEvent);
 
       // Attempt 5 failed logins
       for (let i = 0; i < 5; i++) {
         const loginEvent = createPostEvent('/auth/login', {
-          email: testEmail,
+          email: buyerPayload.email,
           password: 'WrongPassword1',
         });
         await loginHandler(loginEvent);
       }
 
       // Verify account is locked
-      const user = getCognitoUsers().get(testEmail);
+      const user = getCognitoUsers().get(buyerPayload.email);
       expect(user).toBeDefined();
       expect(user!.failedAttempts).toBeGreaterThanOrEqual(5);
       expect(user!.lockUntil).not.toBe('');
 
       // Attempt login with correct password — should be locked
       const loginEvent = createPostEvent('/auth/login', {
-        email: testEmail,
-        password: testPassword,
+        email: buyerPayload.email,
+        password: buyerPayload.password,
       });
       const response = await loginHandler(loginEvent);
 
@@ -201,13 +181,7 @@ describe('Auth Service Integration Flow', () => {
     });
 
     it('should register a seller account with correct role', async () => {
-      const event = createPostEvent('/auth/register', {
-        username: 'seller-test',
-        email: 'seller@blipzo.test',
-        phone: '+1987654321',
-        password: 'SellerPass1',
-        role: 'Seller',
-      });
+      const event = createPostEvent('/auth/register', sellerPayload);
 
       const response = await registerHandler(event);
 
@@ -215,12 +189,30 @@ describe('Auth Service Integration Flow', () => {
 
       // Login and verify role
       const loginEvent = createPostEvent('/auth/login', {
-        email: 'seller@blipzo.test',
-        password: 'SellerPass1',
+        email: sellerPayload.email,
+        password: sellerPayload.password,
       });
       const loginResponse = await loginHandler(loginEvent);
       const body = JSON.parse(loginResponse.body) as { role: string };
       expect(body.role).toBe('Seller');
+    });
+
+    it('should reject buyer registration with missing required fields', async () => {
+      const { dateOfBirth: _, gender: __, ...incompletePayload } = buyerPayload;
+      const event = createPostEvent('/auth/register', incompletePayload);
+
+      const response = await registerHandler(event);
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject seller registration with missing company fields', async () => {
+      const { companyName: _, gstNumber: __, ...incompletePayload } = sellerPayload;
+      const event = createPostEvent('/auth/register', incompletePayload);
+
+      const response = await registerHandler(event);
+
+      expect(response.statusCode).toBe(400);
     });
   });
 });

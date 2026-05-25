@@ -55,6 +55,9 @@ export class DatabaseStack extends cdk.NestedStack {
   /** Payments table for payment transaction records. */
   public readonly paymentsTable: dynamodb.Table;
 
+  /** Users table for extended user profile data. */
+  public readonly usersTable: dynamodb.Table;
+
   public constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
@@ -188,6 +191,16 @@ export class DatabaseStack extends cdk.NestedStack {
     this.paymentsTable = paymentsConstruct.table;
 
     // -------------------------------------------------------------------------
+    // Users Table — PK only (extended user profile data)
+    // -------------------------------------------------------------------------
+    const usersConstruct = new BlipzoTable(this, 'UsersTable', {
+      tableName: resourceName('users'),
+      partitionKeyName: 'PK',
+      removalPolicy,
+    });
+    this.usersTable = usersConstruct.table;
+
+    // -------------------------------------------------------------------------
     // Stack Outputs — Table ARNs and Names
     // -------------------------------------------------------------------------
     new cdk.CfnOutput(this, 'OtpTableName', {
@@ -260,6 +273,15 @@ export class DatabaseStack extends cdk.NestedStack {
     new cdk.CfnOutput(this, 'PaymentsTableArn', {
       value: this.paymentsTable.tableArn,
       description: 'Payments DynamoDB table ARN',
+    });
+
+    new cdk.CfnOutput(this, 'UsersTableName', {
+      value: this.usersTable.tableName,
+      description: 'Users DynamoDB table name',
+    });
+    new cdk.CfnOutput(this, 'UsersTableArn', {
+      value: this.usersTable.tableArn,
+      description: 'Users DynamoDB table ARN',
     });
   }
 }

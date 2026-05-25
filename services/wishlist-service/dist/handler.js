@@ -15247,6 +15247,8 @@ config(en_default());
 
 // ../../packages/shared/dist/schemas/auth.schema.js
 var e164PhoneRegex = /^\+\d{7,15}$/;
+var panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+var gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}Z[0-9A-Z]{1}$/;
 var passwordSchema = external_exports.string().min(8, { message: "Password must be at least 8 characters" }).max(128, { message: "Password must be at most 128 characters" }).refine((val) => /[A-Z]/.test(val), {
   message: "Password must contain at least one uppercase letter"
 }).refine((val) => /[a-z]/.test(val), {
@@ -15267,15 +15269,71 @@ var e164PhoneSchema = external_exports.string().regex(e164PhoneRegex, {
 var usernameSchema = external_exports.string().min(3, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).max(30, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).regex(/^[a-zA-Z0-9_-]+$/, {
   message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens"
 });
-var registerSchema = external_exports.object({
-  username: usernameSchema,
-  email: emailSchema.optional(),
-  phone: e164PhoneSchema,
-  password: passwordSchema,
-  role: external_exports.enum(["Buyer", "Seller"], {
-    message: 'Role must be either "Buyer" or "Seller"'
-  })
+var firstNameSchema = external_exports.string().min(1, { message: "First name is required" }).max(50, { message: "First name must be at most 50 characters" });
+var lastNameSchema = external_exports.string().min(1, { message: "Last name is required" }).max(50, { message: "Last name must be at most 50 characters" });
+var genderSchema = external_exports.enum(["Male", "Female", "Other", "PreferNotToSay"], {
+  message: "Gender must be Male, Female, Other, or PreferNotToSay"
 });
+var dateOfBirthSchema = external_exports.string().min(1, { message: "Date of birth is required" }).refine((val) => {
+  const date5 = new Date(val);
+  return !isNaN(date5.getTime());
+}, { message: "Date of birth must be a valid date" }).refine((val) => {
+  const dob = new Date(val);
+  const today = /* @__PURE__ */ new Date();
+  const age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  const dayDiff = today.getDate() - dob.getDate();
+  const actualAge = monthDiff < 0 || monthDiff === 0 && dayDiff < 0 ? age - 1 : age;
+  return actualAge >= 13;
+}, { message: "You must be at least 13 years old" });
+var companyNameSchema = external_exports.string().min(1, { message: "Company name is required" }).max(200, { message: "Company name must be at most 200 characters" });
+var companyUrlSchema = external_exports.string().min(1, { message: "Company URL is required" }).refine((val) => val.startsWith("https://"), {
+  message: "Company URL must start with https://"
+}).refine((val) => {
+  try {
+    new URL(val);
+    return true;
+  } catch {
+    return false;
+  }
+}, { message: "Company URL must be a valid URL" });
+var companyAddressSchema = external_exports.string().min(1, { message: "Company address is required" }).max(500, { message: "Company address must be at most 500 characters" });
+var tanPanNumberSchema = external_exports.string().length(10, { message: "TAN/PAN number must be exactly 10 characters" }).regex(panRegex, {
+  message: "TAN/PAN must be in Indian PAN format (e.g., ABCDE1234F)"
+});
+var gstNumberSchema = external_exports.string().length(15, { message: "GST number must be exactly 15 characters" }).regex(gstRegex, {
+  message: "GST must be in Indian GST format (e.g., 22ABCDE1234F1Z5)"
+});
+var inceptionDateSchema = external_exports.string().min(1, { message: "Inception date is required" }).refine((val) => {
+  const date5 = new Date(val);
+  return !isNaN(date5.getTime());
+}, { message: "Inception date must be a valid date" }).refine((val) => {
+  const date5 = new Date(val);
+  return date5 < /* @__PURE__ */ new Date();
+}, { message: "Inception date must be in the past" });
+var commonFieldsSchema = external_exports.object({
+  firstName: firstNameSchema,
+  lastName: lastNameSchema,
+  username: usernameSchema,
+  email: emailSchema,
+  phone: e164PhoneSchema,
+  password: passwordSchema
+});
+var buyerSchema = commonFieldsSchema.extend({
+  role: external_exports.literal("Buyer"),
+  dateOfBirth: dateOfBirthSchema,
+  gender: genderSchema
+});
+var sellerSchema = commonFieldsSchema.extend({
+  role: external_exports.literal("Seller"),
+  companyName: companyNameSchema,
+  companyUrl: companyUrlSchema,
+  companyAddress: companyAddressSchema,
+  tanPanNumber: tanPanNumberSchema,
+  gstNumber: gstNumberSchema,
+  inceptionDate: inceptionDateSchema
+});
+var registerSchema = external_exports.discriminatedUnion("role", [buyerSchema, sellerSchema]);
 var loginSchema = external_exports.object({
   email: emailSchema,
   password: external_exports.string().min(1, { message: "Password is required" })

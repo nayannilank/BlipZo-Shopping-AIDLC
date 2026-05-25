@@ -47,6 +47,17 @@ export {
   passwordSchema,
   emailSchema,
   e164PhoneSchema,
+  usernameSchema,
+  firstNameSchema,
+  lastNameSchema,
+  genderSchema,
+  dateOfBirthSchema,
+  companyNameSchema,
+  companyUrlSchema,
+  companyAddressSchema,
+  tanPanNumberSchema,
+  gstNumberSchema,
+  inceptionDateSchema,
 } from './schemas/auth.schema.js';
 
 export type {
