@@ -15246,7 +15246,6 @@ function date4(params) {
 config(en_default());
 
 // ../../packages/shared/dist/schemas/auth.schema.js
-var e164PhoneRegex = /^\+\d{7,15}$/;
 var panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 var gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}Z[0-9A-Z]{1}$/;
 var passwordSchema = external_exports.string().min(8, { message: "Password must be at least 8 characters" }).max(128, { message: "Password must be at most 128 characters" }).refine((val) => /[A-Z]/.test(val), {
@@ -15263,9 +15262,7 @@ var emailSchema = external_exports.string().min(1, { message: "Email is required
   const [local, domain2] = parts;
   return local !== void 0 && local.length > 0 && domain2 !== void 0 && domain2.length > 0;
 }, { message: "Email must contain exactly one @ with non-empty local and domain parts" });
-var e164PhoneSchema = external_exports.string().regex(e164PhoneRegex, {
-  message: "Phone must be in E.164 format (+ followed by 7-15 digits)"
-});
+var e164PhoneSchema = external_exports.string().refine((val) => /^\+\d{7,15}$/.test(val) || /^\d{10}$/.test(val), { message: "Phone must be a 10-digit number or E.164 format (+ followed by 7-15 digits)" });
 var usernameSchema = external_exports.string().min(3, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).max(30, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).regex(/^[a-zA-Z0-9_-]+$/, {
   message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens"
 });
@@ -15427,10 +15424,10 @@ var returnExchangeRequestSchema = external_exports.object({
 });
 
 // ../../packages/shared/dist/schemas/address.schema.js
-var e164PhoneRegex2 = /^\+\d{7,15}$/;
+var e164PhoneRegex = /^\+\d{7,15}$/;
 var addressSchema = external_exports.object({
   fullName: external_exports.string().min(1, { message: "Full name is required" }).max(100, { message: "Full name must be at most 100 characters" }),
-  phone: external_exports.string().regex(e164PhoneRegex2, {
+  phone: external_exports.string().regex(e164PhoneRegex, {
     message: "Phone must be in E.164 format (+ followed by 7-15 digits)"
   }),
   line1: external_exports.string().min(1, { message: "Address line 1 is required" }).max(200, { message: "Address line 1 must be at most 200 characters" }),
@@ -15442,7 +15439,7 @@ var addressSchema = external_exports.object({
 });
 var updateAddressSchema = external_exports.object({
   fullName: external_exports.string().min(1, { message: "Full name is required" }).max(100, { message: "Full name must be at most 100 characters" }).optional(),
-  phone: external_exports.string().regex(e164PhoneRegex2, {
+  phone: external_exports.string().regex(e164PhoneRegex, {
     message: "Phone must be in E.164 format (+ followed by 7-15 digits)"
   }).optional(),
   line1: external_exports.string().min(1, { message: "Address line 1 is required" }).max(200, { message: "Address line 1 must be at most 200 characters" }).optional(),

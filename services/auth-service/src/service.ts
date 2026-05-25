@@ -82,9 +82,18 @@ const MAX_OTP_ATTEMPTS = 3;
 export async function registerUser(input: RegisterRequest): Promise<RegisterResult> {
   const { firstName, lastName, username, email, phone, password, role } = input;
 
+  // Normalize phone: prepend +91 if user provided just 10 digits
+  const normalizedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+
+  // Cognito requires Username to be email or phone — use email as the Cognito username
+  const cognitoUsername = email;
+
+  // Store custom username as preferred_username attribute (lowercase)
+  const normalizedUsername = username.toLowerCase();
+
   const userAttributes: Array<{ Name: string; Value: string }> = [
     { Name: 'custom:role', Value: role },
-    { Name: 'preferred_username', Value: username },
+    { Name: 'preferred_username', Value: normalizedUsername },
   ];
 
   if (email) {
@@ -92,8 +101,8 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     userAttributes.push({ Name: 'email_verified', Value: 'true' });
   }
 
-  if (phone) {
-    userAttributes.push({ Name: 'phone_number', Value: phone });
+  if (normalizedPhone) {
+    userAttributes.push({ Name: 'phone_number', Value: normalizedPhone });
     userAttributes.push({ Name: 'phone_number_verified', Value: 'true' });
   }
 
@@ -103,7 +112,7 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     // Create the user with a temporary password (suppressing welcome message)
     const createCommand = new AdminCreateUserCommand({
       UserPoolId: USER_POOL_ID,
-      Username: username,
+      Username: cognitoUsername,
       UserAttributes: userAttributes,
       MessageAction: MessageActionType.SUPPRESS,
       TemporaryPassword: password,
@@ -120,7 +129,7 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     // Set the permanent password so the user doesn't need to change it
     const setPasswordCommand = new AdminSetUserPasswordCommand({
       UserPoolId: USER_POOL_ID,
-      Username: username,
+      Username: cognitoUsername,
       Password: password,
       Permanent: true,
     });
@@ -141,9 +150,9 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
       userId,
       firstName,
       lastName,
-      username,
+      username: normalizedUsername,
       email,
-      phone,
+      phone: normalizedPhone,
       role,
       createdAt: new Date().toISOString(),
     };
@@ -171,7 +180,7 @@ export async function registerUser(input: RegisterRequest): Promise<RegisterResu
     try {
       const deleteCommand = new AdminDeleteUserCommand({
         UserPoolId: USER_POOL_ID,
-        Username: username,
+        Username: cognitoUsername,
       });
       await cognitoClient.send(deleteCommand);
     } catch {

@@ -1,11 +1,6 @@
 import { z } from 'zod';
 
 /**
- * E.164 phone format: + followed by 7-15 digits
- */
-const e164PhoneRegex = /^\+\d{7,15}$/;
-
-/**
  * Indian PAN format: 5 uppercase letters + 4 digits + 1 uppercase letter
  */
 const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
@@ -50,11 +45,14 @@ export const emailSchema = z
   );
 
 /**
- * Phone number in E.164 format: + followed by 7-15 digits.
+ * Phone number validation: E.164 format (+ followed by 7-15 digits) OR 10-digit Indian number.
+ * The backend will normalize 10-digit numbers by prepending +91.
  */
-export const e164PhoneSchema = z.string().regex(e164PhoneRegex, {
-  message: 'Phone must be in E.164 format (+ followed by 7-15 digits)',
-});
+export const e164PhoneSchema = z
+  .string()
+  .refine((val) => /^\+\d{7,15}$/.test(val) || /^\d{10}$/.test(val), {
+    message: 'Phone must be a 10-digit number or E.164 format (+ followed by 7-15 digits)',
+  });
 
 /**
  * Username validation: 3-30 characters, alphanumeric, underscores, or hyphens.
