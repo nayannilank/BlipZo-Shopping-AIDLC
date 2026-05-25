@@ -32,13 +32,17 @@ describe('Auth Service Integration Flow', () => {
   });
 
   describe('Register → Login → Verify JWT → Refresh Token', () => {
+    const testUsername = 'buyer-test';
     const testEmail = 'buyer@blipzo.test';
+    const testPhone = '+1234567890';
     const testPassword = 'SecurePass1';
     const testRole = 'Buyer';
 
     it('should register a new buyer account successfully', async () => {
       const event = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
@@ -54,15 +58,19 @@ describe('Auth Service Integration Flow', () => {
     it('should reject duplicate registration', async () => {
       // Register first
       const event1 = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
       await registerHandler(event1);
 
-      // Try to register again with same email
+      // Try to register again with same username
       const event2 = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
@@ -74,7 +82,9 @@ describe('Auth Service Integration Flow', () => {
     it('should login with valid credentials and return JWT with correct claims', async () => {
       // Register first
       const registerEvent = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
@@ -106,7 +116,9 @@ describe('Auth Service Integration Flow', () => {
     it('should reject login with invalid credentials', async () => {
       // Register first
       const registerEvent = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
@@ -125,7 +137,9 @@ describe('Auth Service Integration Flow', () => {
     it('should refresh token successfully', async () => {
       // Register and login
       const registerEvent = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
@@ -153,7 +167,9 @@ describe('Auth Service Integration Flow', () => {
     it('should lock account after 5 failed login attempts', async () => {
       // Register
       const registerEvent = createPostEvent('/auth/register', {
+        username: testUsername,
         email: testEmail,
+        phone: testPhone,
         password: testPassword,
         role: testRole,
       });
@@ -186,7 +202,9 @@ describe('Auth Service Integration Flow', () => {
 
     it('should register a seller account with correct role', async () => {
       const event = createPostEvent('/auth/register', {
+        username: 'seller-test',
         email: 'seller@blipzo.test',
+        phone: '+1987654321',
         password: 'SellerPass1',
         role: 'Seller',
       });
