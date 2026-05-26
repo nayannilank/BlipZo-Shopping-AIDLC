@@ -16561,7 +16561,7 @@ async function refreshToken(input) {
       }
     });
     const response = await cognitoClient.send(command);
-    const accessToken = response.AuthenticationResult?.AccessToken;
+    const accessToken = response.AuthenticationResult?.IdToken ?? response.AuthenticationResult?.AccessToken;
     if (!accessToken) {
       throw new Error("Token refresh succeeded but access token was not returned");
     }

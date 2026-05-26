@@ -17643,7 +17643,9 @@ var emailSchema = external_exports.string().min(1, { message: "Email is required
   const [local, domain2] = parts;
   return local !== void 0 && local.length > 0 && domain2 !== void 0 && domain2.length > 0;
 }, { message: "Email must contain exactly one @ with non-empty local and domain parts" });
-var e164PhoneSchema = external_exports.string().refine((val) => /^\+\d{7,15}$/.test(val) || /^\d{10}$/.test(val), { message: "Phone must be a 10-digit number or E.164 format (+ followed by 7-15 digits)" });
+var e164PhoneSchema = external_exports.string().refine((val) => /^\+\d{7,15}$/.test(val) || /^\d{10}$/.test(val), {
+  message: "Phone must be a 10-digit number or E.164 format (+ followed by 7-15 digits)"
+});
 var usernameSchema = external_exports.string().min(3, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).max(30, { message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens" }).regex(/^[a-zA-Z0-9_-]+$/, {
   message: "Username must be 3-30 characters, alphanumeric, underscores, or hyphens"
 });

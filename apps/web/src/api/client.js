@@ -52,7 +52,7 @@ apiClient.interceptors.response.use(
         useAuthStore.getState().logout();
         return await Promise.reject(error);
       }
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/token/refresh`, {
+      const response = await axios.post(`${apiClient.defaults.baseURL}/auth/token/refresh`, {
         refreshToken,
       });
       const { accessToken } = response.data;
