@@ -235,7 +235,8 @@ export async function loginUser(input: LoginRequest): Promise<AuthResponse> {
 
     const authResponse = await cognitoClient.send(authCommand);
 
-    const accessToken = authResponse.AuthenticationResult?.AccessToken;
+    const accessToken =
+      authResponse.AuthenticationResult?.IdToken ?? authResponse.AuthenticationResult?.AccessToken;
     const refreshToken = authResponse.AuthenticationResult?.RefreshToken;
 
     if (!accessToken || !refreshToken) {
@@ -624,7 +625,8 @@ async function generateTokensForUser(
 
     const authResponse = await cognitoClient.send(authCommand);
 
-    const accessToken = authResponse.AuthenticationResult?.AccessToken;
+    const accessToken =
+      authResponse.AuthenticationResult?.IdToken ?? authResponse.AuthenticationResult?.AccessToken;
     const refreshTokenValue = authResponse.AuthenticationResult?.RefreshToken;
 
     if (!accessToken || !refreshTokenValue) {

@@ -34,6 +34,7 @@ export function Header() {
                 role === 'Buyer' &&
                   _jsxs(_Fragment, {
                     children: [
+                      _jsx(Link, { to: '/', className: 'text-sm', children: 'Shop' }),
                       _jsx(Link, { to: '/wishlist', className: 'text-sm', children: 'Wishlist' }),
                       _jsx(Link, { to: '/cart', className: 'text-sm', children: 'Cart' }),
                       _jsx(Link, { to: '/orders', className: 'text-sm', children: 'Orders' }),
