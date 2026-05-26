@@ -29,7 +29,7 @@ export function Header() {
           }),
           isAuthenticated &&
             _jsxs('nav', {
-              className: 'hidden items-center gap-3 sm:flex',
+              className: 'flex items-center gap-3',
               children: [
                 role === 'Buyer' &&
                   _jsxs(_Fragment, {
@@ -40,10 +40,19 @@ export function Header() {
                     ],
                   }),
                 role === 'Seller' &&
-                  _jsx(Link, {
-                    to: '/seller/products',
-                    className: 'text-sm',
-                    children: 'My Products',
+                  _jsxs(_Fragment, {
+                    children: [
+                      _jsx(Link, {
+                        to: '/seller/products',
+                        className: 'text-sm font-semibold',
+                        children: 'My Products',
+                      }),
+                      _jsx(Link, {
+                        to: '/seller/products/new',
+                        className: 'text-sm',
+                        children: 'Add Product',
+                      }),
+                    ],
                   }),
               ],
             }),
@@ -55,7 +64,7 @@ export function Header() {
           ? _jsxs(_Fragment, {
               children: [
                 _jsx('span', {
-                  className: 'hidden text-sm text-white/80 sm:inline',
+                  className: 'text-sm text-white/80',
                   children: role,
                 }),
                 _jsx('button', {
