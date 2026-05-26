@@ -416,6 +416,39 @@ export class LambdaStack extends cdk.NestedStack {
       methodResponses: [methodResponseOk],
     });
 
+    const catalogueCategorySubcategories = findResource([
+      'catalogue',
+      'categories',
+      '{categoryId}',
+      'subcategories',
+    ]);
+    catalogueCategorySubcategories.addMethod('GET', catalogueIntegration, {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [methodResponseOk],
+    });
+
+    const catalogueCategorySchema = findResource([
+      'catalogue',
+      'categories',
+      '{categoryId}',
+      'schema',
+    ]);
+    catalogueCategorySchema.addMethod('GET', catalogueIntegration, {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [methodResponseOk],
+    });
+
+    const catalogueCategoryProducts = findResource([
+      'catalogue',
+      'categories',
+      '{categoryId}',
+      'products',
+    ]);
+    catalogueCategoryProducts.addMethod('GET', catalogueIntegration, {
+      authorizationType: apigateway.AuthorizationType.NONE,
+      methodResponses: [methodResponseOk],
+    });
+
     const catalogueSearch = findResource(['catalogue', 'search']);
     catalogueSearch.addMethod('GET', catalogueIntegration, {
       authorizationType: apigateway.AuthorizationType.NONE,

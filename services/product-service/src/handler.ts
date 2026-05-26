@@ -6,7 +6,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-l
 
 import {
   createProduct,
-  getProductById,
+  getProductDetail,
   updateProduct,
   deleteProduct,
   listSellerProducts,
@@ -190,13 +190,16 @@ export const setSellerPolicyHandler = middy(rawSetSellerPolicyHandler)
 
 /**
  * GET /products/{productId} — thin handler for retrieving a single product by ID.
- * Extracts productId from path, calls getProductById, returns 200 with ProductRecord.
+ * Extracts productId from path, calls getProductDetail to enrich with display labels,
+ * returns 200 with enriched ProductRecord including attributeLabels.
+ *
+ * Requirements: 4.4, 4.5, 4.6
  */
 const rawGetProductHandler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   const productId = extractProductId(event);
-  const product = await getProductById(productId);
+  const product = await getProductDetail(productId);
 
   return {
     statusCode: 200,

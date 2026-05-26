@@ -10,7 +10,7 @@ export async function fetchCategoryProducts(categoryId, params = {}) {
   return response.data;
 }
 export async function fetchProductDetail(productId) {
-  const response = await apiClient.get(`/catalogue/products/${productId}`);
+  const response = await apiClient.get(`/products/${productId}`);
   return response.data;
 }
 export async function searchProducts(query, params = {}) {

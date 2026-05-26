@@ -28,6 +28,8 @@ import {
   listProductsByCategory,
   getProductDetail,
   searchProducts,
+  searchProductsEnriched,
+  clearSearchCaches,
 } from './service.js';
 
 describe('listCategories', () => {
@@ -476,6 +478,406 @@ describe('searchProducts', () => {
     mockSend.mockRejectedValueOnce(new Error('Connection timeout'));
 
     await expect(searchProducts('laptop', 20)).rejects.toMatchObject({
+      statusCode: 503,
+    });
+  });
+});
+
+describe('searchProductsEnriched', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearSearchCaches();
+  });
+
+  it('should return enriched search results with categoryName, subcategoryName, and previewAttributes', async () => {
+    // ScanCommand for search
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          productId: 'prod-1',
+          name: 'Nike Air Max',
+          price: 8999,
+          imageUrls: ['https://s3.amazonaws.com/shoe.jpg'],
+          averageRating: 4.5,
+          sellerName: 'Nike Store',
+          isDeleted: false,
+          searchTokens: 'nike air max running shoes nike male',
+          categoryId: 'cat_clothing',
+          subcategoryId: 'subcat_footwear',
+          dynamicAttributes: {
+            brand: 'Nike',
+            availableSizes: ['IND 7', 'IND 8', 'IND 9'],
+            gender: 'Male',
+            ageGroup: 'Adult',
+            availableColours: ['Black', 'White'],
+          },
+        },
+      ],
+      LastEvaluatedKey: undefined,
+    });
+
+    // GetCommand for category name (cat_clothing)
+    mockSend.mockResolvedValueOnce({
+      Item: { PK: 'CAT#cat_clothing', SK: 'METADATA', name: 'Clothing' },
+    });
+
+    // GetCommand for subcategory name (subcat_footwear)
+    mockSend.mockResolvedValueOnce({
+      Item: { PK: 'CAT#subcat_footwear', SK: 'METADATA', name: 'Footwear' },
+    });
+
+    // QueryCommand for attribute schema (preview attributes)
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          subcategoryId: 'subcat_footwear',
+          schemaVersion: 1,
+          attributes: [
+            {
+              fieldName: 'brand',
+              displayLabel: 'Brand',
+              dataType: 'text',
+              required: true,
+              filterable: true,
+              displayPriority: 1,
+            },
+            {
+              fieldName: 'availableSizes',
+              displayLabel: 'Available Sizes',
+              dataType: 'multi-select',
+              required: true,
+              filterable: true,
+              displayPriority: 2,
+            },
+            {
+              fieldName: 'gender',
+              displayLabel: 'Gender',
+              dataType: 'single-select',
+              required: true,
+              filterable: true,
+              displayPriority: 3,
+            },
+            {
+              fieldName: 'ageGroup',
+              displayLabel: 'Age Group',
+              dataType: 'single-select',
+              required: true,
+              filterable: true,
+              displayPriority: 4,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await searchProductsEnriched('nike', 20);
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toEqual({
+      productId: 'prod-1',
+      name: 'Nike Air Max',
+      price: 8999,
+      primaryImageUrl: 'https://s3.amazonaws.com/shoe.jpg',
+      averageRating: 4.5,
+      sellerName: 'Nike Store',
+      categoryName: 'Clothing',
+      subcategoryName: 'Footwear',
+      previewAttributes: {
+        brand: 'Nike',
+        availableSizes: ['IND 7', 'IND 8', 'IND 9'],
+        gender: 'Male',
+      },
+    });
+  });
+
+  it('should include at most 3 preview attributes sorted by lowest displayPriority', async () => {
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          productId: 'prod-2',
+          name: 'Samsung Galaxy',
+          price: 49999,
+          imageUrls: ['https://s3.amazonaws.com/phone.jpg'],
+          averageRating: 4.2,
+          sellerName: 'Samsung Store',
+          isDeleted: false,
+          searchTokens: 'samsung galaxy phone android',
+          categoryId: 'cat_electronics',
+          subcategoryId: 'subcat_phones',
+          dynamicAttributes: {
+            brand: 'Samsung',
+            model: 'Galaxy S24',
+            ram: '8GB',
+            storage: '256GB',
+            displaySize: 6.2,
+            batteryCapacity: 4000,
+          },
+        },
+      ],
+      LastEvaluatedKey: undefined,
+    });
+
+    // GetCommand for category name
+    mockSend.mockResolvedValueOnce({
+      Item: { PK: 'CAT#cat_electronics', SK: 'METADATA', name: 'Electronics' },
+    });
+
+    // GetCommand for subcategory name
+    mockSend.mockResolvedValueOnce({
+      Item: { PK: 'CAT#subcat_phones', SK: 'METADATA', name: 'Phones' },
+    });
+
+    // QueryCommand for attribute schema
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          subcategoryId: 'subcat_phones',
+          schemaVersion: 1,
+          attributes: [
+            {
+              fieldName: 'brand',
+              displayLabel: 'Brand',
+              dataType: 'text',
+              required: true,
+              filterable: true,
+              displayPriority: 1,
+            },
+            {
+              fieldName: 'model',
+              displayLabel: 'Model',
+              dataType: 'text',
+              required: true,
+              filterable: false,
+              displayPriority: 2,
+            },
+            {
+              fieldName: 'ram',
+              displayLabel: 'RAM',
+              dataType: 'single-select',
+              required: true,
+              filterable: true,
+              displayPriority: 3,
+            },
+            {
+              fieldName: 'storage',
+              displayLabel: 'Storage',
+              dataType: 'single-select',
+              required: true,
+              filterable: true,
+              displayPriority: 4,
+            },
+            {
+              fieldName: 'displaySize',
+              displayLabel: 'Display Size',
+              dataType: 'number',
+              required: true,
+              filterable: false,
+              displayPriority: 5,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await searchProductsEnriched('samsung', 20);
+
+    expect(result.items[0]?.previewAttributes).toEqual({
+      brand: 'Samsung',
+      model: 'Galaxy S24',
+      ram: '8GB',
+    });
+  });
+
+  it('should filter results by categoryId when provided', async () => {
+    mockSend.mockResolvedValueOnce({
+      Items: [],
+      LastEvaluatedKey: undefined,
+    });
+
+    await searchProductsEnriched('laptop', 20, undefined, { categoryId: 'cat_electronics' });
+
+    const { ScanCommand: MockedScanCommand } =
+      (await import('@aws-sdk/lib-dynamodb')) as unknown as {
+        ScanCommand: ReturnType<typeof vi.fn>;
+      };
+    expect(MockedScanCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        FilterExpression: expect.stringContaining('#categoryId = :categoryId'),
+        ExpressionAttributeValues: expect.objectContaining({
+          ':categoryId': 'cat_electronics',
+        }),
+      }),
+    );
+  });
+
+  it('should filter results by subcategoryId when provided', async () => {
+    mockSend.mockResolvedValueOnce({
+      Items: [],
+      LastEvaluatedKey: undefined,
+    });
+
+    await searchProductsEnriched('shoes', 20, undefined, { subcategoryId: 'subcat_footwear' });
+
+    const { ScanCommand: MockedScanCommand } =
+      (await import('@aws-sdk/lib-dynamodb')) as unknown as {
+        ScanCommand: ReturnType<typeof vi.fn>;
+      };
+    expect(MockedScanCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        FilterExpression: expect.stringContaining('#subcategoryId = :subcategoryId'),
+        ExpressionAttributeValues: expect.objectContaining({
+          ':subcategoryId': 'subcat_footwear',
+        }),
+      }),
+    );
+  });
+
+  it('should handle products without categoryId or subcategoryId gracefully', async () => {
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          productId: 'prod-legacy',
+          name: 'Legacy Product',
+          price: 100,
+          imageUrls: ['https://s3.amazonaws.com/legacy.jpg'],
+          averageRating: 3.0,
+          sellerName: 'Old Store',
+          isDeleted: false,
+          searchTokens: 'legacy product old',
+          // No categoryId or subcategoryId (legacy product)
+        },
+      ],
+      LastEvaluatedKey: undefined,
+    });
+
+    const result = await searchProductsEnriched('legacy', 20);
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toEqual({
+      productId: 'prod-legacy',
+      name: 'Legacy Product',
+      price: 100,
+      primaryImageUrl: 'https://s3.amazonaws.com/legacy.jpg',
+      averageRating: 3.0,
+      sellerName: 'Old Store',
+      categoryName: '',
+      subcategoryName: '',
+      previewAttributes: {},
+    });
+  });
+
+  it('should return empty list when no products match', async () => {
+    mockSend.mockResolvedValueOnce({
+      Items: [],
+      LastEvaluatedKey: undefined,
+    });
+
+    const result = await searchProductsEnriched('nonexistentproduct', 20);
+
+    expect(result.items).toEqual([]);
+    expect(result.nextCursor).toBeUndefined();
+  });
+
+  it('should include nextCursor when LastEvaluatedKey is present', async () => {
+    const lastKey = { PK: 'PRODUCT#123', SK: 'METADATA' };
+
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          productId: 'prod-1',
+          name: 'Phone',
+          price: 499,
+          imageUrls: ['https://s3.amazonaws.com/phone.jpg'],
+          isDeleted: false,
+          searchTokens: 'phone smartphone',
+        },
+      ],
+      LastEvaluatedKey: lastKey,
+    });
+
+    const result = await searchProductsEnriched('phone', 1);
+
+    expect(result.nextCursor).toBeDefined();
+    const decoded = JSON.parse(
+      Buffer.from(result.nextCursor ?? '', 'base64').toString('utf-8'),
+    ) as Record<string, unknown>;
+    expect(decoded).toEqual(lastKey);
+  });
+
+  it('should use cached category names for subsequent items with same category', async () => {
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          productId: 'prod-1',
+          name: 'Product A',
+          price: 100,
+          imageUrls: [],
+          isDeleted: false,
+          searchTokens: 'product a',
+          categoryId: 'cat_clothing',
+          subcategoryId: 'subcat_footwear',
+          dynamicAttributes: { brand: 'Nike' },
+        },
+        {
+          productId: 'prod-2',
+          name: 'Product B',
+          price: 200,
+          imageUrls: [],
+          isDeleted: false,
+          searchTokens: 'product b',
+          categoryId: 'cat_clothing',
+          subcategoryId: 'subcat_footwear',
+          dynamicAttributes: { brand: 'Adidas' },
+        },
+      ],
+      LastEvaluatedKey: undefined,
+    });
+
+    // GetCommand for cat_clothing (only called once due to caching)
+    mockSend.mockResolvedValueOnce({
+      Item: { PK: 'CAT#cat_clothing', SK: 'METADATA', name: 'Clothing' },
+    });
+
+    // GetCommand for subcat_footwear (only called once due to caching)
+    mockSend.mockResolvedValueOnce({
+      Item: { PK: 'CAT#subcat_footwear', SK: 'METADATA', name: 'Footwear' },
+    });
+
+    // QueryCommand for schema (only called once due to caching)
+    mockSend.mockResolvedValueOnce({
+      Items: [
+        {
+          subcategoryId: 'subcat_footwear',
+          schemaVersion: 1,
+          attributes: [
+            {
+              fieldName: 'brand',
+              displayLabel: 'Brand',
+              dataType: 'text',
+              required: true,
+              filterable: true,
+              displayPriority: 1,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await searchProductsEnriched('product', 20);
+
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]?.categoryName).toBe('Clothing');
+    expect(result.items[0]?.subcategoryName).toBe('Footwear');
+    expect(result.items[1]?.categoryName).toBe('Clothing');
+    expect(result.items[1]?.subcategoryName).toBe('Footwear');
+    // Only 4 calls total: 1 scan + 1 get category + 1 get subcategory + 1 query schema
+    expect(mockSend).toHaveBeenCalledTimes(4);
+  });
+
+  it('should throw 503 when DynamoDB is unavailable', async () => {
+    mockSend.mockRejectedValueOnce(new Error('Connection timeout'));
+
+    await expect(searchProductsEnriched('laptop', 20)).rejects.toMatchObject({
       statusCode: 503,
     });
   });

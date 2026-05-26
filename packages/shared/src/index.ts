@@ -11,6 +11,7 @@ export type {
   CreateProductRequest,
   ImageUpload,
   ProductRecord,
+  ProductListItem,
   SellerPolicy,
 } from './types/product.js';
 
@@ -37,6 +38,16 @@ export type { AddressRecord, AddressSnapshot } from './types/address.js';
 export type { PaymentRequest, MockPaymentDetails, PaymentResponse } from './types/payment.js';
 
 export type { ErrorResponse } from './types/errors.js';
+
+export type {
+  CategoryNode,
+  AttributeDataType,
+  AttributeDefinition,
+  AttributeSchema,
+  CategoryTreeResponse,
+  SubcategoryListResponse,
+  AttributeSchemaResponse,
+} from './types/category.js';
 
 // Schema exports
 export {
@@ -108,6 +119,26 @@ export type {
 export { addressSchema, updateAddressSchema } from './schemas/address.schema.js';
 
 export type { AddressSchemaInput, UpdateAddressSchemaInput } from './schemas/address.schema.js';
+
+export {
+  categoryNodeSchema,
+  attributeDataTypeSchema,
+  attributeDefinitionSchema,
+  attributeSchemaSchema,
+  categoryTreeResponseSchema,
+  subcategoryListResponseSchema,
+  attributeSchemaResponseSchema,
+} from './schemas/category.schema.js';
+
+export type {
+  AttributeDataTypeSchemaInput,
+  AttributeDefinitionSchemaInput,
+  CategoryNodeSchemaInput,
+  AttributeSchemaSchemaInput,
+  CategoryTreeResponseSchemaInput,
+  SubcategoryListResponseSchemaInput,
+  AttributeSchemaResponseSchemaInput,
+} from './schemas/category.schema.js';
 
 // Middleware exports
 export { structuredLogger } from './middleware/logger.middleware.js';

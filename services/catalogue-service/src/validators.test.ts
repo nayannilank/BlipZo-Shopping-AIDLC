@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import {
   extractCategoryId,
   extractProductId,
+  extractSubcategoryId,
   extractPaginationParams,
   extractSearchParams,
 } from './validators.js';
@@ -47,6 +48,23 @@ describe('extractProductId', () => {
   it('should throw 400 when productId is missing', () => {
     const event = createMockEvent({ pathParameters: null });
     expect(() => extractProductId(event)).toThrow();
+  });
+});
+
+describe('extractSubcategoryId', () => {
+  it('should extract subcategoryId from path parameters', () => {
+    const event = createMockEvent({ pathParameters: { subcategoryId: 'subcat_footwear' } });
+    expect(extractSubcategoryId(event)).toBe('subcat_footwear');
+  });
+
+  it('should throw 400 when subcategoryId is missing', () => {
+    const event = createMockEvent({ pathParameters: null });
+    expect(() => extractSubcategoryId(event)).toThrow();
+  });
+
+  it('should throw 400 when subcategoryId is empty string', () => {
+    const event = createMockEvent({ pathParameters: { subcategoryId: '' } });
+    expect(() => extractSubcategoryId(event)).toThrow();
   });
 });
 

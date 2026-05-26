@@ -15354,12 +15354,21 @@ var imageUploadSchema = external_exports.object({
   }),
   sizeBytes: external_exports.number().int({ message: "Image size must be an integer" }).positive({ message: "Image size must be greater than 0" }).max(10 * 1024 * 1024, { message: "Each image must be at most 10 MB" })
 });
+var dynamicAttributeValueSchema = external_exports.union([
+  external_exports.string(),
+  external_exports.number(),
+  external_exports.boolean(),
+  external_exports.array(external_exports.string())
+]);
 var createProductSchema = external_exports.object({
   name: external_exports.string().min(1, { message: "Product name is required" }).max(200, { message: "Product name must be at most 200 characters" }),
   description: external_exports.string().min(1, { message: "Product description is required" }).max(2e3, { message: "Product description must be at most 2000 characters" }),
   price: external_exports.number().gt(0, { message: "Price must be greater than 0" }).max(999999999e-2, { message: "Price must be at most 9,999,999.99" }),
   stockQuantity: external_exports.number().int({ message: "Stock quantity must be an integer" }).min(0, { message: "Stock quantity must be at least 0" }).max(999999, { message: "Stock quantity must be at most 999,999" }),
-  categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }),
+  categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }).optional(),
+  categoryId: external_exports.string().min(1, { message: "Category ID must not be empty" }).optional(),
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID must not be empty" }).optional(),
+  dynamicAttributes: external_exports.record(external_exports.string(), dynamicAttributeValueSchema).optional(),
   images: external_exports.array(imageUploadSchema).min(1, { message: "At least one image is required" }).max(10, { message: "At most 10 images are allowed" })
 });
 var updateProductSchema = external_exports.object({
@@ -15368,6 +15377,9 @@ var updateProductSchema = external_exports.object({
   price: external_exports.number().gt(0, { message: "Price must be greater than 0" }).max(999999999e-2, { message: "Price must be at most 9,999,999.99" }).optional(),
   stockQuantity: external_exports.number().int({ message: "Stock quantity must be an integer" }).min(0, { message: "Stock quantity must be at least 0" }).max(999999, { message: "Stock quantity must be at most 999,999" }).optional(),
   categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }).optional(),
+  categoryId: external_exports.string().min(1, { message: "Category ID must not be empty" }).optional(),
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID must not be empty" }).optional(),
+  dynamicAttributes: external_exports.record(external_exports.string(), dynamicAttributeValueSchema).optional(),
   images: external_exports.array(imageUploadSchema).min(1, { message: "At least one image is required" }).max(10, { message: "At most 10 images are allowed" }).optional()
 });
 var sellerPolicySchema = external_exports.object({
@@ -15451,6 +15463,61 @@ var updateAddressSchema = external_exports.object({
   state: external_exports.string().min(1, { message: "State is required" }).max(100, { message: "State must be at most 100 characters" }).optional(),
   postalCode: external_exports.string().min(1, { message: "Postal code is required" }).optional(),
   country: external_exports.string().min(1, { message: "Country is required" }).optional()
+});
+
+// ../../packages/shared/dist/schemas/category.schema.js
+var attributeDataTypeSchema = external_exports.enum([
+  "text",
+  "number",
+  "single-select",
+  "multi-select",
+  "boolean"
+]);
+var attributeDefinitionSchema = external_exports.object({
+  fieldName: external_exports.string().min(1, { message: "Field name is required" }),
+  displayLabel: external_exports.string().min(1, { message: "Display label is required" }),
+  dataType: attributeDataTypeSchema,
+  required: external_exports.boolean(),
+  allowedValues: external_exports.array(external_exports.string()).nullable().optional(),
+  filterable: external_exports.boolean(),
+  displayPriority: external_exports.number().int({ message: "Display priority must be an integer" })
+}).refine((data) => {
+  if (data.dataType === "single-select" || data.dataType === "multi-select") {
+    if (data.allowedValues !== null && data.allowedValues !== void 0) {
+      return data.allowedValues.length > 0;
+    }
+  }
+  return true;
+}, {
+  message: "allowedValues must be a non-empty array when specified for single-select or multi-select data types"
+});
+var categoryNodeSchema = external_exports.object({
+  categoryId: external_exports.string().min(1, { message: "Category ID is required" }),
+  parentId: external_exports.string().nullable(),
+  name: external_exports.string().min(1, { message: "Category name is required" }),
+  slug: external_exports.string().min(1, { message: "Slug is required" }),
+  level: external_exports.union([external_exports.literal(1), external_exports.literal(2)]),
+  isActive: external_exports.boolean(),
+  icon: external_exports.string().optional(),
+  createdAt: external_exports.string().min(1, { message: "Created at timestamp is required" }),
+  updatedAt: external_exports.string().min(1, { message: "Updated at timestamp is required" })
+});
+var attributeSchemaSchema = external_exports.object({
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID is required" }),
+  schemaVersion: external_exports.number().int({ message: "Schema version must be an integer" }).positive({ message: "Schema version must be positive" }),
+  attributes: external_exports.array(attributeDefinitionSchema).min(1, { message: "At least one attribute definition is required" }),
+  createdAt: external_exports.string().min(1, { message: "Created at timestamp is required" })
+});
+var categoryTreeResponseSchema = external_exports.object({
+  categories: external_exports.array(categoryNodeSchema)
+});
+var subcategoryListResponseSchema = external_exports.object({
+  subcategories: external_exports.array(categoryNodeSchema)
+});
+var attributeSchemaResponseSchema = external_exports.object({
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID is required" }),
+  schemaVersion: external_exports.number().int({ message: "Schema version must be an integer" }).positive({ message: "Schema version must be positive" }),
+  attributes: external_exports.array(attributeDefinitionSchema)
 });
 
 // ../../packages/shared/dist/middleware/logger.middleware.js

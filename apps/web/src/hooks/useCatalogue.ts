@@ -1,8 +1,8 @@
-import type { CatalogueListResponse, ProductRecord } from '@blipzo/shared';
+import type { CatalogueListResponse } from '@blipzo/shared';
 import type { UseInfiniteQueryResult, UseQueryResult, InfiniteData } from '@tanstack/react-query';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 
-import type { Category } from '../api/catalogue.api';
+import type { Category, EnrichedProductDetail } from '../api/catalogue.api';
 import {
   fetchCategories,
   fetchCategoryProducts,
@@ -30,7 +30,7 @@ export function useCategoryProducts(
   });
 }
 
-export function useProductDetail(productId: string): UseQueryResult<ProductRecord> {
+export function useProductDetail(productId: string): UseQueryResult<EnrichedProductDetail> {
   return useQuery({
     queryKey: ['product', productId],
     queryFn: () => fetchProductDetail(productId),

@@ -60,15 +60,34 @@ export function extractPaginationParams(event: APIGatewayProxyEvent): {
 }
 
 /**
+ * Extracts the subcategoryId from the path parameters.
+ * Throws 400 if not present.
+ *
+ * Requirements: 1.3, 2.1
+ */
+export function extractSubcategoryId(event: APIGatewayProxyEvent): string {
+  const subcategoryId = event.pathParameters?.['subcategoryId'];
+
+  if (!subcategoryId) {
+    throw createError(400, 'Subcategory ID is required');
+  }
+
+  return subcategoryId;
+}
+
+/**
  * Extracts and validates search query parameters.
  * Query must be 1-100 non-whitespace-only characters.
+ * Optionally extracts categoryId and subcategoryId for filtering.
  *
- * Requirement 6.6
+ * Requirements: 6.6, 9.3
  */
 export function extractSearchParams(event: APIGatewayProxyEvent): {
   query: string;
   limit: number;
   cursor?: string;
+  categoryId?: string;
+  subcategoryId?: string;
 } {
   const q = event.queryStringParameters?.['q'];
 
@@ -82,9 +101,26 @@ export function extractSearchParams(event: APIGatewayProxyEvent): {
 
   const { limit, cursor } = extractPaginationParams(event);
 
-  const result: { query: string; limit: number; cursor?: string } = { query: q, limit };
+  const result: {
+    query: string;
+    limit: number;
+    cursor?: string;
+    categoryId?: string;
+    subcategoryId?: string;
+  } = { query: q, limit };
   if (cursor) {
     result.cursor = cursor;
+  }
+
+  // Extract optional category/subcategory filters
+  const categoryId = event.queryStringParameters?.['categoryId'];
+  if (categoryId) {
+    result.categoryId = categoryId;
+  }
+
+  const subcategoryId = event.queryStringParameters?.['subcategoryId'];
+  if (subcategoryId) {
+    result.subcategoryId = subcategoryId;
   }
 
   return result;

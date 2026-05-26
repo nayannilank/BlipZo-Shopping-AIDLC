@@ -15356,12 +15356,21 @@ var imageUploadSchema = external_exports.object({
   }),
   sizeBytes: external_exports.number().int({ message: "Image size must be an integer" }).positive({ message: "Image size must be greater than 0" }).max(10 * 1024 * 1024, { message: "Each image must be at most 10 MB" })
 });
+var dynamicAttributeValueSchema = external_exports.union([
+  external_exports.string(),
+  external_exports.number(),
+  external_exports.boolean(),
+  external_exports.array(external_exports.string())
+]);
 var createProductSchema = external_exports.object({
   name: external_exports.string().min(1, { message: "Product name is required" }).max(200, { message: "Product name must be at most 200 characters" }),
   description: external_exports.string().min(1, { message: "Product description is required" }).max(2e3, { message: "Product description must be at most 2000 characters" }),
   price: external_exports.number().gt(0, { message: "Price must be greater than 0" }).max(999999999e-2, { message: "Price must be at most 9,999,999.99" }),
   stockQuantity: external_exports.number().int({ message: "Stock quantity must be an integer" }).min(0, { message: "Stock quantity must be at least 0" }).max(999999, { message: "Stock quantity must be at most 999,999" }),
-  categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }),
+  categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }).optional(),
+  categoryId: external_exports.string().min(1, { message: "Category ID must not be empty" }).optional(),
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID must not be empty" }).optional(),
+  dynamicAttributes: external_exports.record(external_exports.string(), dynamicAttributeValueSchema).optional(),
   images: external_exports.array(imageUploadSchema).min(1, { message: "At least one image is required" }).max(10, { message: "At most 10 images are allowed" })
 });
 var updateProductSchema = external_exports.object({
@@ -15370,6 +15379,9 @@ var updateProductSchema = external_exports.object({
   price: external_exports.number().gt(0, { message: "Price must be greater than 0" }).max(999999999e-2, { message: "Price must be at most 9,999,999.99" }).optional(),
   stockQuantity: external_exports.number().int({ message: "Stock quantity must be an integer" }).min(0, { message: "Stock quantity must be at least 0" }).max(999999, { message: "Stock quantity must be at most 999,999" }).optional(),
   categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }).optional(),
+  categoryId: external_exports.string().min(1, { message: "Category ID must not be empty" }).optional(),
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID must not be empty" }).optional(),
+  dynamicAttributes: external_exports.record(external_exports.string(), dynamicAttributeValueSchema).optional(),
   images: external_exports.array(imageUploadSchema).min(1, { message: "At least one image is required" }).max(10, { message: "At most 10 images are allowed" }).optional()
 });
 var sellerPolicySchema = external_exports.object({
@@ -15453,6 +15465,61 @@ var updateAddressSchema = external_exports.object({
   state: external_exports.string().min(1, { message: "State is required" }).max(100, { message: "State must be at most 100 characters" }).optional(),
   postalCode: external_exports.string().min(1, { message: "Postal code is required" }).optional(),
   country: external_exports.string().min(1, { message: "Country is required" }).optional()
+});
+
+// ../../packages/shared/dist/schemas/category.schema.js
+var attributeDataTypeSchema = external_exports.enum([
+  "text",
+  "number",
+  "single-select",
+  "multi-select",
+  "boolean"
+]);
+var attributeDefinitionSchema = external_exports.object({
+  fieldName: external_exports.string().min(1, { message: "Field name is required" }),
+  displayLabel: external_exports.string().min(1, { message: "Display label is required" }),
+  dataType: attributeDataTypeSchema,
+  required: external_exports.boolean(),
+  allowedValues: external_exports.array(external_exports.string()).nullable().optional(),
+  filterable: external_exports.boolean(),
+  displayPriority: external_exports.number().int({ message: "Display priority must be an integer" })
+}).refine((data) => {
+  if (data.dataType === "single-select" || data.dataType === "multi-select") {
+    if (data.allowedValues !== null && data.allowedValues !== void 0) {
+      return data.allowedValues.length > 0;
+    }
+  }
+  return true;
+}, {
+  message: "allowedValues must be a non-empty array when specified for single-select or multi-select data types"
+});
+var categoryNodeSchema = external_exports.object({
+  categoryId: external_exports.string().min(1, { message: "Category ID is required" }),
+  parentId: external_exports.string().nullable(),
+  name: external_exports.string().min(1, { message: "Category name is required" }),
+  slug: external_exports.string().min(1, { message: "Slug is required" }),
+  level: external_exports.union([external_exports.literal(1), external_exports.literal(2)]),
+  isActive: external_exports.boolean(),
+  icon: external_exports.string().optional(),
+  createdAt: external_exports.string().min(1, { message: "Created at timestamp is required" }),
+  updatedAt: external_exports.string().min(1, { message: "Updated at timestamp is required" })
+});
+var attributeSchemaSchema = external_exports.object({
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID is required" }),
+  schemaVersion: external_exports.number().int({ message: "Schema version must be an integer" }).positive({ message: "Schema version must be positive" }),
+  attributes: external_exports.array(attributeDefinitionSchema).min(1, { message: "At least one attribute definition is required" }),
+  createdAt: external_exports.string().min(1, { message: "Created at timestamp is required" })
+});
+var categoryTreeResponseSchema = external_exports.object({
+  categories: external_exports.array(categoryNodeSchema)
+});
+var subcategoryListResponseSchema = external_exports.object({
+  subcategories: external_exports.array(categoryNodeSchema)
+});
+var attributeSchemaResponseSchema = external_exports.object({
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID is required" }),
+  schemaVersion: external_exports.number().int({ message: "Schema version must be an integer" }).positive({ message: "Schema version must be positive" }),
+  attributes: external_exports.array(attributeDefinitionSchema)
 });
 
 // ../../packages/shared/dist/middleware/logger.middleware.js
@@ -16191,6 +16258,93 @@ function v4(options, buf, offset) {
 }
 var v4_default = v4;
 
+// src/attribute-validator.ts
+function buildFieldSchema(definition) {
+  const { dataType, required: required2, allowedValues, displayLabel } = definition;
+  let schema;
+  switch (dataType) {
+    case "text": {
+      if (required2) {
+        schema = external_exports.string().min(1, { message: `${displayLabel} is required` });
+      } else {
+        schema = external_exports.string();
+      }
+      break;
+    }
+    case "number": {
+      schema = external_exports.number({ message: `${displayLabel} must be a number` });
+      break;
+    }
+    case "single-select": {
+      if (allowedValues && allowedValues.length > 0) {
+        const values = allowedValues;
+        schema = external_exports.enum(values, {
+          message: `Value is not allowed. Allowed values: ${allowedValues.join(", ")}`
+        });
+      } else {
+        if (required2) {
+          schema = external_exports.string().min(1, { message: `${displayLabel} is required` });
+        } else {
+          schema = external_exports.string();
+        }
+      }
+      break;
+    }
+    case "multi-select": {
+      let itemSchema;
+      if (allowedValues && allowedValues.length > 0) {
+        const values = allowedValues;
+        itemSchema = external_exports.enum(values, {
+          message: `Value is not allowed. Allowed values: ${allowedValues.join(", ")}`
+        });
+      } else {
+        itemSchema = external_exports.string();
+      }
+      if (required2) {
+        schema = external_exports.array(itemSchema).min(1, {
+          message: `At least one ${displayLabel.toLowerCase()} must be selected`
+        });
+      } else {
+        schema = external_exports.array(itemSchema);
+      }
+      break;
+    }
+    case "boolean": {
+      schema = external_exports.boolean({ message: `${displayLabel} must be a boolean` });
+      break;
+    }
+    default: {
+      schema = external_exports.unknown();
+      break;
+    }
+  }
+  if (!required2) {
+    schema = schema.optional();
+  }
+  return schema;
+}
+function validateDynamicAttributes(dynamicAttributes, schema) {
+  const shape = {};
+  for (const definition of schema) {
+    shape[definition.fieldName] = buildFieldSchema(definition);
+  }
+  const zodSchema = external_exports.object(shape);
+  const result = zodSchema.safeParse(dynamicAttributes);
+  if (result.success) {
+    return { valid: true, fields: {} };
+  }
+  const fields = {};
+  for (const issue2 of result.error.issues) {
+    const topLevelField = issue2.path[0];
+    if (topLevelField === void 0) continue;
+    const fieldKey = `dynamicAttributes.${String(topLevelField)}`;
+    if (!fields[fieldKey]) {
+      fields[fieldKey] = issue2.message;
+    }
+  }
+  return { valid: false, fields };
+}
+
 // src/errors.ts
 var import_http_errors = __toESM(require_http_errors(), 1);
 var PRODUCT_ERROR_CODES = {
@@ -16198,8 +16352,15 @@ var PRODUCT_ERROR_CODES = {
   NOT_FOUND: "NOT_FOUND",
   FORBIDDEN: "FORBIDDEN",
   S3_UPLOAD_FAILED: "S3_UPLOAD_FAILED",
-  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE"
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+  CATEGORY_IMMUTABLE: "CATEGORY_IMMUTABLE"
 };
+function createValidationError(fields) {
+  const error51 = (0, import_http_errors.default)(400, "Validation failed");
+  error51["code"] = PRODUCT_ERROR_CODES.VALIDATION_ERROR;
+  error51["fields"] = fields;
+  throw error51;
+}
 function createNotFoundError(message) {
   const error51 = (0, import_http_errors.default)(404, message, { expose: true });
   error51["code"] = PRODUCT_ERROR_CODES.NOT_FOUND;
@@ -16226,6 +16387,13 @@ function createServiceUnavailableError() {
   error51["code"] = PRODUCT_ERROR_CODES.SERVICE_UNAVAILABLE;
   throw error51;
 }
+function createCategoryImmutableError() {
+  const error51 = (0, import_http_errors.default)(400, "Category and subcategory cannot be changed after creation", {
+    expose: true
+  });
+  error51["code"] = PRODUCT_ERROR_CODES.CATEGORY_IMMUTABLE;
+  throw error51;
+}
 
 // src/service.ts
 var dynamoDbClient = new import_client_dynamodb.DynamoDBClient({});
@@ -16237,9 +16405,61 @@ function getProductsTableName() {
 function getProductImagesBucket() {
   return process.env["PRODUCT_IMAGES_BUCKET"] ?? "";
 }
+function getCategoriesTableName() {
+  return process.env["CATEGORIES_TABLE_NAME"] ?? "";
+}
+async function fetchAttributeSchema(subcategoryId) {
+  try {
+    const command = new import_lib_dynamodb.QueryCommand({
+      TableName: getCategoriesTableName(),
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
+      ExpressionAttributeNames: {
+        "#pk": "PK",
+        "#sk": "SK"
+      },
+      ExpressionAttributeValues: {
+        ":pk": `CAT#${subcategoryId}`,
+        ":skPrefix": "SCHEMA#"
+      },
+      ScanIndexForward: false,
+      // Sort descending to get latest version first
+      Limit: 1
+    });
+    const result = await docClient.send(command);
+    const items = result.Items ?? [];
+    if (items.length === 0) {
+      return null;
+    }
+    const item = items[0];
+    return {
+      schemaVersion: item["schemaVersion"],
+      attributes: item["attributes"]
+    };
+  } catch (error51) {
+    if (error51 && typeof error51 === "object" && "statusCode" in error51) {
+      throw error51;
+    }
+    createServiceUnavailableError();
+  }
+}
 var PRESIGNED_URL_EXPIRY = 900;
-function generateSearchTokens(name, description) {
-  return `${name} ${description}`.toLowerCase();
+function generateSearchTokens(name, description, dynamicAttributes, schema) {
+  let tokens = `${name} ${description}`;
+  if (dynamicAttributes && schema) {
+    const textValues = [];
+    for (const attr of schema) {
+      if (attr.dataType === "text") {
+        const value = dynamicAttributes[attr.fieldName];
+        if (typeof value === "string" && value.length > 0) {
+          textValues.push(value);
+        }
+      }
+    }
+    if (textValues.length > 0) {
+      tokens += ` ${textValues.join(" ")}`;
+    }
+  }
+  return tokens.toLowerCase();
 }
 async function generatePresignedUploadUrls(productId, images) {
   const uploadUrls = [];
@@ -16275,10 +16495,36 @@ function buildImageUrls(uploadUrls) {
 async function createProduct(input, sellerId) {
   const productId = v4_default();
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  const primaryCategory = input.categories[0] ?? "";
+  let gsi1pk;
+  let gsi1sk;
+  let schemaVersion;
+  let validatedDynamicAttributes;
+  let schemaAttributes;
+  if (input.subcategoryId) {
+    const schema = await fetchAttributeSchema(input.subcategoryId);
+    if (!schema) {
+      createValidationError({
+        subcategoryId: `Attribute schema not found for subcategory '${input.subcategoryId}'`
+      });
+    }
+    const dynamicAttrs = input.dynamicAttributes ?? {};
+    const validationResult = validateDynamicAttributes(dynamicAttrs, schema.attributes);
+    if (!validationResult.valid) {
+      createValidationError(validationResult.fields);
+    }
+    schemaVersion = schema.schemaVersion;
+    schemaAttributes = schema.attributes;
+    validatedDynamicAttributes = dynamicAttrs;
+    gsi1pk = `SUBCATEGORY#${input.subcategoryId}`;
+    gsi1sk = `CREATED#${now}`;
+  } else {
+    const primaryCategory = input.categories?.[0] ?? "";
+    gsi1pk = `CATEGORY#${primaryCategory}`;
+    gsi1sk = `CREATED#${now}`;
+  }
   const uploadUrls = await generatePresignedUploadUrls(productId, input.images);
   const imageUrls = buildImageUrls(uploadUrls);
-  const searchTokens = generateSearchTokens(input.name, input.description);
+  const searchTokens = generateSearchTokens(input.name, input.description, validatedDynamicAttributes, schemaAttributes);
   const productRecord = {
     productId,
     sellerId,
@@ -16286,18 +16532,32 @@ async function createProduct(input, sellerId) {
     description: input.description,
     price: input.price,
     stockQuantity: input.stockQuantity,
-    categories: input.categories,
     imageUrls,
     isDeleted: false,
     createdAt: now,
     updatedAt: now
   };
+  if (input.categories) {
+    productRecord.categories = input.categories;
+  }
+  if (input.categoryId) {
+    productRecord.categoryId = input.categoryId;
+  }
+  if (input.subcategoryId) {
+    productRecord.subcategoryId = input.subcategoryId;
+  }
+  if (validatedDynamicAttributes) {
+    productRecord.dynamicAttributes = validatedDynamicAttributes;
+  }
+  if (schemaVersion !== void 0) {
+    productRecord.schemaVersion = schemaVersion;
+  }
   const dynamoItem = {
     PK: `PRODUCT#${productId}`,
     SK: "METADATA",
     ...productRecord,
-    GSI1PK: `CATEGORY#${primaryCategory}`,
-    GSI1SK: `CREATED#${now}`,
+    GSI1PK: gsi1pk,
+    GSI1SK: gsi1sk,
     GSI2PK: `SELLER#${sellerId}`,
     GSI2SK: `CREATED#${now}`,
     searchTokens
@@ -16324,12 +16584,26 @@ function mapItemToProductRecord(item) {
     description: item["description"],
     price: item["price"],
     stockQuantity: item["stockQuantity"],
-    categories: item["categories"],
     imageUrls: item["imageUrls"],
     isDeleted: item["isDeleted"],
     createdAt: item["createdAt"],
     updatedAt: item["updatedAt"]
   };
+  if (item["categories"]) {
+    record2.categories = item["categories"];
+  }
+  if (item["categoryId"]) {
+    record2.categoryId = item["categoryId"];
+  }
+  if (item["subcategoryId"]) {
+    record2.subcategoryId = item["subcategoryId"];
+  }
+  if (item["dynamicAttributes"]) {
+    record2.dynamicAttributes = item["dynamicAttributes"];
+  }
+  if (item["schemaVersion"] !== void 0 && item["schemaVersion"] !== null) {
+    record2.schemaVersion = item["schemaVersion"];
+  }
   if (item["sellerPolicy"]) {
     record2.sellerPolicy = item["sellerPolicy"];
   }
@@ -16356,6 +16630,33 @@ async function getProductById(productId) {
     createServiceUnavailableError();
   }
 }
+async function getProductDetail(productId) {
+  const product = await getProductById(productId);
+  if (!product.subcategoryId) {
+    return product;
+  }
+  const schema = await fetchAttributeSchema(product.subcategoryId);
+  if (!schema || !product.dynamicAttributes) {
+    return product;
+  }
+  const attributeLabels = {};
+  const filteredDynamicAttributes = {};
+  for (const attrDef of schema.attributes) {
+    const value = product.dynamicAttributes[attrDef.fieldName];
+    if (!attrDef.required && (value === null || value === void 0)) {
+      continue;
+    }
+    if (value !== null && value !== void 0) {
+      filteredDynamicAttributes[attrDef.fieldName] = value;
+      attributeLabels[attrDef.fieldName] = attrDef.displayLabel;
+    }
+  }
+  return {
+    ...product,
+    dynamicAttributes: filteredDynamicAttributes,
+    attributeLabels
+  };
+}
 function assertOwnership(product, requestingUserId) {
   if (product.sellerId !== requestingUserId) {
     createForbiddenError();
@@ -16364,10 +16665,33 @@ function assertOwnership(product, requestingUserId) {
 async function updateProduct(productId, input, sellerId) {
   const existingProduct = await getProductById(productId);
   assertOwnership(existingProduct, sellerId);
+  if (input.categoryId !== void 0 && input.categoryId !== existingProduct.categoryId) {
+    createCategoryImmutableError();
+  }
+  if (input.subcategoryId !== void 0 && input.subcategoryId !== existingProduct.subcategoryId) {
+    createCategoryImmutableError();
+  }
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const expressionAttributeNames = {};
   const expressionAttributeValues = {};
   const updateExpressions = [];
+  let schemaAttributes;
+  let newSchemaVersion;
+  if (existingProduct.subcategoryId) {
+    const schema = await fetchAttributeSchema(existingProduct.subcategoryId);
+    if (schema) {
+      schemaAttributes = schema.attributes;
+      if (input.dynamicAttributes !== void 0) {
+        const validationResult = validateDynamicAttributes(input.dynamicAttributes, schema.attributes);
+        if (!validationResult.valid) {
+          createValidationError(validationResult.fields);
+        }
+        if (existingProduct.schemaVersion !== schema.schemaVersion) {
+          newSchemaVersion = schema.schemaVersion;
+        }
+      }
+    }
+  }
   expressionAttributeNames["#updatedAt"] = "updatedAt";
   expressionAttributeValues[":updatedAt"] = now;
   updateExpressions.push("#updatedAt = :updatedAt");
@@ -16377,7 +16701,7 @@ async function updateProduct(productId, input, sellerId) {
     updateExpressions.push("#name = :name");
     const description = input.description ?? existingProduct.description;
     expressionAttributeNames["#searchTokens"] = "searchTokens";
-    expressionAttributeValues[":searchTokens"] = generateSearchTokens(input.name, description);
+    expressionAttributeValues[":searchTokens"] = generateSearchTokens(input.name, description, existingProduct.dynamicAttributes, schemaAttributes);
     updateExpressions.push("#searchTokens = :searchTokens");
   }
   if (input.description !== void 0) {
@@ -16387,7 +16711,7 @@ async function updateProduct(productId, input, sellerId) {
     if (input.name === void 0) {
       const name = existingProduct.name;
       expressionAttributeNames["#searchTokens"] = "searchTokens";
-      expressionAttributeValues[":searchTokens"] = generateSearchTokens(name, input.description);
+      expressionAttributeValues[":searchTokens"] = generateSearchTokens(name, input.description, existingProduct.dynamicAttributes, schemaAttributes);
       updateExpressions.push("#searchTokens = :searchTokens");
     }
   }
@@ -16409,6 +16733,37 @@ async function updateProduct(productId, input, sellerId) {
     expressionAttributeNames["#GSI1PK"] = "GSI1PK";
     expressionAttributeValues[":GSI1PK"] = `CATEGORY#${newPrimaryCategory}`;
     updateExpressions.push("#GSI1PK = :GSI1PK");
+  }
+  if (input.dynamicAttributes !== void 0) {
+    expressionAttributeNames["#dynamicAttributes"] = "dynamicAttributes";
+    expressionAttributeValues[":dynamicAttributes"] = input.dynamicAttributes;
+    updateExpressions.push("#dynamicAttributes = :dynamicAttributes");
+    if (input.name === void 0 && input.description === void 0) {
+      const updatedDynamicAttrs = input.dynamicAttributes;
+      expressionAttributeNames["#searchTokens"] = "searchTokens";
+      expressionAttributeValues[":searchTokens"] = generateSearchTokens(
+        existingProduct.name,
+        existingProduct.description,
+        updatedDynamicAttrs,
+        schemaAttributes
+      );
+      updateExpressions.push("#searchTokens = :searchTokens");
+    } else {
+      const updatedDynamicAttrs = input.dynamicAttributes;
+      const name = input.name ?? existingProduct.name;
+      const description = input.description ?? existingProduct.description;
+      expressionAttributeValues[":searchTokens"] = generateSearchTokens(
+        name,
+        description,
+        updatedDynamicAttrs,
+        schemaAttributes
+      );
+    }
+  }
+  if (newSchemaVersion !== void 0) {
+    expressionAttributeNames["#schemaVersion"] = "schemaVersion";
+    expressionAttributeValues[":schemaVersion"] = newSchemaVersion;
+    updateExpressions.push("#schemaVersion = :schemaVersion");
   }
   try {
     const updateCommand = new import_lib_dynamodb.UpdateCommand({
@@ -16580,7 +16935,27 @@ function validateCreateProductInput(event) {
     error51["fields"] = fields;
     throw error51;
   }
-  return result.data;
+  const data = result.data;
+  const request = {
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    stockQuantity: data.stockQuantity,
+    images: data.images
+  };
+  if (data.categories !== void 0) {
+    request.categories = data.categories;
+  }
+  if (data.categoryId !== void 0) {
+    request.categoryId = data.categoryId;
+  }
+  if (data.subcategoryId !== void 0) {
+    request.subcategoryId = data.subcategoryId;
+  }
+  if (data.dynamicAttributes !== void 0) {
+    request.dynamicAttributes = data.dynamicAttributes;
+  }
+  return request;
 }
 function extractProductId(event) {
   const productId = event.pathParameters?.["productId"];
@@ -16608,7 +16983,7 @@ function validateUpdateProductInput(event) {
     throw error51;
   }
   const data = result.data;
-  const hasAtLeastOneField = data.name !== void 0 || data.description !== void 0 || data.price !== void 0 || data.stockQuantity !== void 0 || data.categories !== void 0 || data.images !== void 0;
+  const hasAtLeastOneField = data.name !== void 0 || data.description !== void 0 || data.price !== void 0 || data.stockQuantity !== void 0 || data.categories !== void 0 || data.categoryId !== void 0 || data.subcategoryId !== void 0 || data.dynamicAttributes !== void 0 || data.images !== void 0;
   if (!hasAtLeastOneField) {
     throw (0, import_http_errors2.default)(400, "At least one field must be provided for update");
   }
@@ -16748,7 +17123,7 @@ var setSellerPolicyHandler = core_default(rawSetSellerPolicyHandler).use(http_js
 );
 var rawGetProductHandler = async (event) => {
   const productId = extractProductId(event);
-  const product = await getProductById(productId);
+  const product = await getProductDetail(productId);
   return {
     statusCode: 200,
     headers: {

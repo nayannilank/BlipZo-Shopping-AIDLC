@@ -9,6 +9,7 @@ export const PRODUCT_ERROR_CODES = {
   FORBIDDEN: 'FORBIDDEN',
   S3_UPLOAD_FAILED: 'S3_UPLOAD_FAILED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  CATEGORY_IMMUTABLE: 'CATEGORY_IMMUTABLE',
 } as const;
 
 /**
@@ -63,5 +64,19 @@ export function createServiceUnavailableError(): never {
     expose: true,
   });
   (error as unknown as Record<string, unknown>)['code'] = PRODUCT_ERROR_CODES.SERVICE_UNAVAILABLE;
+  throw error;
+}
+
+/**
+ * Creates a 400 CATEGORY_IMMUTABLE error when a seller attempts to change
+ * the categoryId or subcategoryId of an existing product.
+ *
+ * Requirements: 8.3
+ */
+export function createCategoryImmutableError(): never {
+  const error = createError(400, 'Category and subcategory cannot be changed after creation', {
+    expose: true,
+  });
+  (error as unknown as Record<string, unknown>)['code'] = PRODUCT_ERROR_CODES.CATEGORY_IMMUTABLE;
   throw error;
 }

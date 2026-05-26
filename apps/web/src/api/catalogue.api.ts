@@ -11,6 +11,11 @@ export interface CategoriesResponse {
   categories: Category[];
 }
 
+/** Enriched product detail response from the product service with display labels */
+export interface EnrichedProductDetail extends ProductRecord {
+  attributeLabels?: Record<string, string>;
+}
+
 export async function fetchCategories(): Promise<Category[]> {
   const response = await apiClient.get<CategoriesResponse>('/catalogue/categories');
   return response.data.categories;
@@ -27,8 +32,8 @@ export async function fetchCategoryProducts(
   return response.data;
 }
 
-export async function fetchProductDetail(productId: string): Promise<ProductRecord> {
-  const response = await apiClient.get<ProductRecord>(`/catalogue/products/${productId}`);
+export async function fetchProductDetail(productId: string): Promise<EnrichedProductDetail> {
+  const response = await apiClient.get<EnrichedProductDetail>(`/products/${productId}`);
   return response.data;
 }
 

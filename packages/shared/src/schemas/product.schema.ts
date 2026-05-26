@@ -17,9 +17,23 @@ export const imageUploadSchema = z.object({
 });
 
 /**
+ * Dynamic attributes value schema.
+ * Each attribute value can be a string, number, boolean, or array of strings.
+ * Requirements 3.5, 3.6, 7.1: Validates dynamic attribute value types.
+ */
+const dynamicAttributeValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.array(z.string()),
+]);
+
+/**
  * Create product request schema.
  * Requirement 5.1: name 1-200, description 1-2000, price > 0 and ≤ 9999999.99,
  * stock 0-999999, at least one category, 1-10 images.
+ * Requirements 3.5, 3.6, 7.1: categoryId, subcategoryId, and dynamicAttributes
+ * for category-based product management.
  */
 export const createProductSchema = z.object({
   name: z
@@ -41,7 +55,11 @@ export const createProductSchema = z.object({
     .max(999999, { message: 'Stock quantity must be at most 999,999' }),
   categories: z
     .array(z.string().min(1, { message: 'Category must not be empty' }))
-    .min(1, { message: 'At least one category is required' }),
+    .min(1, { message: 'At least one category is required' })
+    .optional(),
+  categoryId: z.string().min(1, { message: 'Category ID must not be empty' }).optional(),
+  subcategoryId: z.string().min(1, { message: 'Subcategory ID must not be empty' }).optional(),
+  dynamicAttributes: z.record(z.string(), dynamicAttributeValueSchema).optional(),
   images: z
     .array(imageUploadSchema)
     .min(1, { message: 'At least one image is required' })
@@ -52,6 +70,8 @@ export const createProductSchema = z.object({
  * Update product request schema.
  * Requirement 5.5: partial update with same bounds as creation.
  * All fields are optional but must meet constraints if provided.
+ * Note: categoryId and subcategoryId are included as optional so the service layer
+ * can detect and reject attempts to change them (Requirement 8.3).
  */
 export const updateProductSchema = z.object({
   name: z
@@ -79,6 +99,9 @@ export const updateProductSchema = z.object({
     .array(z.string().min(1, { message: 'Category must not be empty' }))
     .min(1, { message: 'At least one category is required' })
     .optional(),
+  categoryId: z.string().min(1, { message: 'Category ID must not be empty' }).optional(),
+  subcategoryId: z.string().min(1, { message: 'Subcategory ID must not be empty' }).optional(),
+  dynamicAttributes: z.record(z.string(), dynamicAttributeValueSchema).optional(),
   images: z
     .array(imageUploadSchema)
     .min(1, { message: 'At least one image is required' })

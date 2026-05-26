@@ -155,7 +155,7 @@ function ProductForm({
         description: existingProduct.description,
         price: String(existingProduct.price),
         stockQuantity: String(existingProduct.stockQuantity),
-        categories: existingProduct.categories.join(', '),
+        categories: (existingProduct.categories ?? []).join(', '),
         images: existingProduct.imageUrls.map((url, index) => ({
           uri: url,
           filename: `existing-image-${String(index)}.jpg`,

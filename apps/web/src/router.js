@@ -39,6 +39,19 @@ export const router = createBrowserRouter([
         path: 'search',
         lazy: () => import('./pages/Search/SearchPage'),
       },
+      // Category browsing routes
+      {
+        path: 'browse',
+        lazy: () => import('./pages/Browse/CategoriesPage'),
+      },
+      {
+        path: 'browse/:categoryId',
+        lazy: () => import('./pages/Browse/SubcategoriesPage'),
+      },
+      {
+        path: 'browse/:categoryId/:subcategoryId',
+        lazy: () => import('./pages/Browse/SubcategoryProductsPage'),
+      },
       // Protected routes (any authenticated user)
       {
         element: _jsx(ProtectedRoute, {}),

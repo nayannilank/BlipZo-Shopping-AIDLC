@@ -150,6 +150,9 @@ export class ApiStack extends cdk.NestedStack {
     const catalogue = this.api.root.addResource('catalogue');
     const catalogueCategories = catalogue.addResource('categories');
     const catalogueCategoryById = catalogueCategories.addResource('{categoryId}');
+    const catalogueCategorySubcategories = catalogueCategoryById.addResource('subcategories');
+    const catalogueCategorySchema = catalogueCategoryById.addResource('schema');
+    const catalogueCategoryProducts = catalogueCategoryById.addResource('products');
     const catalogueSearch = catalogue.addResource('search');
     const catalogueProducts = catalogue.addResource('products');
     const catalogueProductById = catalogueProducts.addResource('{productId}');
@@ -189,6 +192,9 @@ export class ApiStack extends cdk.NestedStack {
     void productsSellerMe;
     void catalogueCategories;
     void catalogueCategoryById;
+    void catalogueCategorySubcategories;
+    void catalogueCategorySchema;
+    void catalogueCategoryProducts;
     void catalogueSearch;
     void catalogueProductById;
     void wishlist;

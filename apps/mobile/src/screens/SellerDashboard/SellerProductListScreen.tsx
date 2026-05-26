@@ -67,9 +67,9 @@ function ProductCard({
               </View>
             )}
           </View>
-          {product.categories.length > 0 && (
+          {(product.categories ?? []).length > 0 && (
             <Text className="text-xs text-gray-400 mt-1" numberOfLines={1}>
-              {product.categories.join(', ')}
+              {(product.categories ?? []).join(', ')}
             </Text>
           )}
         </View>

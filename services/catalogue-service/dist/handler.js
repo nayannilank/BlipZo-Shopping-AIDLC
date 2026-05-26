@@ -30,6 +30,697 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// ../../node_modules/depd/index.js
+var require_depd = __commonJS({
+  "../../node_modules/depd/index.js"(exports2, module2) {
+    var relative = require("path").relative;
+    module2.exports = depd;
+    var basePath = process.cwd();
+    function containsNamespace(str, namespace) {
+      var vals = str.split(/[ ,]+/);
+      var ns = String(namespace).toLowerCase();
+      for (var i = 0; i < vals.length; i++) {
+        var val = vals[i];
+        if (val && (val === "*" || val.toLowerCase() === ns)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function convertDataDescriptorToAccessor(obj, prop, message) {
+      var descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+      var value = descriptor.value;
+      descriptor.get = function getter() {
+        return value;
+      };
+      if (descriptor.writable) {
+        descriptor.set = function setter(val) {
+          return value = val;
+        };
+      }
+      delete descriptor.value;
+      delete descriptor.writable;
+      Object.defineProperty(obj, prop, descriptor);
+      return descriptor;
+    }
+    function createArgumentsString(arity) {
+      var str = "";
+      for (var i = 0; i < arity; i++) {
+        str += ", arg" + i;
+      }
+      return str.substr(2);
+    }
+    function createStackString(stack) {
+      var str = this.name + ": " + this.namespace;
+      if (this.message) {
+        str += " deprecated " + this.message;
+      }
+      for (var i = 0; i < stack.length; i++) {
+        str += "\n    at " + stack[i].toString();
+      }
+      return str;
+    }
+    function depd(namespace) {
+      if (!namespace) {
+        throw new TypeError("argument namespace is required");
+      }
+      var stack = getStack();
+      var site = callSiteLocation(stack[1]);
+      var file2 = site[0];
+      function deprecate(message) {
+        log.call(deprecate, message);
+      }
+      deprecate._file = file2;
+      deprecate._ignored = isignored(namespace);
+      deprecate._namespace = namespace;
+      deprecate._traced = istraced(namespace);
+      deprecate._warned = /* @__PURE__ */ Object.create(null);
+      deprecate.function = wrapfunction;
+      deprecate.property = wrapproperty;
+      return deprecate;
+    }
+    function eehaslisteners(emitter, type) {
+      var count = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count > 0;
+    }
+    function isignored(namespace) {
+      if (process.noDeprecation) {
+        return true;
+      }
+      var str = process.env.NO_DEPRECATION || "";
+      return containsNamespace(str, namespace);
+    }
+    function istraced(namespace) {
+      if (process.traceDeprecation) {
+        return true;
+      }
+      var str = process.env.TRACE_DEPRECATION || "";
+      return containsNamespace(str, namespace);
+    }
+    function log(message, site) {
+      var haslisteners = eehaslisteners(process, "deprecation");
+      if (!haslisteners && this._ignored) {
+        return;
+      }
+      var caller;
+      var callFile;
+      var callSite;
+      var depSite;
+      var i = 0;
+      var seen = false;
+      var stack = getStack();
+      var file2 = this._file;
+      if (site) {
+        depSite = site;
+        callSite = callSiteLocation(stack[1]);
+        callSite.name = depSite.name;
+        file2 = callSite[0];
+      } else {
+        i = 2;
+        depSite = callSiteLocation(stack[i]);
+        callSite = depSite;
+      }
+      for (; i < stack.length; i++) {
+        caller = callSiteLocation(stack[i]);
+        callFile = caller[0];
+        if (callFile === file2) {
+          seen = true;
+        } else if (callFile === this._file) {
+          file2 = this._file;
+        } else if (seen) {
+          break;
+        }
+      }
+      var key = caller ? depSite.join(":") + "__" + caller.join(":") : void 0;
+      if (key !== void 0 && key in this._warned) {
+        return;
+      }
+      this._warned[key] = true;
+      var msg = message;
+      if (!msg) {
+        msg = callSite === depSite || !callSite.name ? defaultMessage(depSite) : defaultMessage(callSite);
+      }
+      if (haslisteners) {
+        var err = DeprecationError(this._namespace, msg, stack.slice(i));
+        process.emit("deprecation", err);
+        return;
+      }
+      var format = process.stderr.isTTY ? formatColor : formatPlain;
+      var output = format.call(this, msg, caller, stack.slice(i));
+      process.stderr.write(output + "\n", "utf8");
+    }
+    function callSiteLocation(callSite) {
+      var file2 = callSite.getFileName() || "<anonymous>";
+      var line = callSite.getLineNumber();
+      var colm = callSite.getColumnNumber();
+      if (callSite.isEval()) {
+        file2 = callSite.getEvalOrigin() + ", " + file2;
+      }
+      var site = [file2, line, colm];
+      site.callSite = callSite;
+      site.name = callSite.getFunctionName();
+      return site;
+    }
+    function defaultMessage(site) {
+      var callSite = site.callSite;
+      var funcName = site.name;
+      if (!funcName) {
+        funcName = "<anonymous@" + formatLocation(site) + ">";
+      }
+      var context = callSite.getThis();
+      var typeName = context && callSite.getTypeName();
+      if (typeName === "Object") {
+        typeName = void 0;
+      }
+      if (typeName === "Function") {
+        typeName = context.name || typeName;
+      }
+      return typeName && callSite.getMethodName() ? typeName + "." + funcName : funcName;
+    }
+    function formatPlain(msg, caller, stack) {
+      var timestamp = (/* @__PURE__ */ new Date()).toUTCString();
+      var formatted = timestamp + " " + this._namespace + " deprecated " + msg;
+      if (this._traced) {
+        for (var i = 0; i < stack.length; i++) {
+          formatted += "\n    at " + stack[i].toString();
+        }
+        return formatted;
+      }
+      if (caller) {
+        formatted += " at " + formatLocation(caller);
+      }
+      return formatted;
+    }
+    function formatColor(msg, caller, stack) {
+      var formatted = "\x1B[36;1m" + this._namespace + "\x1B[22;39m \x1B[33;1mdeprecated\x1B[22;39m \x1B[0m" + msg + "\x1B[39m";
+      if (this._traced) {
+        for (var i = 0; i < stack.length; i++) {
+          formatted += "\n    \x1B[36mat " + stack[i].toString() + "\x1B[39m";
+        }
+        return formatted;
+      }
+      if (caller) {
+        formatted += " \x1B[36m" + formatLocation(caller) + "\x1B[39m";
+      }
+      return formatted;
+    }
+    function formatLocation(callSite) {
+      return relative(basePath, callSite[0]) + ":" + callSite[1] + ":" + callSite[2];
+    }
+    function getStack() {
+      var limit = Error.stackTraceLimit;
+      var obj = {};
+      var prep = Error.prepareStackTrace;
+      Error.prepareStackTrace = prepareObjectStackTrace;
+      Error.stackTraceLimit = Math.max(10, limit);
+      Error.captureStackTrace(obj);
+      var stack = obj.stack.slice(1);
+      Error.prepareStackTrace = prep;
+      Error.stackTraceLimit = limit;
+      return stack;
+    }
+    function prepareObjectStackTrace(obj, stack) {
+      return stack;
+    }
+    function wrapfunction(fn, message) {
+      if (typeof fn !== "function") {
+        throw new TypeError("argument fn must be a function");
+      }
+      var args = createArgumentsString(fn.length);
+      var stack = getStack();
+      var site = callSiteLocation(stack[1]);
+      site.name = fn.name;
+      var deprecatedfn = new Function(
+        "fn",
+        "log",
+        "deprecate",
+        "message",
+        "site",
+        '"use strict"\nreturn function (' + args + ") {log.call(deprecate, message, site)\nreturn fn.apply(this, arguments)\n}"
+      )(fn, log, this, message, site);
+      return deprecatedfn;
+    }
+    function wrapproperty(obj, prop, message) {
+      if (!obj || typeof obj !== "object" && typeof obj !== "function") {
+        throw new TypeError("argument obj must be object");
+      }
+      var descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+      if (!descriptor) {
+        throw new TypeError("must call property on owner object");
+      }
+      if (!descriptor.configurable) {
+        throw new TypeError("property must be configurable");
+      }
+      var deprecate = this;
+      var stack = getStack();
+      var site = callSiteLocation(stack[1]);
+      site.name = prop;
+      if ("value" in descriptor) {
+        descriptor = convertDataDescriptorToAccessor(obj, prop, message);
+      }
+      var get = descriptor.get;
+      var set2 = descriptor.set;
+      if (typeof get === "function") {
+        descriptor.get = function getter() {
+          log.call(deprecate, message, site);
+          return get.apply(this, arguments);
+        };
+      }
+      if (typeof set2 === "function") {
+        descriptor.set = function setter() {
+          log.call(deprecate, message, site);
+          return set2.apply(this, arguments);
+        };
+      }
+      Object.defineProperty(obj, prop, descriptor);
+    }
+    function DeprecationError(namespace, message, stack) {
+      var error51 = new Error();
+      var stackString;
+      Object.defineProperty(error51, "constructor", {
+        value: DeprecationError
+      });
+      Object.defineProperty(error51, "message", {
+        configurable: true,
+        enumerable: false,
+        value: message,
+        writable: true
+      });
+      Object.defineProperty(error51, "name", {
+        enumerable: false,
+        configurable: true,
+        value: "DeprecationError",
+        writable: true
+      });
+      Object.defineProperty(error51, "namespace", {
+        configurable: true,
+        enumerable: false,
+        value: namespace,
+        writable: true
+      });
+      Object.defineProperty(error51, "stack", {
+        configurable: true,
+        enumerable: false,
+        get: function() {
+          if (stackString !== void 0) {
+            return stackString;
+          }
+          return stackString = createStackString.call(this, stack);
+        },
+        set: function setter(val) {
+          stackString = val;
+        }
+      });
+      return error51;
+    }
+  }
+});
+
+// ../../node_modules/setprototypeof/index.js
+var require_setprototypeof = __commonJS({
+  "../../node_modules/setprototypeof/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);
+    function setProtoOf(obj, proto) {
+      obj.__proto__ = proto;
+      return obj;
+    }
+    function mixinProperties(obj, proto) {
+      for (var prop in proto) {
+        if (!Object.prototype.hasOwnProperty.call(obj, prop)) {
+          obj[prop] = proto[prop];
+        }
+      }
+      return obj;
+    }
+  }
+});
+
+// ../../node_modules/http-errors/node_modules/statuses/codes.json
+var require_codes = __commonJS({
+  "../../node_modules/http-errors/node_modules/statuses/codes.json"(exports2, module2) {
+    module2.exports = {
+      "100": "Continue",
+      "101": "Switching Protocols",
+      "102": "Processing",
+      "103": "Early Hints",
+      "200": "OK",
+      "201": "Created",
+      "202": "Accepted",
+      "203": "Non-Authoritative Information",
+      "204": "No Content",
+      "205": "Reset Content",
+      "206": "Partial Content",
+      "207": "Multi-Status",
+      "208": "Already Reported",
+      "226": "IM Used",
+      "300": "Multiple Choices",
+      "301": "Moved Permanently",
+      "302": "Found",
+      "303": "See Other",
+      "304": "Not Modified",
+      "305": "Use Proxy",
+      "307": "Temporary Redirect",
+      "308": "Permanent Redirect",
+      "400": "Bad Request",
+      "401": "Unauthorized",
+      "402": "Payment Required",
+      "403": "Forbidden",
+      "404": "Not Found",
+      "405": "Method Not Allowed",
+      "406": "Not Acceptable",
+      "407": "Proxy Authentication Required",
+      "408": "Request Timeout",
+      "409": "Conflict",
+      "410": "Gone",
+      "411": "Length Required",
+      "412": "Precondition Failed",
+      "413": "Payload Too Large",
+      "414": "URI Too Long",
+      "415": "Unsupported Media Type",
+      "416": "Range Not Satisfiable",
+      "417": "Expectation Failed",
+      "418": "I'm a Teapot",
+      "421": "Misdirected Request",
+      "422": "Unprocessable Entity",
+      "423": "Locked",
+      "424": "Failed Dependency",
+      "425": "Too Early",
+      "426": "Upgrade Required",
+      "428": "Precondition Required",
+      "429": "Too Many Requests",
+      "431": "Request Header Fields Too Large",
+      "451": "Unavailable For Legal Reasons",
+      "500": "Internal Server Error",
+      "501": "Not Implemented",
+      "502": "Bad Gateway",
+      "503": "Service Unavailable",
+      "504": "Gateway Timeout",
+      "505": "HTTP Version Not Supported",
+      "506": "Variant Also Negotiates",
+      "507": "Insufficient Storage",
+      "508": "Loop Detected",
+      "509": "Bandwidth Limit Exceeded",
+      "510": "Not Extended",
+      "511": "Network Authentication Required"
+    };
+  }
+});
+
+// ../../node_modules/http-errors/node_modules/statuses/index.js
+var require_statuses = __commonJS({
+  "../../node_modules/http-errors/node_modules/statuses/index.js"(exports2, module2) {
+    "use strict";
+    var codes = require_codes();
+    module2.exports = status;
+    status.message = codes;
+    status.code = createMessageToStatusCodeMap(codes);
+    status.codes = createStatusCodeList(codes);
+    status.redirect = {
+      300: true,
+      301: true,
+      302: true,
+      303: true,
+      305: true,
+      307: true,
+      308: true
+    };
+    status.empty = {
+      204: true,
+      205: true,
+      304: true
+    };
+    status.retry = {
+      502: true,
+      503: true,
+      504: true
+    };
+    function createMessageToStatusCodeMap(codes2) {
+      var map2 = {};
+      Object.keys(codes2).forEach(function forEachCode(code) {
+        var message = codes2[code];
+        var status2 = Number(code);
+        map2[message.toLowerCase()] = status2;
+      });
+      return map2;
+    }
+    function createStatusCodeList(codes2) {
+      return Object.keys(codes2).map(function mapCode(code) {
+        return Number(code);
+      });
+    }
+    function getStatusCode(message) {
+      var msg = message.toLowerCase();
+      if (!Object.prototype.hasOwnProperty.call(status.code, msg)) {
+        throw new Error('invalid status message: "' + message + '"');
+      }
+      return status.code[msg];
+    }
+    function getStatusMessage(code) {
+      if (!Object.prototype.hasOwnProperty.call(status.message, code)) {
+        throw new Error("invalid status code: " + code);
+      }
+      return status.message[code];
+    }
+    function status(code) {
+      if (typeof code === "number") {
+        return getStatusMessage(code);
+      }
+      if (typeof code !== "string") {
+        throw new TypeError("code must be a number or string");
+      }
+      var n = parseInt(code, 10);
+      if (!isNaN(n)) {
+        return getStatusMessage(n);
+      }
+      return getStatusCode(code);
+    }
+  }
+});
+
+// ../../node_modules/inherits/inherits_browser.js
+var require_inherits_browser = __commonJS({
+  "../../node_modules/inherits/inherits_browser.js"(exports2, module2) {
+    if (typeof Object.create === "function") {
+      module2.exports = function inherits(ctor, superCtor) {
+        if (superCtor) {
+          ctor.super_ = superCtor;
+          ctor.prototype = Object.create(superCtor.prototype, {
+            constructor: {
+              value: ctor,
+              enumerable: false,
+              writable: true,
+              configurable: true
+            }
+          });
+        }
+      };
+    } else {
+      module2.exports = function inherits(ctor, superCtor) {
+        if (superCtor) {
+          ctor.super_ = superCtor;
+          var TempCtor = function() {
+          };
+          TempCtor.prototype = superCtor.prototype;
+          ctor.prototype = new TempCtor();
+          ctor.prototype.constructor = ctor;
+        }
+      };
+    }
+  }
+});
+
+// ../../node_modules/inherits/inherits.js
+var require_inherits = __commonJS({
+  "../../node_modules/inherits/inherits.js"(exports2, module2) {
+    try {
+      util = require("util");
+      if (typeof util.inherits !== "function") throw "";
+      module2.exports = util.inherits;
+    } catch (e) {
+      module2.exports = require_inherits_browser();
+    }
+    var util;
+  }
+});
+
+// ../../node_modules/toidentifier/index.js
+var require_toidentifier = __commonJS({
+  "../../node_modules/toidentifier/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = toIdentifier;
+    function toIdentifier(str) {
+      return str.split(" ").map(function(token) {
+        return token.slice(0, 1).toUpperCase() + token.slice(1);
+      }).join("").replace(/[^ _0-9a-z]/gi, "");
+    }
+  }
+});
+
+// ../../node_modules/http-errors/index.js
+var require_http_errors = __commonJS({
+  "../../node_modules/http-errors/index.js"(exports2, module2) {
+    "use strict";
+    var deprecate = require_depd()("http-errors");
+    var setPrototypeOf = require_setprototypeof();
+    var statuses = require_statuses();
+    var inherits = require_inherits();
+    var toIdentifier = require_toidentifier();
+    module2.exports = createError4;
+    module2.exports.HttpError = createHttpErrorConstructor();
+    module2.exports.isHttpError = createIsHttpErrorFunction(module2.exports.HttpError);
+    populateConstructorExports(module2.exports, statuses.codes, module2.exports.HttpError);
+    function codeClass(status) {
+      return Number(String(status).charAt(0) + "00");
+    }
+    function createError4() {
+      var err;
+      var msg;
+      var status = 500;
+      var props = {};
+      for (var i = 0; i < arguments.length; i++) {
+        var arg = arguments[i];
+        var type = typeof arg;
+        if (type === "object" && arg instanceof Error) {
+          err = arg;
+          status = err.status || err.statusCode || status;
+        } else if (type === "number" && i === 0) {
+          status = arg;
+        } else if (type === "string") {
+          msg = arg;
+        } else if (type === "object") {
+          props = arg;
+        } else {
+          throw new TypeError("argument #" + (i + 1) + " unsupported type " + type);
+        }
+      }
+      if (typeof status === "number" && (status < 400 || status >= 600)) {
+        deprecate("non-error status code; use only 4xx or 5xx status codes");
+      }
+      if (typeof status !== "number" || !statuses.message[status] && (status < 400 || status >= 600)) {
+        status = 500;
+      }
+      var HttpError = createError4[status] || createError4[codeClass(status)];
+      if (!err) {
+        err = HttpError ? new HttpError(msg) : new Error(msg || statuses.message[status]);
+        Error.captureStackTrace(err, createError4);
+      }
+      if (!HttpError || !(err instanceof HttpError) || err.status !== status) {
+        err.expose = status < 500;
+        err.status = err.statusCode = status;
+      }
+      for (var key in props) {
+        if (key !== "status" && key !== "statusCode") {
+          err[key] = props[key];
+        }
+      }
+      return err;
+    }
+    function createHttpErrorConstructor() {
+      function HttpError() {
+        throw new TypeError("cannot construct abstract class");
+      }
+      inherits(HttpError, Error);
+      return HttpError;
+    }
+    function createClientErrorConstructor(HttpError, name, code) {
+      var className = toClassName(name);
+      function ClientError(message) {
+        var msg = message != null ? message : statuses.message[code];
+        var err = new Error(msg);
+        Error.captureStackTrace(err, ClientError);
+        setPrototypeOf(err, ClientError.prototype);
+        Object.defineProperty(err, "message", {
+          enumerable: true,
+          configurable: true,
+          value: msg,
+          writable: true
+        });
+        Object.defineProperty(err, "name", {
+          enumerable: false,
+          configurable: true,
+          value: className,
+          writable: true
+        });
+        return err;
+      }
+      inherits(ClientError, HttpError);
+      nameFunc(ClientError, className);
+      ClientError.prototype.status = code;
+      ClientError.prototype.statusCode = code;
+      ClientError.prototype.expose = true;
+      return ClientError;
+    }
+    function createIsHttpErrorFunction(HttpError) {
+      return function isHttpError(val) {
+        if (!val || typeof val !== "object") {
+          return false;
+        }
+        if (val instanceof HttpError) {
+          return true;
+        }
+        return val instanceof Error && typeof val.expose === "boolean" && typeof val.statusCode === "number" && val.status === val.statusCode;
+      };
+    }
+    function createServerErrorConstructor(HttpError, name, code) {
+      var className = toClassName(name);
+      function ServerError(message) {
+        var msg = message != null ? message : statuses.message[code];
+        var err = new Error(msg);
+        Error.captureStackTrace(err, ServerError);
+        setPrototypeOf(err, ServerError.prototype);
+        Object.defineProperty(err, "message", {
+          enumerable: true,
+          configurable: true,
+          value: msg,
+          writable: true
+        });
+        Object.defineProperty(err, "name", {
+          enumerable: false,
+          configurable: true,
+          value: className,
+          writable: true
+        });
+        return err;
+      }
+      inherits(ServerError, HttpError);
+      nameFunc(ServerError, className);
+      ServerError.prototype.status = code;
+      ServerError.prototype.statusCode = code;
+      ServerError.prototype.expose = false;
+      return ServerError;
+    }
+    function nameFunc(func, name) {
+      var desc = Object.getOwnPropertyDescriptor(func, "name");
+      if (desc && desc.configurable) {
+        desc.value = name;
+        Object.defineProperty(func, "name", desc);
+      }
+    }
+    function populateConstructorExports(exports3, codes, HttpError) {
+      codes.forEach(function forEachCode(code) {
+        var CodeError;
+        var name = toIdentifier(statuses.message[code]);
+        switch (codeClass(code)) {
+          case 400:
+            CodeError = createClientErrorConstructor(HttpError, name, code);
+            break;
+          case 500:
+            CodeError = createServerErrorConstructor(HttpError, name, code);
+            break;
+        }
+        if (CodeError) {
+          exports3[code] = CodeError;
+          exports3[name] = CodeError;
+        }
+      });
+    }
+    function toClassName(name) {
+      return name.slice(-5) === "Error" ? name : name + "Error";
+    }
+  }
+});
+
 // ../../node_modules/aws-embedded-metrics/lib/Constants.js
 var require_Constants = __commonJS({
   "../../node_modules/aws-embedded-metrics/lib/Constants.js"(exports2) {
@@ -2408,704 +3099,17 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../node_modules/depd/index.js
-var require_depd = __commonJS({
-  "../../node_modules/depd/index.js"(exports2, module2) {
-    var relative = require("path").relative;
-    module2.exports = depd;
-    var basePath = process.cwd();
-    function containsNamespace(str, namespace) {
-      var vals = str.split(/[ ,]+/);
-      var ns = String(namespace).toLowerCase();
-      for (var i = 0; i < vals.length; i++) {
-        var val = vals[i];
-        if (val && (val === "*" || val.toLowerCase() === ns)) {
-          return true;
-        }
-      }
-      return false;
-    }
-    function convertDataDescriptorToAccessor(obj, prop, message) {
-      var descriptor = Object.getOwnPropertyDescriptor(obj, prop);
-      var value = descriptor.value;
-      descriptor.get = function getter() {
-        return value;
-      };
-      if (descriptor.writable) {
-        descriptor.set = function setter(val) {
-          return value = val;
-        };
-      }
-      delete descriptor.value;
-      delete descriptor.writable;
-      Object.defineProperty(obj, prop, descriptor);
-      return descriptor;
-    }
-    function createArgumentsString(arity) {
-      var str = "";
-      for (var i = 0; i < arity; i++) {
-        str += ", arg" + i;
-      }
-      return str.substr(2);
-    }
-    function createStackString(stack) {
-      var str = this.name + ": " + this.namespace;
-      if (this.message) {
-        str += " deprecated " + this.message;
-      }
-      for (var i = 0; i < stack.length; i++) {
-        str += "\n    at " + stack[i].toString();
-      }
-      return str;
-    }
-    function depd(namespace) {
-      if (!namespace) {
-        throw new TypeError("argument namespace is required");
-      }
-      var stack = getStack();
-      var site = callSiteLocation(stack[1]);
-      var file2 = site[0];
-      function deprecate(message) {
-        log.call(deprecate, message);
-      }
-      deprecate._file = file2;
-      deprecate._ignored = isignored(namespace);
-      deprecate._namespace = namespace;
-      deprecate._traced = istraced(namespace);
-      deprecate._warned = /* @__PURE__ */ Object.create(null);
-      deprecate.function = wrapfunction;
-      deprecate.property = wrapproperty;
-      return deprecate;
-    }
-    function eehaslisteners(emitter, type) {
-      var count = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count > 0;
-    }
-    function isignored(namespace) {
-      if (process.noDeprecation) {
-        return true;
-      }
-      var str = process.env.NO_DEPRECATION || "";
-      return containsNamespace(str, namespace);
-    }
-    function istraced(namespace) {
-      if (process.traceDeprecation) {
-        return true;
-      }
-      var str = process.env.TRACE_DEPRECATION || "";
-      return containsNamespace(str, namespace);
-    }
-    function log(message, site) {
-      var haslisteners = eehaslisteners(process, "deprecation");
-      if (!haslisteners && this._ignored) {
-        return;
-      }
-      var caller;
-      var callFile;
-      var callSite;
-      var depSite;
-      var i = 0;
-      var seen = false;
-      var stack = getStack();
-      var file2 = this._file;
-      if (site) {
-        depSite = site;
-        callSite = callSiteLocation(stack[1]);
-        callSite.name = depSite.name;
-        file2 = callSite[0];
-      } else {
-        i = 2;
-        depSite = callSiteLocation(stack[i]);
-        callSite = depSite;
-      }
-      for (; i < stack.length; i++) {
-        caller = callSiteLocation(stack[i]);
-        callFile = caller[0];
-        if (callFile === file2) {
-          seen = true;
-        } else if (callFile === this._file) {
-          file2 = this._file;
-        } else if (seen) {
-          break;
-        }
-      }
-      var key = caller ? depSite.join(":") + "__" + caller.join(":") : void 0;
-      if (key !== void 0 && key in this._warned) {
-        return;
-      }
-      this._warned[key] = true;
-      var msg = message;
-      if (!msg) {
-        msg = callSite === depSite || !callSite.name ? defaultMessage(depSite) : defaultMessage(callSite);
-      }
-      if (haslisteners) {
-        var err = DeprecationError(this._namespace, msg, stack.slice(i));
-        process.emit("deprecation", err);
-        return;
-      }
-      var format = process.stderr.isTTY ? formatColor : formatPlain;
-      var output = format.call(this, msg, caller, stack.slice(i));
-      process.stderr.write(output + "\n", "utf8");
-    }
-    function callSiteLocation(callSite) {
-      var file2 = callSite.getFileName() || "<anonymous>";
-      var line = callSite.getLineNumber();
-      var colm = callSite.getColumnNumber();
-      if (callSite.isEval()) {
-        file2 = callSite.getEvalOrigin() + ", " + file2;
-      }
-      var site = [file2, line, colm];
-      site.callSite = callSite;
-      site.name = callSite.getFunctionName();
-      return site;
-    }
-    function defaultMessage(site) {
-      var callSite = site.callSite;
-      var funcName = site.name;
-      if (!funcName) {
-        funcName = "<anonymous@" + formatLocation(site) + ">";
-      }
-      var context = callSite.getThis();
-      var typeName = context && callSite.getTypeName();
-      if (typeName === "Object") {
-        typeName = void 0;
-      }
-      if (typeName === "Function") {
-        typeName = context.name || typeName;
-      }
-      return typeName && callSite.getMethodName() ? typeName + "." + funcName : funcName;
-    }
-    function formatPlain(msg, caller, stack) {
-      var timestamp = (/* @__PURE__ */ new Date()).toUTCString();
-      var formatted = timestamp + " " + this._namespace + " deprecated " + msg;
-      if (this._traced) {
-        for (var i = 0; i < stack.length; i++) {
-          formatted += "\n    at " + stack[i].toString();
-        }
-        return formatted;
-      }
-      if (caller) {
-        formatted += " at " + formatLocation(caller);
-      }
-      return formatted;
-    }
-    function formatColor(msg, caller, stack) {
-      var formatted = "\x1B[36;1m" + this._namespace + "\x1B[22;39m \x1B[33;1mdeprecated\x1B[22;39m \x1B[0m" + msg + "\x1B[39m";
-      if (this._traced) {
-        for (var i = 0; i < stack.length; i++) {
-          formatted += "\n    \x1B[36mat " + stack[i].toString() + "\x1B[39m";
-        }
-        return formatted;
-      }
-      if (caller) {
-        formatted += " \x1B[36m" + formatLocation(caller) + "\x1B[39m";
-      }
-      return formatted;
-    }
-    function formatLocation(callSite) {
-      return relative(basePath, callSite[0]) + ":" + callSite[1] + ":" + callSite[2];
-    }
-    function getStack() {
-      var limit = Error.stackTraceLimit;
-      var obj = {};
-      var prep = Error.prepareStackTrace;
-      Error.prepareStackTrace = prepareObjectStackTrace;
-      Error.stackTraceLimit = Math.max(10, limit);
-      Error.captureStackTrace(obj);
-      var stack = obj.stack.slice(1);
-      Error.prepareStackTrace = prep;
-      Error.stackTraceLimit = limit;
-      return stack;
-    }
-    function prepareObjectStackTrace(obj, stack) {
-      return stack;
-    }
-    function wrapfunction(fn, message) {
-      if (typeof fn !== "function") {
-        throw new TypeError("argument fn must be a function");
-      }
-      var args = createArgumentsString(fn.length);
-      var stack = getStack();
-      var site = callSiteLocation(stack[1]);
-      site.name = fn.name;
-      var deprecatedfn = new Function(
-        "fn",
-        "log",
-        "deprecate",
-        "message",
-        "site",
-        '"use strict"\nreturn function (' + args + ") {log.call(deprecate, message, site)\nreturn fn.apply(this, arguments)\n}"
-      )(fn, log, this, message, site);
-      return deprecatedfn;
-    }
-    function wrapproperty(obj, prop, message) {
-      if (!obj || typeof obj !== "object" && typeof obj !== "function") {
-        throw new TypeError("argument obj must be object");
-      }
-      var descriptor = Object.getOwnPropertyDescriptor(obj, prop);
-      if (!descriptor) {
-        throw new TypeError("must call property on owner object");
-      }
-      if (!descriptor.configurable) {
-        throw new TypeError("property must be configurable");
-      }
-      var deprecate = this;
-      var stack = getStack();
-      var site = callSiteLocation(stack[1]);
-      site.name = prop;
-      if ("value" in descriptor) {
-        descriptor = convertDataDescriptorToAccessor(obj, prop, message);
-      }
-      var get = descriptor.get;
-      var set2 = descriptor.set;
-      if (typeof get === "function") {
-        descriptor.get = function getter() {
-          log.call(deprecate, message, site);
-          return get.apply(this, arguments);
-        };
-      }
-      if (typeof set2 === "function") {
-        descriptor.set = function setter() {
-          log.call(deprecate, message, site);
-          return set2.apply(this, arguments);
-        };
-      }
-      Object.defineProperty(obj, prop, descriptor);
-    }
-    function DeprecationError(namespace, message, stack) {
-      var error51 = new Error();
-      var stackString;
-      Object.defineProperty(error51, "constructor", {
-        value: DeprecationError
-      });
-      Object.defineProperty(error51, "message", {
-        configurable: true,
-        enumerable: false,
-        value: message,
-        writable: true
-      });
-      Object.defineProperty(error51, "name", {
-        enumerable: false,
-        configurable: true,
-        value: "DeprecationError",
-        writable: true
-      });
-      Object.defineProperty(error51, "namespace", {
-        configurable: true,
-        enumerable: false,
-        value: namespace,
-        writable: true
-      });
-      Object.defineProperty(error51, "stack", {
-        configurable: true,
-        enumerable: false,
-        get: function() {
-          if (stackString !== void 0) {
-            return stackString;
-          }
-          return stackString = createStackString.call(this, stack);
-        },
-        set: function setter(val) {
-          stackString = val;
-        }
-      });
-      return error51;
-    }
-  }
-});
-
-// ../../node_modules/setprototypeof/index.js
-var require_setprototypeof = __commonJS({
-  "../../node_modules/setprototypeof/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);
-    function setProtoOf(obj, proto) {
-      obj.__proto__ = proto;
-      return obj;
-    }
-    function mixinProperties(obj, proto) {
-      for (var prop in proto) {
-        if (!Object.prototype.hasOwnProperty.call(obj, prop)) {
-          obj[prop] = proto[prop];
-        }
-      }
-      return obj;
-    }
-  }
-});
-
-// ../../node_modules/http-errors/node_modules/statuses/codes.json
-var require_codes = __commonJS({
-  "../../node_modules/http-errors/node_modules/statuses/codes.json"(exports2, module2) {
-    module2.exports = {
-      "100": "Continue",
-      "101": "Switching Protocols",
-      "102": "Processing",
-      "103": "Early Hints",
-      "200": "OK",
-      "201": "Created",
-      "202": "Accepted",
-      "203": "Non-Authoritative Information",
-      "204": "No Content",
-      "205": "Reset Content",
-      "206": "Partial Content",
-      "207": "Multi-Status",
-      "208": "Already Reported",
-      "226": "IM Used",
-      "300": "Multiple Choices",
-      "301": "Moved Permanently",
-      "302": "Found",
-      "303": "See Other",
-      "304": "Not Modified",
-      "305": "Use Proxy",
-      "307": "Temporary Redirect",
-      "308": "Permanent Redirect",
-      "400": "Bad Request",
-      "401": "Unauthorized",
-      "402": "Payment Required",
-      "403": "Forbidden",
-      "404": "Not Found",
-      "405": "Method Not Allowed",
-      "406": "Not Acceptable",
-      "407": "Proxy Authentication Required",
-      "408": "Request Timeout",
-      "409": "Conflict",
-      "410": "Gone",
-      "411": "Length Required",
-      "412": "Precondition Failed",
-      "413": "Payload Too Large",
-      "414": "URI Too Long",
-      "415": "Unsupported Media Type",
-      "416": "Range Not Satisfiable",
-      "417": "Expectation Failed",
-      "418": "I'm a Teapot",
-      "421": "Misdirected Request",
-      "422": "Unprocessable Entity",
-      "423": "Locked",
-      "424": "Failed Dependency",
-      "425": "Too Early",
-      "426": "Upgrade Required",
-      "428": "Precondition Required",
-      "429": "Too Many Requests",
-      "431": "Request Header Fields Too Large",
-      "451": "Unavailable For Legal Reasons",
-      "500": "Internal Server Error",
-      "501": "Not Implemented",
-      "502": "Bad Gateway",
-      "503": "Service Unavailable",
-      "504": "Gateway Timeout",
-      "505": "HTTP Version Not Supported",
-      "506": "Variant Also Negotiates",
-      "507": "Insufficient Storage",
-      "508": "Loop Detected",
-      "509": "Bandwidth Limit Exceeded",
-      "510": "Not Extended",
-      "511": "Network Authentication Required"
-    };
-  }
-});
-
-// ../../node_modules/http-errors/node_modules/statuses/index.js
-var require_statuses = __commonJS({
-  "../../node_modules/http-errors/node_modules/statuses/index.js"(exports2, module2) {
-    "use strict";
-    var codes = require_codes();
-    module2.exports = status;
-    status.message = codes;
-    status.code = createMessageToStatusCodeMap(codes);
-    status.codes = createStatusCodeList(codes);
-    status.redirect = {
-      300: true,
-      301: true,
-      302: true,
-      303: true,
-      305: true,
-      307: true,
-      308: true
-    };
-    status.empty = {
-      204: true,
-      205: true,
-      304: true
-    };
-    status.retry = {
-      502: true,
-      503: true,
-      504: true
-    };
-    function createMessageToStatusCodeMap(codes2) {
-      var map2 = {};
-      Object.keys(codes2).forEach(function forEachCode(code) {
-        var message = codes2[code];
-        var status2 = Number(code);
-        map2[message.toLowerCase()] = status2;
-      });
-      return map2;
-    }
-    function createStatusCodeList(codes2) {
-      return Object.keys(codes2).map(function mapCode(code) {
-        return Number(code);
-      });
-    }
-    function getStatusCode(message) {
-      var msg = message.toLowerCase();
-      if (!Object.prototype.hasOwnProperty.call(status.code, msg)) {
-        throw new Error('invalid status message: "' + message + '"');
-      }
-      return status.code[msg];
-    }
-    function getStatusMessage(code) {
-      if (!Object.prototype.hasOwnProperty.call(status.message, code)) {
-        throw new Error("invalid status code: " + code);
-      }
-      return status.message[code];
-    }
-    function status(code) {
-      if (typeof code === "number") {
-        return getStatusMessage(code);
-      }
-      if (typeof code !== "string") {
-        throw new TypeError("code must be a number or string");
-      }
-      var n = parseInt(code, 10);
-      if (!isNaN(n)) {
-        return getStatusMessage(n);
-      }
-      return getStatusCode(code);
-    }
-  }
-});
-
-// ../../node_modules/inherits/inherits_browser.js
-var require_inherits_browser = __commonJS({
-  "../../node_modules/inherits/inherits_browser.js"(exports2, module2) {
-    if (typeof Object.create === "function") {
-      module2.exports = function inherits(ctor, superCtor) {
-        if (superCtor) {
-          ctor.super_ = superCtor;
-          ctor.prototype = Object.create(superCtor.prototype, {
-            constructor: {
-              value: ctor,
-              enumerable: false,
-              writable: true,
-              configurable: true
-            }
-          });
-        }
-      };
-    } else {
-      module2.exports = function inherits(ctor, superCtor) {
-        if (superCtor) {
-          ctor.super_ = superCtor;
-          var TempCtor = function() {
-          };
-          TempCtor.prototype = superCtor.prototype;
-          ctor.prototype = new TempCtor();
-          ctor.prototype.constructor = ctor;
-        }
-      };
-    }
-  }
-});
-
-// ../../node_modules/inherits/inherits.js
-var require_inherits = __commonJS({
-  "../../node_modules/inherits/inherits.js"(exports2, module2) {
-    try {
-      util = require("util");
-      if (typeof util.inherits !== "function") throw "";
-      module2.exports = util.inherits;
-    } catch (e) {
-      module2.exports = require_inherits_browser();
-    }
-    var util;
-  }
-});
-
-// ../../node_modules/toidentifier/index.js
-var require_toidentifier = __commonJS({
-  "../../node_modules/toidentifier/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = toIdentifier;
-    function toIdentifier(str) {
-      return str.split(" ").map(function(token) {
-        return token.slice(0, 1).toUpperCase() + token.slice(1);
-      }).join("").replace(/[^ _0-9a-z]/gi, "");
-    }
-  }
-});
-
-// ../../node_modules/http-errors/index.js
-var require_http_errors = __commonJS({
-  "../../node_modules/http-errors/index.js"(exports2, module2) {
-    "use strict";
-    var deprecate = require_depd()("http-errors");
-    var setPrototypeOf = require_setprototypeof();
-    var statuses = require_statuses();
-    var inherits = require_inherits();
-    var toIdentifier = require_toidentifier();
-    module2.exports = createError3;
-    module2.exports.HttpError = createHttpErrorConstructor();
-    module2.exports.isHttpError = createIsHttpErrorFunction(module2.exports.HttpError);
-    populateConstructorExports(module2.exports, statuses.codes, module2.exports.HttpError);
-    function codeClass(status) {
-      return Number(String(status).charAt(0) + "00");
-    }
-    function createError3() {
-      var err;
-      var msg;
-      var status = 500;
-      var props = {};
-      for (var i = 0; i < arguments.length; i++) {
-        var arg = arguments[i];
-        var type = typeof arg;
-        if (type === "object" && arg instanceof Error) {
-          err = arg;
-          status = err.status || err.statusCode || status;
-        } else if (type === "number" && i === 0) {
-          status = arg;
-        } else if (type === "string") {
-          msg = arg;
-        } else if (type === "object") {
-          props = arg;
-        } else {
-          throw new TypeError("argument #" + (i + 1) + " unsupported type " + type);
-        }
-      }
-      if (typeof status === "number" && (status < 400 || status >= 600)) {
-        deprecate("non-error status code; use only 4xx or 5xx status codes");
-      }
-      if (typeof status !== "number" || !statuses.message[status] && (status < 400 || status >= 600)) {
-        status = 500;
-      }
-      var HttpError = createError3[status] || createError3[codeClass(status)];
-      if (!err) {
-        err = HttpError ? new HttpError(msg) : new Error(msg || statuses.message[status]);
-        Error.captureStackTrace(err, createError3);
-      }
-      if (!HttpError || !(err instanceof HttpError) || err.status !== status) {
-        err.expose = status < 500;
-        err.status = err.statusCode = status;
-      }
-      for (var key in props) {
-        if (key !== "status" && key !== "statusCode") {
-          err[key] = props[key];
-        }
-      }
-      return err;
-    }
-    function createHttpErrorConstructor() {
-      function HttpError() {
-        throw new TypeError("cannot construct abstract class");
-      }
-      inherits(HttpError, Error);
-      return HttpError;
-    }
-    function createClientErrorConstructor(HttpError, name, code) {
-      var className = toClassName(name);
-      function ClientError(message) {
-        var msg = message != null ? message : statuses.message[code];
-        var err = new Error(msg);
-        Error.captureStackTrace(err, ClientError);
-        setPrototypeOf(err, ClientError.prototype);
-        Object.defineProperty(err, "message", {
-          enumerable: true,
-          configurable: true,
-          value: msg,
-          writable: true
-        });
-        Object.defineProperty(err, "name", {
-          enumerable: false,
-          configurable: true,
-          value: className,
-          writable: true
-        });
-        return err;
-      }
-      inherits(ClientError, HttpError);
-      nameFunc(ClientError, className);
-      ClientError.prototype.status = code;
-      ClientError.prototype.statusCode = code;
-      ClientError.prototype.expose = true;
-      return ClientError;
-    }
-    function createIsHttpErrorFunction(HttpError) {
-      return function isHttpError(val) {
-        if (!val || typeof val !== "object") {
-          return false;
-        }
-        if (val instanceof HttpError) {
-          return true;
-        }
-        return val instanceof Error && typeof val.expose === "boolean" && typeof val.statusCode === "number" && val.status === val.statusCode;
-      };
-    }
-    function createServerErrorConstructor(HttpError, name, code) {
-      var className = toClassName(name);
-      function ServerError(message) {
-        var msg = message != null ? message : statuses.message[code];
-        var err = new Error(msg);
-        Error.captureStackTrace(err, ServerError);
-        setPrototypeOf(err, ServerError.prototype);
-        Object.defineProperty(err, "message", {
-          enumerable: true,
-          configurable: true,
-          value: msg,
-          writable: true
-        });
-        Object.defineProperty(err, "name", {
-          enumerable: false,
-          configurable: true,
-          value: className,
-          writable: true
-        });
-        return err;
-      }
-      inherits(ServerError, HttpError);
-      nameFunc(ServerError, className);
-      ServerError.prototype.status = code;
-      ServerError.prototype.statusCode = code;
-      ServerError.prototype.expose = false;
-      return ServerError;
-    }
-    function nameFunc(func, name) {
-      var desc = Object.getOwnPropertyDescriptor(func, "name");
-      if (desc && desc.configurable) {
-        desc.value = name;
-        Object.defineProperty(func, "name", desc);
-      }
-    }
-    function populateConstructorExports(exports3, codes, HttpError) {
-      codes.forEach(function forEachCode(code) {
-        var CodeError;
-        var name = toIdentifier(statuses.message[code]);
-        switch (codeClass(code)) {
-          case 400:
-            CodeError = createClientErrorConstructor(HttpError, name, code);
-            break;
-          case 500:
-            CodeError = createServerErrorConstructor(HttpError, name, code);
-            break;
-        }
-        if (CodeError) {
-          exports3[code] = CodeError;
-          exports3[name] = CodeError;
-        }
-      });
-    }
-    function toClassName(name) {
-      return name.slice(-5) === "Error" ? name : name + "Error";
-    }
-  }
-});
-
 // src/handler.ts
 var handler_exports = {};
 __export(handler_exports, {
+  getAttributeSchemaHandler: () => getAttributeSchemaHandler,
   getProductDetailHandler: () => getProductDetailHandler,
   handler: () => handler,
   listCategoriesHandler: () => listCategoriesHandler,
+  listCategoryTreeHandler: () => listCategoryTreeHandler,
   listProductsByCategoryHandler: () => listProductsByCategoryHandler,
+  listProductsBySubcategoryHandler: () => listProductsBySubcategoryHandler,
+  listSubcategoriesHandler: () => listSubcategoriesHandler,
   searchProductsHandler: () => searchProductsHandler
 });
 module.exports = __toCommonJS(handler_exports);
@@ -17732,12 +17736,21 @@ var imageUploadSchema = external_exports.object({
   }),
   sizeBytes: external_exports.number().int({ message: "Image size must be an integer" }).positive({ message: "Image size must be greater than 0" }).max(10 * 1024 * 1024, { message: "Each image must be at most 10 MB" })
 });
+var dynamicAttributeValueSchema = external_exports.union([
+  external_exports.string(),
+  external_exports.number(),
+  external_exports.boolean(),
+  external_exports.array(external_exports.string())
+]);
 var createProductSchema = external_exports.object({
   name: external_exports.string().min(1, { message: "Product name is required" }).max(200, { message: "Product name must be at most 200 characters" }),
   description: external_exports.string().min(1, { message: "Product description is required" }).max(2e3, { message: "Product description must be at most 2000 characters" }),
   price: external_exports.number().gt(0, { message: "Price must be greater than 0" }).max(999999999e-2, { message: "Price must be at most 9,999,999.99" }),
   stockQuantity: external_exports.number().int({ message: "Stock quantity must be an integer" }).min(0, { message: "Stock quantity must be at least 0" }).max(999999, { message: "Stock quantity must be at most 999,999" }),
-  categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }),
+  categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }).optional(),
+  categoryId: external_exports.string().min(1, { message: "Category ID must not be empty" }).optional(),
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID must not be empty" }).optional(),
+  dynamicAttributes: external_exports.record(external_exports.string(), dynamicAttributeValueSchema).optional(),
   images: external_exports.array(imageUploadSchema).min(1, { message: "At least one image is required" }).max(10, { message: "At most 10 images are allowed" })
 });
 var updateProductSchema = external_exports.object({
@@ -17746,6 +17759,9 @@ var updateProductSchema = external_exports.object({
   price: external_exports.number().gt(0, { message: "Price must be greater than 0" }).max(999999999e-2, { message: "Price must be at most 9,999,999.99" }).optional(),
   stockQuantity: external_exports.number().int({ message: "Stock quantity must be an integer" }).min(0, { message: "Stock quantity must be at least 0" }).max(999999, { message: "Stock quantity must be at most 999,999" }).optional(),
   categories: external_exports.array(external_exports.string().min(1, { message: "Category must not be empty" })).min(1, { message: "At least one category is required" }).optional(),
+  categoryId: external_exports.string().min(1, { message: "Category ID must not be empty" }).optional(),
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID must not be empty" }).optional(),
+  dynamicAttributes: external_exports.record(external_exports.string(), dynamicAttributeValueSchema).optional(),
   images: external_exports.array(imageUploadSchema).min(1, { message: "At least one image is required" }).max(10, { message: "At most 10 images are allowed" }).optional()
 });
 var sellerPolicySchema = external_exports.object({
@@ -17829,6 +17845,61 @@ var updateAddressSchema = external_exports.object({
   state: external_exports.string().min(1, { message: "State is required" }).max(100, { message: "State must be at most 100 characters" }).optional(),
   postalCode: external_exports.string().min(1, { message: "Postal code is required" }).optional(),
   country: external_exports.string().min(1, { message: "Country is required" }).optional()
+});
+
+// ../../packages/shared/dist/schemas/category.schema.js
+var attributeDataTypeSchema = external_exports.enum([
+  "text",
+  "number",
+  "single-select",
+  "multi-select",
+  "boolean"
+]);
+var attributeDefinitionSchema = external_exports.object({
+  fieldName: external_exports.string().min(1, { message: "Field name is required" }),
+  displayLabel: external_exports.string().min(1, { message: "Display label is required" }),
+  dataType: attributeDataTypeSchema,
+  required: external_exports.boolean(),
+  allowedValues: external_exports.array(external_exports.string()).nullable().optional(),
+  filterable: external_exports.boolean(),
+  displayPriority: external_exports.number().int({ message: "Display priority must be an integer" })
+}).refine((data) => {
+  if (data.dataType === "single-select" || data.dataType === "multi-select") {
+    if (data.allowedValues !== null && data.allowedValues !== void 0) {
+      return data.allowedValues.length > 0;
+    }
+  }
+  return true;
+}, {
+  message: "allowedValues must be a non-empty array when specified for single-select or multi-select data types"
+});
+var categoryNodeSchema = external_exports.object({
+  categoryId: external_exports.string().min(1, { message: "Category ID is required" }),
+  parentId: external_exports.string().nullable(),
+  name: external_exports.string().min(1, { message: "Category name is required" }),
+  slug: external_exports.string().min(1, { message: "Slug is required" }),
+  level: external_exports.union([external_exports.literal(1), external_exports.literal(2)]),
+  isActive: external_exports.boolean(),
+  icon: external_exports.string().optional(),
+  createdAt: external_exports.string().min(1, { message: "Created at timestamp is required" }),
+  updatedAt: external_exports.string().min(1, { message: "Updated at timestamp is required" })
+});
+var attributeSchemaSchema = external_exports.object({
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID is required" }),
+  schemaVersion: external_exports.number().int({ message: "Schema version must be an integer" }).positive({ message: "Schema version must be positive" }),
+  attributes: external_exports.array(attributeDefinitionSchema).min(1, { message: "At least one attribute definition is required" }),
+  createdAt: external_exports.string().min(1, { message: "Created at timestamp is required" })
+});
+var categoryTreeResponseSchema = external_exports.object({
+  categories: external_exports.array(categoryNodeSchema)
+});
+var subcategoryListResponseSchema = external_exports.object({
+  subcategories: external_exports.array(categoryNodeSchema)
+});
+var attributeSchemaResponseSchema = external_exports.object({
+  subcategoryId: external_exports.string().min(1, { message: "Subcategory ID is required" }),
+  schemaVersion: external_exports.number().int({ message: "Schema version must be an integer" }).positive({ message: "Schema version must be positive" }),
+  attributes: external_exports.array(attributeDefinitionSchema)
 });
 
 // ../../packages/shared/dist/middleware/logger.middleware.js
@@ -18392,6 +18463,163 @@ var httpErrorHandlerMiddleware = (opts = {}) => {
 };
 var http_error_handler_default = httpErrorHandlerMiddleware;
 
+// src/handler.ts
+var import_http_errors3 = __toESM(require_http_errors(), 1);
+
+// src/attribute-schema.ts
+var import_client_dynamodb = require("@aws-sdk/client-dynamodb");
+var import_lib_dynamodb = require("@aws-sdk/lib-dynamodb");
+
+// src/errors.ts
+var import_http_errors = __toESM(require_http_errors(), 1);
+var CATALOGUE_ERROR_CODES = {
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  NOT_FOUND: "NOT_FOUND",
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE"
+};
+function createNotFoundError(message) {
+  const error51 = (0, import_http_errors.default)(404, message, { expose: true });
+  error51["code"] = CATALOGUE_ERROR_CODES.NOT_FOUND;
+  throw error51;
+}
+function createServiceUnavailableError() {
+  const error51 = (0, import_http_errors.default)(503, "Service temporarily unavailable. Please try again later.", {
+    expose: true
+  });
+  error51["code"] = CATALOGUE_ERROR_CODES.SERVICE_UNAVAILABLE;
+  throw error51;
+}
+
+// src/attribute-schema.ts
+var dynamoDbClient = new import_client_dynamodb.DynamoDBClient({});
+var docClient = import_lib_dynamodb.DynamoDBDocumentClient.from(dynamoDbClient);
+function getCategoriesTableName() {
+  return process.env["CATEGORIES_TABLE_NAME"] ?? "";
+}
+var schemaCache = /* @__PURE__ */ new Map();
+async function getAttributeSchema(subcategoryId) {
+  const cached2 = schemaCache.get(subcategoryId);
+  if (cached2) {
+    return cached2;
+  }
+  try {
+    const command = new import_lib_dynamodb.QueryCommand({
+      TableName: getCategoriesTableName(),
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
+      ExpressionAttributeNames: {
+        "#pk": "PK",
+        "#sk": "SK"
+      },
+      ExpressionAttributeValues: {
+        ":pk": `CAT#${subcategoryId}`,
+        ":skPrefix": "SCHEMA#"
+      },
+      ScanIndexForward: false,
+      // Sort descending to get latest version first
+      Limit: 1
+    });
+    const result = await docClient.send(command);
+    const items = result.Items ?? [];
+    if (items.length === 0) {
+      createNotFoundError(`Attribute schema not found for subcategory '${subcategoryId}'`);
+    }
+    const item = items[0];
+    const response = {
+      subcategoryId: item["subcategoryId"],
+      schemaVersion: item["schemaVersion"],
+      attributes: item["attributes"]
+    };
+    schemaCache.set(subcategoryId, response);
+    return response;
+  } catch (error51) {
+    if (error51 && typeof error51 === "object" && "statusCode" in error51) {
+      throw error51;
+    }
+    createServiceUnavailableError();
+  }
+}
+
+// src/category-tree.ts
+var import_client_dynamodb2 = require("@aws-sdk/client-dynamodb");
+var import_lib_dynamodb2 = require("@aws-sdk/lib-dynamodb");
+var dynamoDbClient2 = new import_client_dynamodb2.DynamoDBClient({});
+var docClient2 = import_lib_dynamodb2.DynamoDBDocumentClient.from(dynamoDbClient2);
+function getCategoriesTableName2() {
+  return process.env["CATEGORIES_TABLE_NAME"] ?? "";
+}
+function mapItemToCategoryNode(item) {
+  const node = {
+    categoryId: item["categoryId"],
+    parentId: item["parentId"] ?? null,
+    name: item["name"],
+    slug: item["slug"],
+    level: item["level"],
+    isActive: item["isActive"],
+    createdAt: item["createdAt"],
+    updatedAt: item["updatedAt"]
+  };
+  if (item["icon"]) {
+    node.icon = item["icon"];
+  }
+  return node;
+}
+async function listCategories() {
+  try {
+    const command = new import_lib_dynamodb2.QueryCommand({
+      TableName: getCategoriesTableName2(),
+      IndexName: "ParentIndex",
+      KeyConditionExpression: "#gsi1pk = :gsi1pk",
+      FilterExpression: "#isActive = :isActive",
+      ExpressionAttributeNames: {
+        "#gsi1pk": "GSI1PK",
+        "#isActive": "isActive"
+      },
+      ExpressionAttributeValues: {
+        ":gsi1pk": "PARENT#ROOT",
+        ":isActive": true
+      }
+    });
+    const result = await docClient2.send(command);
+    const categories = (result.Items ?? []).map(
+      (item) => mapItemToCategoryNode(item)
+    );
+    return { categories };
+  } catch (error51) {
+    if (error51 && typeof error51 === "object" && "statusCode" in error51) {
+      throw error51;
+    }
+    createServiceUnavailableError();
+  }
+}
+async function listSubcategories(categoryId) {
+  try {
+    const command = new import_lib_dynamodb2.QueryCommand({
+      TableName: getCategoriesTableName2(),
+      IndexName: "ParentIndex",
+      KeyConditionExpression: "#gsi1pk = :gsi1pk",
+      FilterExpression: "#isActive = :isActive",
+      ExpressionAttributeNames: {
+        "#gsi1pk": "GSI1PK",
+        "#isActive": "isActive"
+      },
+      ExpressionAttributeValues: {
+        ":gsi1pk": `PARENT#${categoryId}`,
+        ":isActive": true
+      }
+    });
+    const result = await docClient2.send(command);
+    const subcategories = (result.Items ?? []).map(
+      (item) => mapItemToCategoryNode(item)
+    );
+    return { subcategories };
+  } catch (error51) {
+    if (error51 && typeof error51 === "object" && "statusCode" in error51) {
+      throw error51;
+    }
+    createServiceUnavailableError();
+  }
+}
+
 // src/metrics.ts
 var import_aws_embedded_metrics = __toESM(require_lib(), 1);
 async function emitCatalogueResponseLatency(durationMs) {
@@ -18424,45 +18652,192 @@ function catalogueLatencyMetrics() {
   };
 }
 
-// src/service.ts
-var import_client_dynamodb = require("@aws-sdk/client-dynamodb");
-var import_lib_dynamodb = require("@aws-sdk/lib-dynamodb");
-
-// src/errors.ts
-var import_http_errors = __toESM(require_http_errors(), 1);
-var CATALOGUE_ERROR_CODES = {
-  VALIDATION_ERROR: "VALIDATION_ERROR",
-  NOT_FOUND: "NOT_FOUND",
-  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE"
-};
-function createNotFoundError(message) {
-  const error51 = (0, import_http_errors.default)(404, message, { expose: true });
-  error51["code"] = CATALOGUE_ERROR_CODES.NOT_FOUND;
-  throw error51;
-}
-function createServiceUnavailableError() {
-  const error51 = (0, import_http_errors.default)(503, "Service temporarily unavailable. Please try again later.", {
-    expose: true
-  });
-  error51["code"] = CATALOGUE_ERROR_CODES.SERVICE_UNAVAILABLE;
-  throw error51;
-}
-
-// src/service.ts
-var dynamoDbClient = new import_client_dynamodb.DynamoDBClient({});
-var docClient = import_lib_dynamodb.DynamoDBDocumentClient.from(dynamoDbClient);
+// src/product-browse.ts
+var import_client_dynamodb3 = require("@aws-sdk/client-dynamodb");
+var import_lib_dynamodb3 = require("@aws-sdk/lib-dynamodb");
+var dynamoDbClient3 = new import_client_dynamodb3.DynamoDBClient({});
+var docClient3 = import_lib_dynamodb3.DynamoDBDocumentClient.from(dynamoDbClient3);
 function getProductsTableName() {
   return process.env["PRODUCTS_TABLE_NAME"] ?? "";
 }
-function getCategoriesTableName() {
+function decodeCursor(cursor) {
+  try {
+    return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
+  } catch {
+    return void 0;
+  }
+}
+function encodeCursor(lastEvaluatedKey) {
+  return Buffer.from(JSON.stringify(lastEvaluatedKey)).toString("base64");
+}
+function buildFilterExpression(options, filterableAttributes) {
+  const conditions = [];
+  const expressionAttributeNames = {};
+  const expressionAttributeValues = {};
+  conditions.push("#isDeleted <> :isDeletedTrue");
+  expressionAttributeNames["#isDeleted"] = "isDeleted";
+  expressionAttributeValues[":isDeletedTrue"] = true;
+  if (options.minPrice !== void 0) {
+    conditions.push("#price >= :minPrice");
+    expressionAttributeNames["#price"] = "price";
+    expressionAttributeValues[":minPrice"] = options.minPrice;
+  }
+  if (options.maxPrice !== void 0) {
+    conditions.push("#price <= :maxPrice");
+    if (!expressionAttributeNames["#price"]) {
+      expressionAttributeNames["#price"] = "price";
+    }
+    expressionAttributeValues[":maxPrice"] = options.maxPrice;
+  }
+  if (options.attributeFilters && filterableAttributes) {
+    const filterableMap = new Map(
+      filterableAttributes.map((attr) => [attr.fieldName, attr])
+    );
+    let filterIndex = 0;
+    for (const [fieldName, filterValue] of Object.entries(options.attributeFilters)) {
+      const attrDef = filterableMap.get(fieldName);
+      if (!attrDef) {
+        continue;
+      }
+      const nameAlias = `#dynAttr${filterIndex}`;
+      const valueAlias = `:dynVal${filterIndex}`;
+      expressionAttributeNames["#dynamicAttributes"] = "dynamicAttributes";
+      expressionAttributeNames[nameAlias] = fieldName;
+      expressionAttributeValues[valueAlias] = filterValue;
+      if (attrDef.dataType === "multi-select") {
+        conditions.push(
+          `contains(#dynamicAttributes.${nameAlias}, ${valueAlias})`
+        );
+      } else {
+        conditions.push(
+          `#dynamicAttributes.${nameAlias} = ${valueAlias}`
+        );
+      }
+      filterIndex++;
+    }
+  }
+  return {
+    filterExpression: conditions.join(" AND "),
+    expressionAttributeNames,
+    expressionAttributeValues
+  };
+}
+function mapItemToProductListItem(item) {
+  const imageUrls = item["imageUrls"];
+  const primaryImageUrl = imageUrls?.[0] ?? "";
+  return {
+    productId: item["productId"],
+    name: item["name"],
+    price: item["price"],
+    primaryImageUrl,
+    averageRating: item["averageRating"] ?? 0,
+    sellerName: item["sellerName"] ?? "",
+    categoryName: item["categoryName"] ?? "",
+    subcategoryName: item["subcategoryName"] ?? "",
+    previewAttributes: item["previewAttributes"] ?? {}
+  };
+}
+function computeFacetCounts(items, filterableAttributes) {
+  const facets = {};
+  for (const attr of filterableAttributes) {
+    facets[attr.fieldName] = {};
+  }
+  for (const item of items) {
+    const dynamicAttributes = item["dynamicAttributes"];
+    if (!dynamicAttributes) {
+      continue;
+    }
+    for (const attr of filterableAttributes) {
+      const value = dynamicAttributes[attr.fieldName];
+      if (value === void 0 || value === null) {
+        continue;
+      }
+      if (attr.dataType === "multi-select" && Array.isArray(value)) {
+        for (const v of value) {
+          const strVal = String(v);
+          facets[attr.fieldName][strVal] = (facets[attr.fieldName][strVal] ?? 0) + 1;
+        }
+      } else {
+        const strVal = String(value);
+        facets[attr.fieldName][strVal] = (facets[attr.fieldName][strVal] ?? 0) + 1;
+      }
+    }
+  }
+  return facets;
+}
+async function listProductsBySubcategory(subcategoryId, options = {}, filterableAttributes = []) {
+  const limit = options.limit ?? 20;
+  const { filterExpression, expressionAttributeNames, expressionAttributeValues } = buildFilterExpression(options, filterableAttributes);
+  try {
+    const queryInput = {
+      TableName: getProductsTableName(),
+      IndexName: "GSI1-CategoryByDate",
+      KeyConditionExpression: "#gsi1pk = :gsi1pk",
+      FilterExpression: filterExpression,
+      ExpressionAttributeNames: {
+        "#gsi1pk": "GSI1PK",
+        ...expressionAttributeNames
+      },
+      ExpressionAttributeValues: {
+        ":gsi1pk": `SUBCATEGORY#${subcategoryId}`,
+        ...expressionAttributeValues
+      },
+      Limit: limit,
+      ScanIndexForward: false
+      // Descending — newest first
+    };
+    if (options.cursor) {
+      const decodedKey = decodeCursor(options.cursor);
+      if (decodedKey) {
+        queryInput.ExclusiveStartKey = decodedKey;
+      }
+    }
+    const command = new import_lib_dynamodb3.QueryCommand(queryInput);
+    const result = await docClient3.send(command);
+    const rawItems = result.Items ?? [];
+    const items = rawItems.map(
+      (item) => mapItemToProductListItem(item)
+    );
+    const filters = computeFacetCounts(
+      rawItems,
+      filterableAttributes
+    );
+    const response = {
+      items,
+      filters
+    };
+    if (result.LastEvaluatedKey) {
+      response.nextCursor = encodeCursor(result.LastEvaluatedKey);
+    }
+    if (result.Count !== void 0) {
+      response.total = result.Count;
+    }
+    return response;
+  } catch (error51) {
+    if (error51 && typeof error51 === "object" && "statusCode" in error51) {
+      throw error51;
+    }
+    createServiceUnavailableError();
+  }
+}
+
+// src/service.ts
+var import_client_dynamodb4 = require("@aws-sdk/client-dynamodb");
+var import_lib_dynamodb4 = require("@aws-sdk/lib-dynamodb");
+var dynamoDbClient4 = new import_client_dynamodb4.DynamoDBClient({});
+var docClient4 = import_lib_dynamodb4.DynamoDBDocumentClient.from(dynamoDbClient4);
+function getProductsTableName2() {
+  return process.env["PRODUCTS_TABLE_NAME"] ?? "";
+}
+function getCategoriesTableName3() {
   return process.env["CATEGORIES_TABLE_NAME"] ?? "";
 }
-async function listCategories() {
+async function listCategories2() {
   try {
-    const command = new import_lib_dynamodb.ScanCommand({
-      TableName: getCategoriesTableName()
+    const command = new import_lib_dynamodb4.ScanCommand({
+      TableName: getCategoriesTableName3()
     });
-    const result = await docClient.send(command);
+    const result = await docClient4.send(command);
     return (result.Items ?? []).map((item) => ({
       categoryId: item["categoryId"],
       name: item["name"]
@@ -18476,13 +18851,13 @@ async function listCategories() {
 }
 async function validateCategoryExists(categoryId) {
   try {
-    const command = new import_lib_dynamodb.GetCommand({
-      TableName: getCategoriesTableName(),
+    const command = new import_lib_dynamodb4.GetCommand({
+      TableName: getCategoriesTableName3(),
       Key: {
         categoryId
       }
     });
-    const result = await docClient.send(command);
+    const result = await docClient4.send(command);
     if (!result.Item) {
       createNotFoundError(`Category '${categoryId}' not found`);
     }
@@ -18505,21 +18880,21 @@ function mapItemToCatalogueItem(item) {
     sellerName: item["sellerName"] ?? ""
   };
 }
-function decodeCursor(cursor) {
+function decodeCursor2(cursor) {
   try {
     return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
   } catch {
     return void 0;
   }
 }
-function encodeCursor(lastEvaluatedKey) {
+function encodeCursor2(lastEvaluatedKey) {
   return Buffer.from(JSON.stringify(lastEvaluatedKey)).toString("base64");
 }
 async function listProductsByCategory(categoryId, limit = 20, cursor) {
   await validateCategoryExists(categoryId);
   try {
     const queryInput = {
-      TableName: getProductsTableName(),
+      TableName: getProductsTableName2(),
       IndexName: "GSI1-CategoryByDate",
       KeyConditionExpression: "#gsi1pk = :gsi1pk",
       FilterExpression: "#isDeleted = :isDeleted",
@@ -18536,19 +18911,19 @@ async function listProductsByCategory(categoryId, limit = 20, cursor) {
       // Most recently listed first
     };
     if (cursor) {
-      const decodedKey = decodeCursor(cursor);
+      const decodedKey = decodeCursor2(cursor);
       if (decodedKey) {
         queryInput.ExclusiveStartKey = decodedKey;
       }
     }
-    const command = new import_lib_dynamodb.QueryCommand(queryInput);
-    const result = await docClient.send(command);
+    const command = new import_lib_dynamodb4.QueryCommand(queryInput);
+    const result = await docClient4.send(command);
     const items = (result.Items ?? []).map(
       (item) => mapItemToCatalogueItem(item)
     );
     const response = { items };
     if (result.LastEvaluatedKey) {
-      response.nextCursor = encodeCursor(result.LastEvaluatedKey);
+      response.nextCursor = encodeCursor2(result.LastEvaluatedKey);
     }
     return response;
   } catch (error51) {
@@ -18560,14 +18935,14 @@ async function listProductsByCategory(categoryId, limit = 20, cursor) {
 }
 async function getProductDetail(productId) {
   try {
-    const command = new import_lib_dynamodb.GetCommand({
-      TableName: getProductsTableName(),
+    const command = new import_lib_dynamodb4.GetCommand({
+      TableName: getProductsTableName2(),
       Key: {
         PK: `PRODUCT#${productId}`,
         SK: "METADATA"
       }
     });
-    const result = await docClient.send(command);
+    const result = await docClient4.send(command);
     if (!result.Item) {
       createNotFoundError(`Product '${productId}' not found`);
     }
@@ -18600,36 +18975,172 @@ async function getProductDetail(productId) {
     createServiceUnavailableError();
   }
 }
-async function searchProducts(query, limit = 20, cursor) {
+async function getCategoryName(categoryId) {
   try {
-    const lowercaseQuery = query.toLowerCase();
-    const scanInput = {
-      TableName: getProductsTableName(),
-      FilterExpression: "contains(#searchTokens, :query) AND #isDeleted = :isDeleted",
+    const command = new import_lib_dynamodb4.GetCommand({
+      TableName: getCategoriesTableName3(),
+      Key: {
+        PK: `CAT#${categoryId}`,
+        SK: "METADATA"
+      }
+    });
+    const result = await docClient4.send(command);
+    return result.Item?.["name"];
+  } catch {
+    return void 0;
+  }
+}
+async function getPreviewAttributeDefinitions(subcategoryId) {
+  try {
+    const command = new import_lib_dynamodb4.QueryCommand({
+      TableName: getCategoriesTableName3(),
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
       ExpressionAttributeNames: {
-        "#searchTokens": "searchTokens",
-        "#isDeleted": "isDeleted"
+        "#pk": "PK",
+        "#sk": "SK"
       },
       ExpressionAttributeValues: {
-        ":query": lowercaseQuery,
-        ":isDeleted": false
+        ":pk": `CAT#${subcategoryId}`,
+        ":skPrefix": "SCHEMA#"
       },
+      ScanIndexForward: false,
+      Limit: 1
+    });
+    const result = await docClient4.send(command);
+    const items = result.Items ?? [];
+    if (items.length === 0) {
+      return [];
+    }
+    const attributes = items[0]["attributes"] ?? [];
+    return [...attributes].sort((a, b) => a.displayPriority - b.displayPriority).slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+function extractPreviewAttributes(dynamicAttributes, previewDefs) {
+  if (!dynamicAttributes || previewDefs.length === 0) {
+    return {};
+  }
+  const preview = {};
+  for (const def of previewDefs) {
+    const value = dynamicAttributes[def.fieldName];
+    if (value !== void 0 && value !== null) {
+      preview[def.fieldName] = value;
+    }
+  }
+  return preview;
+}
+var categoryNameCache = /* @__PURE__ */ new Map();
+var previewAttrCache = /* @__PURE__ */ new Map();
+async function searchProductsEnriched(query, limit = 20, cursor, options) {
+  try {
+    const lowercaseQuery = query.toLowerCase();
+    const filterConditions = [
+      "contains(#searchTokens, :query)",
+      "#isDeleted = :isDeleted"
+    ];
+    const expressionAttributeNames = {
+      "#searchTokens": "searchTokens",
+      "#isDeleted": "isDeleted"
+    };
+    const expressionAttributeValues = {
+      ":query": lowercaseQuery,
+      ":isDeleted": false
+    };
+    if (options?.categoryId) {
+      filterConditions.push("#categoryId = :categoryId");
+      expressionAttributeNames["#categoryId"] = "categoryId";
+      expressionAttributeValues[":categoryId"] = options.categoryId;
+    }
+    if (options?.subcategoryId) {
+      filterConditions.push("#subcategoryId = :subcategoryId");
+      expressionAttributeNames["#subcategoryId"] = "subcategoryId";
+      expressionAttributeValues[":subcategoryId"] = options.subcategoryId;
+    }
+    const scanInput = {
+      TableName: getProductsTableName2(),
+      FilterExpression: filterConditions.join(" AND "),
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
       Limit: limit
     };
     if (cursor) {
-      const decodedKey = decodeCursor(cursor);
+      const decodedKey = decodeCursor2(cursor);
       if (decodedKey) {
         scanInput.ExclusiveStartKey = decodedKey;
       }
     }
-    const command = new import_lib_dynamodb.ScanCommand(scanInput);
-    const result = await docClient.send(command);
-    const items = (result.Items ?? []).map(
-      (item) => mapItemToCatalogueItem(item)
-    );
+    const command = new import_lib_dynamodb4.ScanCommand(scanInput);
+    const result = await docClient4.send(command);
+    const rawItems = result.Items ?? [];
+    const uniqueCategoryIds = /* @__PURE__ */ new Set();
+    const uniqueSubcategoryIds = /* @__PURE__ */ new Set();
+    for (const item of rawItems) {
+      const rawItem = item;
+      const catId = rawItem["categoryId"];
+      const subCatId = rawItem["subcategoryId"];
+      if (catId && !categoryNameCache.has(catId)) {
+        uniqueCategoryIds.add(catId);
+      }
+      if (subCatId && !categoryNameCache.has(subCatId)) {
+        uniqueSubcategoryIds.add(subCatId);
+      }
+    }
+    const categoryNamePromises = [...uniqueCategoryIds].map(async (id) => {
+      const name = await getCategoryName(id);
+      if (name) {
+        categoryNameCache.set(id, name);
+      }
+    });
+    const subcategoryNamePromises = [...uniqueSubcategoryIds].map(async (id) => {
+      const name = await getCategoryName(id);
+      if (name) {
+        categoryNameCache.set(id, name);
+      }
+    });
+    await Promise.all([...categoryNamePromises, ...subcategoryNamePromises]);
+    const uniqueSubcatIdsForSchema = /* @__PURE__ */ new Set();
+    for (const item of rawItems) {
+      const rawItem = item;
+      const subCatId = rawItem["subcategoryId"];
+      if (subCatId && !previewAttrCache.has(subCatId)) {
+        uniqueSubcatIdsForSchema.add(subCatId);
+      }
+    }
+    const schemaPromises = [...uniqueSubcatIdsForSchema].map(async (id) => {
+      const defs = await getPreviewAttributeDefinitions(id);
+      previewAttrCache.set(id, defs);
+    });
+    await Promise.all(schemaPromises);
+    const items = rawItems.map((item) => {
+      const rawItem = item;
+      const subcategoryId = rawItem["subcategoryId"];
+      const categoryId = rawItem["categoryId"];
+      const dynamicAttributes = rawItem["dynamicAttributes"];
+      const categoryName = categoryId ? categoryNameCache.get(categoryId) ?? "" : "";
+      const subcategoryName = subcategoryId ? categoryNameCache.get(subcategoryId) ?? "" : "";
+      let previewAttributes = {};
+      if (subcategoryId && dynamicAttributes) {
+        const previewDefs = previewAttrCache.get(subcategoryId) ?? [];
+        previewAttributes = extractPreviewAttributes(dynamicAttributes, previewDefs);
+      }
+      const imageUrls = rawItem["imageUrls"];
+      const primaryImageUrl = imageUrls?.[0] ?? "";
+      return {
+        productId: rawItem["productId"],
+        name: rawItem["name"],
+        price: rawItem["price"],
+        primaryImageUrl,
+        averageRating: rawItem["averageRating"] ?? 0,
+        sellerName: rawItem["sellerName"] ?? "",
+        categoryName,
+        subcategoryName,
+        previewAttributes
+      };
+    });
     const response = { items };
     if (result.LastEvaluatedKey) {
-      response.nextCursor = encodeCursor(result.LastEvaluatedKey);
+      response.nextCursor = encodeCursor2(result.LastEvaluatedKey);
     }
     return response;
   } catch (error51) {
@@ -18672,6 +19183,13 @@ function extractPaginationParams(event) {
   }
   return result;
 }
+function extractSubcategoryId(event) {
+  const subcategoryId = event.pathParameters?.["subcategoryId"];
+  if (!subcategoryId) {
+    throw (0, import_http_errors2.default)(400, "Subcategory ID is required");
+  }
+  return subcategoryId;
+}
 function extractSearchParams(event) {
   const q = event.queryStringParameters?.["q"];
   if (!q || q.trim().length === 0) {
@@ -18685,12 +19203,20 @@ function extractSearchParams(event) {
   if (cursor) {
     result.cursor = cursor;
   }
+  const categoryId = event.queryStringParameters?.["categoryId"];
+  if (categoryId) {
+    result.categoryId = categoryId;
+  }
+  const subcategoryId = event.queryStringParameters?.["subcategoryId"];
+  if (subcategoryId) {
+    result.subcategoryId = subcategoryId;
+  }
   return result;
 }
 
 // src/handler.ts
 var rawListCategoriesHandler = async (_event) => {
-  const categories = await listCategories();
+  const categories = await listCategories2();
   return {
     statusCode: 200,
     headers: {
@@ -18738,8 +19264,15 @@ var getProductDetailHandler = core_default(rawGetProductDetailHandler).use(catal
   })
 );
 var rawSearchProductsHandler = async (event) => {
-  const { query, limit, cursor } = extractSearchParams(event);
-  const result = await searchProducts(query, limit, cursor);
+  const { query, limit, cursor, categoryId, subcategoryId } = extractSearchParams(event);
+  const options = {};
+  if (categoryId) {
+    options.categoryId = categoryId;
+  }
+  if (subcategoryId) {
+    options.subcategoryId = subcategoryId;
+  }
+  const result = await searchProductsEnriched(query, limit, cursor, options);
   return {
     statusCode: 200,
     headers: {
@@ -18749,6 +19282,172 @@ var rawSearchProductsHandler = async (event) => {
   };
 };
 var searchProductsHandler = core_default(rawSearchProductsHandler).use(catalogueLatencyMetrics()).use(structuredLogger({ service: "catalogue-service" })).use(
+  http_error_handler_default({
+    fallbackMessage: "An unexpected error occurred. Please try again later."
+  })
+);
+var rawListCategoryTreeHandler = async (_event) => {
+  const result = await listCategories();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(result)
+  };
+};
+var listCategoryTreeHandler = core_default(rawListCategoryTreeHandler).use(catalogueLatencyMetrics()).use(structuredLogger({ service: "catalogue-service" })).use(
+  http_error_handler_default({
+    fallbackMessage: "An unexpected error occurred. Please try again later."
+  })
+);
+var rawListSubcategoriesHandler = async (event) => {
+  const categoryId = extractCategoryId(event);
+  const result = await listSubcategories(categoryId);
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(result)
+  };
+};
+var listSubcategoriesHandler = core_default(rawListSubcategoriesHandler).use(catalogueLatencyMetrics()).use(structuredLogger({ service: "catalogue-service" })).use(
+  http_error_handler_default({
+    fallbackMessage: "An unexpected error occurred. Please try again later."
+  })
+);
+var rawGetAttributeSchemaHandler = async (event) => {
+  const subcategoryId = extractSubcategoryId(event);
+  const result = await getAttributeSchema(subcategoryId);
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(result)
+  };
+};
+var getAttributeSchemaHandler = core_default(rawGetAttributeSchemaHandler).use(catalogueLatencyMetrics()).use(structuredLogger({ service: "catalogue-service" })).use(
+  http_error_handler_default({
+    fallbackMessage: "An unexpected error occurred. Please try again later."
+  })
+);
+var RESERVED_QUERY_PARAMS = /* @__PURE__ */ new Set(["limit", "cursor", "minPrice", "maxPrice"]);
+function extractBrowseParams(event) {
+  const queryParams = event.queryStringParameters ?? {};
+  let limit = 20;
+  const limitStr = queryParams["limit"];
+  if (limitStr) {
+    const parsed = parseInt(limitStr, 10);
+    if (!isNaN(parsed) && parsed >= 1 && parsed <= 50) {
+      limit = parsed;
+    } else if (!isNaN(parsed)) {
+      limit = Math.max(1, Math.min(50, parsed));
+    }
+  }
+  const cursor = queryParams["cursor"] || void 0;
+  let minPrice;
+  const minPriceStr = queryParams["minPrice"];
+  if (minPriceStr) {
+    const parsed = parseFloat(minPriceStr);
+    if (!isNaN(parsed) && parsed >= 0) {
+      minPrice = parsed;
+    }
+  }
+  let maxPrice;
+  const maxPriceStr = queryParams["maxPrice"];
+  if (maxPriceStr) {
+    const parsed = parseFloat(maxPriceStr);
+    if (!isNaN(parsed) && parsed >= 0) {
+      maxPrice = parsed;
+    }
+  }
+  const attributeFilters = {};
+  for (const [key, value] of Object.entries(queryParams)) {
+    if (!RESERVED_QUERY_PARAMS.has(key) && value) {
+      attributeFilters[key] = value;
+    }
+  }
+  const result = {
+    limit,
+    attributeFilters
+  };
+  if (cursor) {
+    result.cursor = cursor;
+  }
+  if (minPrice !== void 0) {
+    result.minPrice = minPrice;
+  }
+  if (maxPrice !== void 0) {
+    result.maxPrice = maxPrice;
+  }
+  return result;
+}
+var rawListProductsBySubcategoryHandler = async (event) => {
+  const subcategoryId = extractSubcategoryId(event);
+  const { limit, cursor, minPrice, maxPrice, attributeFilters } = extractBrowseParams(event);
+  let schema;
+  try {
+    schema = await getAttributeSchema(subcategoryId);
+  } catch (error51) {
+    if (error51 && typeof error51 === "object" && "statusCode" in error51 && error51.statusCode === 404) {
+      throw (0, import_http_errors3.default)(404, `Subcategory '${subcategoryId}' not found`, {
+        expose: true,
+        code: "SUBCATEGORY_NOT_FOUND"
+      });
+    }
+    throw error51;
+  }
+  const filterableAttributes = schema.attributes.filter((attr) => attr.filterable);
+  const filterableFieldNames = new Set(filterableAttributes.map((attr) => attr.fieldName));
+  const invalidFilters = [];
+  for (const key of Object.keys(attributeFilters)) {
+    if (!filterableFieldNames.has(key)) {
+      invalidFilters.push(key);
+    }
+  }
+  if (invalidFilters.length > 0) {
+    throw (0, import_http_errors3.default)(400, `Filter '${invalidFilters[0]}' is not a valid filterable attribute`, {
+      expose: true,
+      code: "INVALID_FILTER"
+    });
+  }
+  if (cursor) {
+    try {
+      JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
+    } catch {
+      throw (0, import_http_errors3.default)(400, "Invalid pagination cursor", {
+        expose: true,
+        code: "INVALID_CURSOR"
+      });
+    }
+  }
+  const options = {
+    limit
+  };
+  if (cursor) {
+    options.cursor = cursor;
+  }
+  if (minPrice !== void 0) {
+    options.minPrice = minPrice;
+  }
+  if (maxPrice !== void 0) {
+    options.maxPrice = maxPrice;
+  }
+  if (Object.keys(attributeFilters).length > 0) {
+    options.attributeFilters = attributeFilters;
+  }
+  const result = await listProductsBySubcategory(subcategoryId, options, filterableAttributes);
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(result)
+  };
+};
+var listProductsBySubcategoryHandler = core_default(rawListProductsBySubcategoryHandler).use(catalogueLatencyMetrics()).use(structuredLogger({ service: "catalogue-service" })).use(
   http_error_handler_default({
     fallbackMessage: "An unexpected error occurred. Please try again later."
   })
@@ -18764,10 +19463,19 @@ var handler = async (event, context) => {
   let response;
   switch (route) {
     case "GET /catalogue/categories":
-      response = await listCategoriesHandler(event, context);
+      response = await listCategoryTreeHandler(event, context);
       break;
     case "GET /catalogue/categories/{categoryId}":
       response = await listProductsByCategoryHandler(event, context);
+      break;
+    case "GET /catalogue/categories/{categoryId}/subcategories":
+      response = await listSubcategoriesHandler(event, context);
+      break;
+    case "GET /catalogue/categories/{subcategoryId}/schema":
+      response = await getAttributeSchemaHandler(event, context);
+      break;
+    case "GET /catalogue/categories/{subcategoryId}/products":
+      response = await listProductsBySubcategoryHandler(event, context);
       break;
     case "GET /catalogue/search":
       response = await searchProductsHandler(event, context);
@@ -18779,7 +19487,7 @@ var handler = async (event, context) => {
       response = {
         statusCode: 404,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Route not found" } })
+        body: JSON.stringify({ statusCode: 404, error: "NOT_FOUND", message: "Route not found" })
       };
   }
   response.headers = { ...response.headers, ...CORS_HEADERS };
@@ -18787,28 +19495,17 @@ var handler = async (event, context) => {
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  getAttributeSchemaHandler,
   getProductDetailHandler,
   handler,
   listCategoriesHandler,
+  listCategoryTreeHandler,
   listProductsByCategoryHandler,
+  listProductsBySubcategoryHandler,
+  listSubcategoriesHandler,
   searchProductsHandler
 });
 /*! Bundled license information:
-
-@datastructures-js/heap/src/heap.js:
-  (**
-   * @license MIT
-   * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
-   *
-   * @class
-   *)
-
-@datastructures-js/heap/src/minHeap.js:
-@datastructures-js/heap/src/maxHeap.js:
-  (**
-   * @license MIT
-   * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
-   *)
 
 depd/index.js:
   (*!
@@ -18838,5 +19535,20 @@ http-errors/index.js:
    * Copyright(c) 2014 Jonathan Ong
    * Copyright(c) 2016 Douglas Christopher Wilson
    * MIT Licensed
+   *)
+
+@datastructures-js/heap/src/heap.js:
+  (**
+   * @license MIT
+   * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
+   *
+   * @class
+   *)
+
+@datastructures-js/heap/src/minHeap.js:
+@datastructures-js/heap/src/maxHeap.js:
+  (**
+   * @license MIT
+   * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
    *)
 */

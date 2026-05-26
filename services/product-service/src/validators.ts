@@ -66,7 +66,31 @@ export function validateCreateProductInput(event: APIGatewayProxyEvent): CreateP
     throw error;
   }
 
-  return result.data;
+  // Build CreateProductRequest, omitting undefined optional fields to satisfy
+  // exactOptionalPropertyTypes constraint.
+  const data = result.data;
+  const request: CreateProductRequest = {
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    stockQuantity: data.stockQuantity,
+    images: data.images,
+  };
+
+  if (data.categories !== undefined) {
+    request.categories = data.categories;
+  }
+  if (data.categoryId !== undefined) {
+    request.categoryId = data.categoryId;
+  }
+  if (data.subcategoryId !== undefined) {
+    request.subcategoryId = data.subcategoryId;
+  }
+  if (data.dynamicAttributes !== undefined) {
+    request.dynamicAttributes = data.dynamicAttributes;
+  }
+
+  return request;
 }
 
 /**
@@ -121,6 +145,9 @@ export function validateUpdateProductInput(event: APIGatewayProxyEvent): UpdateP
     data.price !== undefined ||
     data.stockQuantity !== undefined ||
     data.categories !== undefined ||
+    data.categoryId !== undefined ||
+    data.subcategoryId !== undefined ||
+    data.dynamicAttributes !== undefined ||
     data.images !== undefined;
 
   if (!hasAtLeastOneField) {

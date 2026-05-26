@@ -103,7 +103,7 @@ describe('createProduct', () => {
   it('should use the first category as the primary category for GSI1', async () => {
     const { DynamoDBDocumentClient } = await import('@aws-sdk/lib-dynamodb');
     const mockDocClient = DynamoDBDocumentClient.from({} as never);
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     const sendMock = vi.mocked(mockDocClient.send);
 
     await createProduct(validInput, 'seller-abc');
