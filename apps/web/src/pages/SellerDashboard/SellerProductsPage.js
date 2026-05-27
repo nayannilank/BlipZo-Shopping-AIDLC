@@ -234,7 +234,12 @@ export function Component() {
                                       ],
                                     }),
                                     _jsxs('span', { children: ['Stock: ', product.stockQuantity] }),
-                                    _jsx('span', { children: product.categories.join(', ') }),
+                                    _jsx('span', {
+                                      children:
+                                        (product.categories ?? []).join(', ') ||
+                                        product.subcategoryId ||
+                                        '',
+                                    }),
                                     product.sellerPolicy &&
                                       _jsx('span', {
                                         className:
