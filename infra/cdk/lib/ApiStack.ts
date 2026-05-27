@@ -112,6 +112,31 @@ export class ApiStack extends cdk.NestedStack {
       },
     });
 
+    // -------------------------------------------------------------------------
+    // Gateway Responses — Add CORS headers to API Gateway-generated errors
+    // Without these, browser requests that fail at the gateway level (4XX/5XX)
+    // are blocked by CORS because the error response lacks the required headers.
+    // -------------------------------------------------------------------------
+    this.api.addGatewayResponse('GatewayResponseDefault4XX', {
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers':
+          "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,X-Correlation-Id'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,PATCH,DELETE,OPTIONS'",
+      },
+    });
+
+    this.api.addGatewayResponse('GatewayResponseDefault5XX', {
+      type: apigateway.ResponseType.DEFAULT_5XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers':
+          "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,X-Correlation-Id'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,PATCH,DELETE,OPTIONS'",
+      },
+    });
+
     // Ensure the API Gateway account setting is created before the API deployment
     this.api.node.addDependency(account);
 
