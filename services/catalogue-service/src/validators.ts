@@ -61,12 +61,14 @@ export function extractPaginationParams(event: APIGatewayProxyEvent): {
 
 /**
  * Extracts the subcategoryId from the path parameters.
+ * Note: API Gateway uses {categoryId} as the path parameter name for all
+ * /catalogue/categories/{categoryId}/... routes, so we read from 'categoryId'.
  * Throws 400 if not present.
  *
  * Requirements: 1.3, 2.1
  */
 export function extractSubcategoryId(event: APIGatewayProxyEvent): string {
-  const subcategoryId = event.pathParameters?.['subcategoryId'];
+  const subcategoryId = event.pathParameters?.['categoryId'];
 
   if (!subcategoryId) {
     throw createError(400, 'Subcategory ID is required');

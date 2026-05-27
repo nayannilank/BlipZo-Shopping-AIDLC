@@ -109,7 +109,6 @@ export class ApiStack extends cdk.NestedStack {
           'X-Amz-Security-Token',
           'X-Correlation-Id',
         ],
-        allowCredentials: true,
       },
     });
 

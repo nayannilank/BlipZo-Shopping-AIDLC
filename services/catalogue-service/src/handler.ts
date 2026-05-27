@@ -483,10 +483,10 @@ export const handler = async (
     case 'GET /catalogue/categories/{categoryId}/subcategories':
       response = (await listSubcategoriesHandler(event, context)) as APIGatewayProxyResult;
       break;
-    case 'GET /catalogue/categories/{subcategoryId}/schema':
+    case 'GET /catalogue/categories/{categoryId}/schema':
       response = (await getAttributeSchemaHandler(event, context)) as APIGatewayProxyResult;
       break;
-    case 'GET /catalogue/categories/{subcategoryId}/products':
+    case 'GET /catalogue/categories/{categoryId}/products':
       response = (await listProductsBySubcategoryHandler(event, context)) as APIGatewayProxyResult;
       break;
     case 'GET /catalogue/search':

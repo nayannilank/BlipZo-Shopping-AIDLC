@@ -53,7 +53,7 @@ describe('extractProductId', () => {
 
 describe('extractSubcategoryId', () => {
   it('should extract subcategoryId from path parameters', () => {
-    const event = createMockEvent({ pathParameters: { subcategoryId: 'subcat_footwear' } });
+    const event = createMockEvent({ pathParameters: { categoryId: 'subcat_footwear' } });
     expect(extractSubcategoryId(event)).toBe('subcat_footwear');
   });
 
@@ -63,7 +63,7 @@ describe('extractSubcategoryId', () => {
   });
 
   it('should throw 400 when subcategoryId is empty string', () => {
-    const event = createMockEvent({ pathParameters: { subcategoryId: '' } });
+    const event = createMockEvent({ pathParameters: { categoryId: '' } });
     expect(() => extractSubcategoryId(event)).toThrow();
   });
 });
