@@ -132,11 +132,13 @@ export class LambdaStack extends cdk.NestedStack {
       environment: {
         PRODUCTS_TABLE_NAME: tables.productsTable.tableName,
         PRODUCT_IMAGES_BUCKET: bucket.bucketName,
+        CATEGORIES_TABLE_NAME: tables.categoriesTable.tableName,
       },
     });
 
-    // Product Lambda IAM: products table read/write, S3 put/delete
+    // Product Lambda IAM: products table read/write, categories table read, S3 put/delete
     tables.productsTable.grantReadWriteData(productLambda.function);
+    tables.categoriesTable.grantReadData(productLambda.function);
     bucket.grantPut(productLambda.function);
     bucket.grantDelete(productLambda.function);
 
