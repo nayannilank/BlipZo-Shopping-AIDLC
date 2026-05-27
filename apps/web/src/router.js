@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'seller/products/new',
-            lazy: () => import('./pages/SellerDashboard/AddProductPage'),
+            lazy: () => import('./pages/Products/AddProductPage'),
           },
           {
             path: 'seller/products/:productId/edit',
