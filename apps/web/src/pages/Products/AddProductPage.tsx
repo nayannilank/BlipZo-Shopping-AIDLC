@@ -67,7 +67,7 @@ const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface CreateProductResponse {
   productId: string;
-  uploadUrls?: Array<{ url: string; key: string }>;
+  uploadUrls?: Array<{ filename: string; uploadUrl: string; s3Key: string }>;
 }
 
 async function createProductWithCategory(
@@ -84,15 +84,14 @@ async function createProductWithCategory(
  */
 async function uploadFilesToS3(
   files: File[],
-  uploadUrls: Array<{ url: string; key: string }>,
+  uploadUrls: Array<{ filename: string; uploadUrl: string; s3Key: string }>,
 ): Promise<void> {
   const uploads = files.map((file, index) => {
-    const uploadUrl = uploadUrls[index];
-    if (!uploadUrl) return Promise.resolve();
-    return axios.put(uploadUrl.url, file, {
+    const uploadInfo = uploadUrls[index];
+    if (!uploadInfo) return Promise.resolve();
+    return axios.put(uploadInfo.uploadUrl, file, {
       headers: {
         'Content-Type': file.type,
-        'Content-Length': String(file.size),
       },
     });
   });

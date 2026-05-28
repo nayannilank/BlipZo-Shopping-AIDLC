@@ -189,7 +189,7 @@ export function Component() {
                               className:
                                 'h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100',
                               children:
-                                product.imageUrls.length > 0
+                                (product.imageUrls ?? []).length > 0
                                   ? _jsx('img', {
                                       src: product.imageUrls[0],
                                       alt: product.name,

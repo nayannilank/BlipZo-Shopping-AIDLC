@@ -46,7 +46,7 @@ export function Component() {
         description: product.description,
         price: product.price,
         stockQuantity: product.stockQuantity,
-        categories: product.categories.join(', '),
+        categories: (product.categories ?? []).join(', '),
       });
     }
   }, [product, reset]);
@@ -190,7 +190,7 @@ export function Component() {
           _jsxs('div', {
             className: 'rounded-lg border border-gray-200 bg-white p-6 shadow-sm',
             children: [
-              product.imageUrls.length > 0 &&
+              (product.imageUrls ?? []).length > 0 &&
                 _jsxs('div', {
                   className: 'mb-6',
                   children: [
