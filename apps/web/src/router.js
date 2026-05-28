@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
       // Public catalogue routes
       {
         index: true,
-        lazy: () => import('./pages/Home/HomePage'),
+        lazy: () => import('./pages/Home/HomePage.tsx'),
       },
       {
         path: 'categories/:categoryId',
