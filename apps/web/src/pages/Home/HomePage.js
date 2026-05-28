@@ -70,7 +70,7 @@ export function Component() {
                 _jsx(
                   Link,
                   {
-                    to: `/categories/${category.categoryId}`,
+                    to: `/browse/${category.categoryId}`,
                     className:
                       'group rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-brand-blue-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-blue-500 focus:ring-offset-2',
                     children: _jsxs('div', {

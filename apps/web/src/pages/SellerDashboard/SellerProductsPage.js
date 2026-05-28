@@ -216,8 +216,10 @@ export function Component() {
                             _jsxs('div', {
                               className: 'min-w-0 flex-1',
                               children: [
-                                _jsx('h3', {
-                                  className: 'truncate text-sm font-semibold text-gray-900',
+                                _jsx(Link, {
+                                  to: `/products/${product.productId}`,
+                                  className:
+                                    'truncate text-sm font-semibold text-gray-900 hover:text-brand-blue-600 hover:underline',
                                   children: product.name,
                                 }),
                                 _jsxs('div', {
@@ -235,10 +237,7 @@ export function Component() {
                                     }),
                                     _jsxs('span', { children: ['Stock: ', product.stockQuantity] }),
                                     _jsx('span', {
-                                      children:
-                                        (product.categories ?? []).join(', ') ||
-                                        product.subcategoryId ||
-                                        '',
+                                      children: (product.categories ?? []).join(', ') || '',
                                     }),
                                     product.sellerPolicy &&
                                       _jsx('span', {
