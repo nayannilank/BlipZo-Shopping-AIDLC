@@ -220,19 +220,25 @@ async function fetchProductsAcrossSubcategories(
   categoryId: string,
   totalLimit: number = 15,
 ): Promise<ProductsResponse> {
-  // First get all subcategories
-  const subcategories = await fetchSubcategories(categoryId);
-  if (subcategories.length === 0) return { items: [] };
+  try {
+    // First get all subcategories
+    const subcategories = await fetchSubcategories(categoryId);
+    if (subcategories.length === 0) return { items: [] };
 
-  // Fetch a few products from each subcategory
-  const perSubcategory = Math.max(3, Math.ceil(totalLimit / subcategories.length));
-  const results = await Promise.all(
-    subcategories.map((sub) => fetchSubcategoryProducts(sub.categoryId, perSubcategory)),
-  );
+    // Fetch a few products from each subcategory (with error tolerance)
+    const perSubcategory = Math.max(3, Math.ceil(totalLimit / subcategories.length));
+    const results = await Promise.allSettled(
+      subcategories.map((sub) => fetchSubcategoryProducts(sub.categoryId, perSubcategory)),
+    );
 
-  // Merge and limit to totalLimit
-  const allItems = results.flatMap((r) => r.items);
-  return { items: allItems.slice(0, totalLimit) };
+    // Merge successful results only
+    const allItems = results
+      .filter((r): r is PromiseFulfilledResult<ProductsResponse> => r.status === 'fulfilled')
+      .flatMap((r) => r.value.items);
+    return { items: allItems.slice(0, totalLimit) };
+  } catch {
+    return { items: [] };
+  }
 }
 
 /**
@@ -245,14 +251,16 @@ async function fetchProductsAcrossAllCategories(
 ): Promise<ProductsResponse> {
   if (categories.length === 0) return { items: [] };
 
-  // Fetch from each category in parallel, limited per category
+  // Fetch from each category in parallel (with error tolerance)
   const perCategory = Math.max(3, Math.ceil(totalLimit / categories.length));
-  const results = await Promise.all(
+  const results = await Promise.allSettled(
     categories.map((cat) => fetchProductsAcrossSubcategories(cat.categoryId, perCategory)),
   );
 
-  // Merge and limit
-  const allItems = results.flatMap((r) => r.items);
+  // Merge successful results only
+  const allItems = results
+    .filter((r): r is PromiseFulfilledResult<ProductsResponse> => r.status === 'fulfilled')
+    .flatMap((r) => r.value.items);
   return { items: allItems.slice(0, totalLimit) };
 }
 
@@ -279,7 +287,7 @@ export function Component(): React.JSX.Element {
 
   // Fetch products based on selection
   const productsQuery = useQuery({
-    queryKey: ['homeProducts', expandedCategoryId, selectedSubcategoryId, categories.length],
+    queryKey: ['homeProducts', expandedCategoryId ?? 'all', selectedSubcategoryId ?? 'none'],
     queryFn: () => {
       if (selectedSubcategoryId) {
         // Subcategory selected: show products from that subcategory
@@ -292,7 +300,7 @@ export function Component(): React.JSX.Element {
       // Default: show products across all categories
       return fetchProductsAcrossAllCategories(categories, 15);
     },
-    enabled: categoriesQuery.isSuccess && categories.length > 0,
+    enabled: categories.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 
