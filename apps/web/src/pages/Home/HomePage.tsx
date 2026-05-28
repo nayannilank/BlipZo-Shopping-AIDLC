@@ -46,16 +46,6 @@ async function fetchSubcategoryProducts(
   return response.data;
 }
 
-async function fetchCategoryProducts(
-  categoryId: string,
-  limit: number = 15,
-): Promise<ProductsResponse> {
-  const response = await apiClient.get<ProductsResponse>(`/catalogue/categories/${categoryId}`, {
-    params: { limit },
-  });
-  return response.data;
-}
-
 // --- Components ---
 
 function ProductTile({ product }: { product: ProductListItem }): React.JSX.Element {
@@ -222,6 +212,50 @@ function CategorySidebar({
 
 // --- Main Page Component ---
 
+/**
+ * Fetches products across all subcategories of a given category.
+ * Distributes the limit evenly across subcategories.
+ */
+async function fetchProductsAcrossSubcategories(
+  categoryId: string,
+  totalLimit: number = 15,
+): Promise<ProductsResponse> {
+  // First get all subcategories
+  const subcategories = await fetchSubcategories(categoryId);
+  if (subcategories.length === 0) return { items: [] };
+
+  // Fetch a few products from each subcategory
+  const perSubcategory = Math.max(3, Math.ceil(totalLimit / subcategories.length));
+  const results = await Promise.all(
+    subcategories.map((sub) => fetchSubcategoryProducts(sub.categoryId, perSubcategory)),
+  );
+
+  // Merge and limit to totalLimit
+  const allItems = results.flatMap((r) => r.items);
+  return { items: allItems.slice(0, totalLimit) };
+}
+
+/**
+ * Fetches products across ALL categories (for the home page default view).
+ * Gets a few products from each category's subcategories.
+ */
+async function fetchProductsAcrossAllCategories(
+  categories: CategoryNode[],
+  totalLimit: number = 15,
+): Promise<ProductsResponse> {
+  if (categories.length === 0) return { items: [] };
+
+  // Fetch from each category in parallel, limited per category
+  const perCategory = Math.max(3, Math.ceil(totalLimit / categories.length));
+  const results = await Promise.all(
+    categories.map((cat) => fetchProductsAcrossSubcategories(cat.categoryId, perCategory)),
+  );
+
+  // Merge and limit
+  const allItems = results.flatMap((r) => r.items);
+  return { items: allItems.slice(0, totalLimit) };
+}
+
 export function Component(): React.JSX.Element {
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
@@ -241,24 +275,24 @@ export function Component(): React.JSX.Element {
     staleTime: 1000 * 60 * 10,
   });
 
+  const categories = categoriesQuery.data ?? [];
+
   // Fetch products based on selection
   const productsQuery = useQuery({
-    queryKey: ['homeProducts', expandedCategoryId, selectedSubcategoryId],
+    queryKey: ['homeProducts', expandedCategoryId, selectedSubcategoryId, categories.length],
     queryFn: () => {
       if (selectedSubcategoryId) {
+        // Subcategory selected: show products from that subcategory
         return fetchSubcategoryProducts(selectedSubcategoryId, 15);
       }
       if (expandedCategoryId) {
-        return fetchCategoryProducts(expandedCategoryId, 15);
+        // Category selected: show products across all its subcategories
+        return fetchProductsAcrossSubcategories(expandedCategoryId, 15);
       }
-      // Default: fetch from first category if available
-      const firstCat = categoriesQuery.data?.[0];
-      if (firstCat) {
-        return fetchCategoryProducts(firstCat.categoryId, 15);
-      }
-      return Promise.resolve({ items: [] } as ProductsResponse);
+      // Default: show products across all categories
+      return fetchProductsAcrossAllCategories(categories, 15);
     },
-    enabled: categoriesQuery.isSuccess,
+    enabled: categoriesQuery.isSuccess && categories.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -277,7 +311,6 @@ export function Component(): React.JSX.Element {
     setSelectedSubcategoryId(subcategoryId);
   }
 
-  const categories = categoriesQuery.data ?? [];
   const subcategories = subcategoriesQuery.data ?? [];
   const products = productsQuery.data?.items ?? [];
 
