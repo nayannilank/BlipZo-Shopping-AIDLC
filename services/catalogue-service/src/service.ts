@@ -68,7 +68,8 @@ export async function validateCategoryExists(categoryId: string): Promise<void> 
     const command = new GetCommand({
       TableName: getCategoriesTableName(),
       Key: {
-        categoryId,
+        PK: `CAT#${categoryId}`,
+        SK: 'METADATA',
       },
     });
 
