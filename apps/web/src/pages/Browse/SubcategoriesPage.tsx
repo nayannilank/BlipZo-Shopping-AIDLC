@@ -46,7 +46,7 @@ export function Component(): React.JSX.Element {
   });
 
   const parentCategory = categoriesQuery.data?.find((c) => c.categoryId === categoryId);
-  const categoryName = parentCategory?.name ?? categoryId ?? 'Category';
+  const categoryName = parentCategory?.name ?? 'Category';
 
   function handleSearch(query: string): void {
     void navigate(`/search?q=${encodeURIComponent(query)}`);

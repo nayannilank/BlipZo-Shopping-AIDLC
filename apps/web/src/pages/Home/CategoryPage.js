@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 
 import { SearchBar } from '../../components/features/SearchBar';
 import { ProductGrid } from '../../components/ui/ProductGrid';
-import { useCategoryProducts } from '../../hooks/useCatalogue';
+import { useCategories, useCategoryProducts } from '../../hooks/useCatalogue';
 function ProductGridSkeleton() {
   return _jsx('div', {
     className: 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4',
@@ -33,6 +33,9 @@ export function Component() {
   const { categoryId } = useParams();
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useCategoryProducts(categoryId ?? '');
+  const { data: categories } = useCategories();
+  const categoryName =
+    categories?.find((c) => c.categoryId === categoryId)?.name ?? categoryId ?? 'Category';
   const allProducts = data?.pages.flatMap((page) => page.items) ?? [];
   return _jsxs('div', {
     className: 'min-h-screen bg-gray-50',
@@ -73,14 +76,14 @@ export function Component() {
                 _jsx('li', { 'aria-hidden': 'true', children: '/' }),
                 _jsx('li', {
                   className: 'font-medium text-gray-900',
-                  children: categoryId ?? 'Category',
+                  children: categoryName,
                 }),
               ],
             }),
           }),
           _jsx('h1', {
             className: 'text-2xl font-bold text-gray-900 sm:text-3xl',
-            children: categoryId ?? 'Category',
+            children: categoryName,
           }),
           isLoading && _jsx('div', { className: 'mt-8', children: _jsx(ProductGridSkeleton, {}) }),
           isError &&
