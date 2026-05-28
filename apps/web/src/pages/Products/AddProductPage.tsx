@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
+import axios, { type AxiosError } from 'axios';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
@@ -65,11 +65,38 @@ const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // --- API Function ---
 
+interface CreateProductResponse {
+  productId: string;
+  uploadUrls?: Array<{ url: string; key: string }>;
+}
+
 async function createProductWithCategory(
   payload: CreateProductWithCategoryPayload,
-): Promise<unknown> {
-  const response = await apiClient.post('/products', payload);
+): Promise<CreateProductResponse> {
+  const response = await apiClient.post<CreateProductResponse>('/products', payload);
   return response.data;
+}
+
+/**
+ * Uploads files to S3 using pre-signed PUT URLs.
+ * Uses raw axios (not apiClient) to avoid adding Authorization headers
+ * which would invalidate the pre-signed URL signature.
+ */
+async function uploadFilesToS3(
+  files: File[],
+  uploadUrls: Array<{ url: string; key: string }>,
+): Promise<void> {
+  const uploads = files.map((file, index) => {
+    const uploadUrl = uploadUrls[index];
+    if (!uploadUrl) return Promise.resolve();
+    return axios.put(uploadUrl.url, file, {
+      headers: {
+        'Content-Type': file.type,
+        'Content-Length': String(file.size),
+      },
+    });
+  });
+  await Promise.all(uploads);
 }
 
 // --- Component ---
@@ -113,7 +140,14 @@ export function Component(): React.JSX.Element {
 
   // Mutation
   const createMutation = useMutation({
-    mutationFn: createProductWithCategory,
+    mutationFn: async (payload: CreateProductWithCategoryPayload) => {
+      const result = await createProductWithCategory(payload);
+      // Upload images to S3 using pre-signed URLs
+      if (result.uploadUrls && result.uploadUrls.length > 0) {
+        await uploadFilesToS3(selectedFiles, result.uploadUrls);
+      }
+      return result;
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['seller-products'] });
       void navigate('/seller/products');

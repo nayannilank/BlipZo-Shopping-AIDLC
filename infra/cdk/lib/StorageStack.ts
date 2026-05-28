@@ -31,19 +31,34 @@ export class StorageStack extends cdk.NestedStack {
 
     const { stageName } = props;
     const resourceName = (suffix: string): string => `blipzo-${stageName}-${suffix}`;
-    const removalPolicy = stageName === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
+    const removalPolicy =
+      stageName === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
 
     // -------------------------------------------------------------------------
     // Product Images S3 Bucket
     // -------------------------------------------------------------------------
     this.productImagesBucket = new s3.Bucket(this, 'ProductImagesBucket', {
       bucketName: resourceName('product-images'),
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: true,
+        ignorePublicAcls: true,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      }),
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       versioned: false,
       removalPolicy,
       autoDeleteObjects: stageName !== 'prod',
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+          exposedHeaders: ['ETag'],
+          maxAge: 3600,
+        },
+      ],
       lifecycleRules: [
         {
           id: 'ExpireAfter365Days',
@@ -52,6 +67,17 @@ export class StorageStack extends cdk.NestedStack {
         },
       ],
     });
+
+    // Allow public read access to product images via bucket policy
+    this.productImagesBucket.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'AllowPublicReadProducts',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        principals: [new cdk.aws_iam.StarPrincipal()],
+        actions: ['s3:GetObject'],
+        resources: [this.productImagesBucket.arnForObjects('products/*')],
+      }),
+    );
 
     // -------------------------------------------------------------------------
     // Stack Outputs — Bucket ARN and Name
