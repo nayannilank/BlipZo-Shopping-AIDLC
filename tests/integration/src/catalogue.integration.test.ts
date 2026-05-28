@@ -46,19 +46,19 @@ describe('Catalogue Service Integration Flow', () => {
 
     // Seed categories
     mockStore.putItem(categoriesTable, {
-      PK: 'electronics',
+      PK: 'CAT#electronics',
       SK: 'METADATA',
       categoryId: 'electronics',
       name: 'Electronics',
     });
     mockStore.putItem(categoriesTable, {
-      PK: 'clothing',
+      PK: 'CAT#clothing',
       SK: 'METADATA',
       categoryId: 'clothing',
       name: 'Clothing',
     });
     mockStore.putItem(categoriesTable, {
-      PK: 'books',
+      PK: 'CAT#books',
       SK: 'METADATA',
       categoryId: 'books',
       name: 'Books',

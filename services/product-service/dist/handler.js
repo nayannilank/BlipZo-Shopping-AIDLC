@@ -16524,7 +16524,12 @@ async function createProduct(input, sellerId) {
   }
   const uploadUrls = await generatePresignedUploadUrls(productId, input.images);
   const imageUrls = buildImageUrls(uploadUrls);
-  const searchTokens = generateSearchTokens(input.name, input.description, validatedDynamicAttributes, schemaAttributes);
+  const searchTokens = generateSearchTokens(
+    input.name,
+    input.description,
+    validatedDynamicAttributes,
+    schemaAttributes
+  );
   const productRecord = {
     productId,
     sellerId,
@@ -16682,7 +16687,10 @@ async function updateProduct(productId, input, sellerId) {
     if (schema) {
       schemaAttributes = schema.attributes;
       if (input.dynamicAttributes !== void 0) {
-        const validationResult = validateDynamicAttributes(input.dynamicAttributes, schema.attributes);
+        const validationResult = validateDynamicAttributes(
+          input.dynamicAttributes,
+          schema.attributes
+        );
         if (!validationResult.valid) {
           createValidationError(validationResult.fields);
         }
@@ -16701,7 +16709,12 @@ async function updateProduct(productId, input, sellerId) {
     updateExpressions.push("#name = :name");
     const description = input.description ?? existingProduct.description;
     expressionAttributeNames["#searchTokens"] = "searchTokens";
-    expressionAttributeValues[":searchTokens"] = generateSearchTokens(input.name, description, existingProduct.dynamicAttributes, schemaAttributes);
+    expressionAttributeValues[":searchTokens"] = generateSearchTokens(
+      input.name,
+      description,
+      existingProduct.dynamicAttributes,
+      schemaAttributes
+    );
     updateExpressions.push("#searchTokens = :searchTokens");
   }
   if (input.description !== void 0) {
@@ -16711,7 +16724,12 @@ async function updateProduct(productId, input, sellerId) {
     if (input.name === void 0) {
       const name = existingProduct.name;
       expressionAttributeNames["#searchTokens"] = "searchTokens";
-      expressionAttributeValues[":searchTokens"] = generateSearchTokens(name, input.description, existingProduct.dynamicAttributes, schemaAttributes);
+      expressionAttributeValues[":searchTokens"] = generateSearchTokens(
+        name,
+        input.description,
+        existingProduct.dynamicAttributes,
+        schemaAttributes
+      );
       updateExpressions.push("#searchTokens = :searchTokens");
     }
   }

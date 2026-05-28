@@ -18690,9 +18690,7 @@ function buildFilterExpression(options, filterableAttributes) {
     expressionAttributeValues[":maxPrice"] = options.maxPrice;
   }
   if (options.attributeFilters && filterableAttributes) {
-    const filterableMap = new Map(
-      filterableAttributes.map((attr) => [attr.fieldName, attr])
-    );
+    const filterableMap = new Map(filterableAttributes.map((attr) => [attr.fieldName, attr]));
     let filterIndex = 0;
     for (const [fieldName, filterValue] of Object.entries(options.attributeFilters)) {
       const attrDef = filterableMap.get(fieldName);
@@ -18705,13 +18703,9 @@ function buildFilterExpression(options, filterableAttributes) {
       expressionAttributeNames[nameAlias] = fieldName;
       expressionAttributeValues[valueAlias] = filterValue;
       if (attrDef.dataType === "multi-select") {
-        conditions.push(
-          `contains(#dynamicAttributes.${nameAlias}, ${valueAlias})`
-        );
+        conditions.push(`contains(#dynamicAttributes.${nameAlias}, ${valueAlias})`);
       } else {
-        conditions.push(
-          `#dynamicAttributes.${nameAlias} = ${valueAlias}`
-        );
+        conditions.push(`#dynamicAttributes.${nameAlias} = ${valueAlias}`);
       }
       filterIndex++;
     }
@@ -18755,11 +18749,15 @@ function computeFacetCounts(items, filterableAttributes) {
       if (attr.dataType === "multi-select" && Array.isArray(value)) {
         for (const v of value) {
           const strVal = String(v);
-          facets[attr.fieldName][strVal] = (facets[attr.fieldName][strVal] ?? 0) + 1;
+          const bucket = facets[attr.fieldName] ?? {};
+          bucket[strVal] = (bucket[strVal] ?? 0) + 1;
+          facets[attr.fieldName] = bucket;
         }
       } else {
         const strVal = String(value);
-        facets[attr.fieldName][strVal] = (facets[attr.fieldName][strVal] ?? 0) + 1;
+        const bucket = facets[attr.fieldName] ?? {};
+        bucket[strVal] = (bucket[strVal] ?? 0) + 1;
+        facets[attr.fieldName] = bucket;
       }
     }
   }
@@ -18798,10 +18796,7 @@ async function listProductsBySubcategory(subcategoryId, options = {}, filterable
     const items = rawItems.map(
       (item) => mapItemToProductListItem(item)
     );
-    const filters = computeFacetCounts(
-      rawItems,
-      filterableAttributes
-    );
+    const filters = computeFacetCounts(rawItems, filterableAttributes);
     const response = {
       items,
       filters
@@ -18854,7 +18849,8 @@ async function validateCategoryExists(categoryId) {
     const command = new import_lib_dynamodb4.GetCommand({
       TableName: getCategoriesTableName3(),
       Key: {
-        categoryId
+        PK: `CAT#${categoryId}`,
+        SK: "METADATA"
       }
     });
     const result = await docClient4.send(command);
@@ -19184,7 +19180,7 @@ function extractPaginationParams(event) {
   return result;
 }
 function extractSubcategoryId(event) {
-  const subcategoryId = event.pathParameters?.["subcategoryId"];
+  const subcategoryId = event.pathParameters?.["categoryId"];
   if (!subcategoryId) {
     throw (0, import_http_errors2.default)(400, "Subcategory ID is required");
   }
@@ -19471,10 +19467,10 @@ var handler = async (event, context) => {
     case "GET /catalogue/categories/{categoryId}/subcategories":
       response = await listSubcategoriesHandler(event, context);
       break;
-    case "GET /catalogue/categories/{subcategoryId}/schema":
+    case "GET /catalogue/categories/{categoryId}/schema":
       response = await getAttributeSchemaHandler(event, context);
       break;
-    case "GET /catalogue/categories/{subcategoryId}/products":
+    case "GET /catalogue/categories/{categoryId}/products":
       response = await listProductsBySubcategoryHandler(event, context);
       break;
     case "GET /catalogue/search":
